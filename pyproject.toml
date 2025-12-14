@@ -13,10 +13,16 @@ license = { text = "MIT" }
 readme = "README.md"
 requires-python = ">=3.8"
 dependencies = [
-  "pandas",
-  "online_retail_simulator",
-  "tools-catalog-generator @ git+https://github.com/eisenhauerIO/tools-catalog-generator.git"
+  "pandas"
 ]
 
 [project.urls]
 Homepage = "https://github.com/eisenhauerIO/tools-impact-engine"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.envs.default]
+dependencies = [
+  "online_retail_simulator @ git+https://github.com/eisenhauerIO/tools-catalog-generator.git"
+]
