@@ -243,7 +243,7 @@ class TestModelsManagerFitModel:
     
     def test_fit_model_success(self):
         """Test successful model fitting."""
-        from impact_engine.storage import create_storage
+        from artefact_store import create_artefact_store
         
         engine = ModelsManager()
         engine.register_model("mock", MockModel)
@@ -254,7 +254,7 @@ class TestModelsManagerFitModel:
         })
         
         with tempfile.TemporaryDirectory() as tmpdir:
-            storage = create_storage(tmpdir)
+            storage = create_artefact_store(tmpdir)
             result_path = engine.fit_model(
                 data=data,
                 intervention_date="2024-01-05",
@@ -269,7 +269,7 @@ class TestModelsManagerFitModel:
     
     def test_fit_model_empty_data(self):
         """Test fitting with empty data."""
-        from impact_engine.storage import create_storage
+        from artefact_store import create_artefact_store
         
         engine = ModelsManager()
         engine.register_model("mock", MockModel)
@@ -277,7 +277,7 @@ class TestModelsManagerFitModel:
         data = pd.DataFrame()
         
         with tempfile.TemporaryDirectory() as tmpdir:
-            storage = create_storage(tmpdir)
+            storage = create_artefact_store(tmpdir)
             # Should work with empty data since MockModel handles it
             result = engine.fit_model(
                 data=data,
@@ -291,7 +291,7 @@ class TestModelsManagerFitModel:
     
     def test_fit_model_invalid_data(self):
         """Test fitting with invalid data."""
-        from impact_engine.storage import create_storage
+        from artefact_store import create_artefact_store
         
         engine = ModelsManager()
         engine.register_model("mock", MockModel)
@@ -300,7 +300,7 @@ class TestModelsManagerFitModel:
         data = pd.DataFrame({'value': range(10)})
         
         with tempfile.TemporaryDirectory() as tmpdir:
-            storage = create_storage(tmpdir)
+            storage = create_artefact_store(tmpdir)
             # Should work since MockModel handles any data
             result = engine.fit_model(
                 data=data,
@@ -347,8 +347,8 @@ class TestModelsManagerFitModel:
             })
             
             with tempfile.TemporaryDirectory() as tmpdir:
-                from impact_engine.storage import create_storage
-                storage = create_storage(tmpdir)
+                from artefact_store import create_artefact_store
+                storage = create_artefact_store(tmpdir)
                 
                 result_path = engine.fit_model(
                     data=data,
@@ -383,8 +383,8 @@ class TestModelsManagerStatistics:
         })
         
         with tempfile.TemporaryDirectory() as tmpdir:
-            from impact_engine.storage import create_storage
-            storage = create_storage(tmpdir)
+            from artefact_store import create_artefact_store
+            storage = create_artefact_store(tmpdir)
             
             result = engine.fit_model(
                 data=data,

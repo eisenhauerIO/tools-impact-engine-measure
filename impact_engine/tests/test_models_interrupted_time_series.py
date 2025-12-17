@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 
 from impact_engine.models import InterruptedTimeSeriesAdapter
-from impact_engine.storage import create_storage
+from artefact_store import create_artefact_store
 
 
 class TestInterruptedTimeSeriesAdapter:
@@ -23,8 +23,8 @@ class TestInterruptedTimeSeriesAdapter:
         }
         model.connect(config)
         
-        # Set up storage
-        storage = create_storage(tmpdir)
+        # Set up artefact store
+        storage = create_artefact_store(tmpdir)
         model.storage = storage
         model.tenant_id = "test_tenant"
         

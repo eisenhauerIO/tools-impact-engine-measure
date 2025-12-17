@@ -1,13 +1,13 @@
-"""S3 storage backend (mocked for development)."""
+"""S3 artefact store backend (mocked for development)."""
 
 import json
 from pathlib import Path
 from typing import Dict, Any
-from .base import StorageInterface
+from .base import ArtefactStoreInterface
 from .url_parser import parse_storage_url
 
-class S3StorageBackend(StorageInterface):
-    """S3 storage backend that mocks S3 operations locally."""
+class S3ArtefactStore(ArtefactStoreInterface):
+    """S3 artefact store backend that mocks S3 operations locally."""
     
     def __init__(self, base_url: str):
         super().__init__(base_url)

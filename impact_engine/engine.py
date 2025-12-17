@@ -5,7 +5,7 @@ import pandas as pd
 from typing import Optional
 from .metrics import MetricsManager
 from .models import ModelsManager
-from .storage import create_storage
+from artefact_store import create_artefact_store
 
 
 def evaluate_impact(
@@ -28,8 +28,8 @@ def evaluate_impact(
         str: URL to the saved model results
     """
     
-    # Create storage backend
-    storage = create_storage(storage_url)
+    # Create artefact store backend
+    artefact_store = create_artefact_store(storage_url)
     
     # Initialize components with storage and tenant context
     metrics_manager = MetricsManager.from_config_file(config_path)
@@ -38,11 +38,11 @@ def evaluate_impact(
     # Retrieve business metrics using metrics layer
     business_metrics = metrics_manager.retrieve_metrics(products)
     
-    # Fit model using models manager with storage
+    # Fit model using models manager with artefact store
     model_results_path = models_manager.fit_model(
         data=business_metrics,
         output_path="results",
-        storage=storage,
+        storage=artefact_store,
         tenant_id=tenant_id
     )
     

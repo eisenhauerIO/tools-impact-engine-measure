@@ -1,12 +1,12 @@
-"""File storage backend for local filesystem."""
+"""File artefact store backend for local filesystem."""
 
 import json
 from pathlib import Path
 from typing import Dict, Any
-from .base import StorageInterface
+from .base import ArtefactStoreInterface
 
-class FileStorageBackend(StorageInterface):
-    """Local filesystem storage implementation with tenant isolation."""
+class FileArtefactStore(ArtefactStoreInterface):
+    """Local filesystem artefact store implementation with tenant isolation."""
     
     def __init__(self, base_url: str):
         super().__init__(base_url)

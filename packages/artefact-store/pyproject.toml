@@ -3,9 +3,9 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "impact_engine"
+name = "artefact-store"
 version = "0.1.0"
-description = "A package for evaluating product impact."
+description = "Artefact store for multi-tenant persistence of analysis results and data products"
 authors = [
   { name = "eisenhauerIO", email = "info@eisenhauer.io" }
 ]
@@ -13,11 +13,7 @@ license = { text = "MIT" }
 readme = "README.md"
 requires-python = ">=3.8"
 dependencies = [
-  "pandas",
-  "pyyaml",
-  "statsmodels",
-  "online_retail_simulator[light] @ git+https://github.com/eisenhauerIO/tools-catalog-generator.git",
-  "artefact-store"
+  "pandas"
 ]
 
 [project.urls]
@@ -31,18 +27,10 @@ dev = [
   "flake8"
 ]
 
-[tool.hatch.metadata]
-allow-direct-references = true
-
 [tool.hatch.envs.default]
 dependencies = [
-  "pytest",
-  "black"
+  "pytest"
 ]
 
 [tool.hatch.envs.default.scripts]
-test = "pytest impact_engine/tests/ -v"
-test-all = "pytest impact_engine/tests/ packages/artefact-store/artefact_store/tests/ -v"
-format = "black ."
-
-
+test = "pytest artefact_store/tests/ -v"

@@ -1,11 +1,11 @@
-"""Base storage interface for Impact Engine."""
+"""Base artefact store interface for Impact Engine."""
 
 from abc import ABC, abstractmethod
 from typing import Dict, Any
 import pandas as pd
 
-class StorageInterface(ABC):
-    """Abstract storage interface for multi-tenant storage."""
+class ArtefactStoreInterface(ABC):
+    """Abstract artefact store interface for multi-tenant persistence."""
     
     def __init__(self, base_url: str):
         self.base_url = base_url

@@ -59,8 +59,8 @@ class TestEvaluateImpactIntegration:
                 assert result_path.endswith('.json')
                 
                 # Load result data using storage backend to verify it exists
-                from impact_engine.storage import create_storage
-                storage = create_storage(tmpdir)
+                from artefact_store import create_artefact_store
+                storage = create_artefact_store(tmpdir)
                 result_data = storage.load_json("results/impact_results.json", "default")
                 
                 # Verify model output structure
@@ -218,8 +218,8 @@ class TestEvaluateImpactIntegration:
                 assert result_path.endswith('.json')
                 
                 # Load result data using storage backend to verify it exists
-                from impact_engine.storage import create_storage
-                storage = create_storage(tmpdir)
+                from artefact_store import create_artefact_store
+                storage = create_artefact_store(tmpdir)
                 result_data = storage.load_json("results/impact_results.json", "default")
                 
                 # Verify model output structure

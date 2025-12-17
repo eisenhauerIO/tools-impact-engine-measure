@@ -1,6 +1,13 @@
-# Impact Engine
+# Impact Engine Monorepo
 
 A comprehensive package for evaluating causal impact of product interventions using business metrics and statistical modeling.
+
+## Monorepo Structure
+
+This repository is organized as a monorepo with the following packages:
+
+- **`impact_engine/`** - Main impact analysis engine
+- **`packages/artefact-store/`** - Independent artefact store for analysis results
 
 ## Overview
 
@@ -13,14 +20,22 @@ Impact Engine provides a unified framework for:
 
 ### Installation
 
+For development (installs both packages in editable mode):
+```bash
+hatch run install-dev
+```
+
+For production:
 ```bash
 pip install impact-engine
+pip install artefact-store
 ```
 
 ### Basic Usage
 
 ```python
 from impact_engine import evaluate_impact
+from artefact_store import create_artefact_store
 import pandas as pd
 
 # Define products to analyze
@@ -29,11 +44,12 @@ products = pd.DataFrame({
     'name': ['Product 1', 'Product 2']
 })
 
-# Run impact analysis
+# Run impact analysis with storage
 result_path = evaluate_impact(
     config_path='config.json',
     products=products,
-    output_path='results/'
+    storage_url='./results',  # or 's3://bucket/prefix'
+    tenant_id='my_company'
 )
 
 print(f"Results saved to: {result_path}")
@@ -186,17 +202,63 @@ manager = ModelsManager(config)
 manager.register_model("custom", CustomModel)
 ```
 
+## Artefact Store Package
+
+The artefact store layer has been extracted as an independent package (`packages/artefact-store/`) that provides:
+
+- **Multi-tenant isolation**: Separate data by tenant/organization
+- **Multiple backends**: File system and S3 (with local mock)
+- **URL-based configuration**: `./data`, `s3://bucket/prefix`
+- **JSON serialization**: Automatic handling of complex data types
+
+### Artefact Store Usage
+
+```python
+from artefact_store import create_artefact_store
+
+# File artefact store
+store = create_artefact_store("./data")
+
+# S3 artefact store  
+store = create_artefact_store("s3://my-bucket/impact-engine")
+
+# Store analysis results with tenant isolation
+url = store.store_json("results.json", {"key": "value"}, tenant_id="company_a")
+
+# Load analysis results
+data = store.load_json("results.json", tenant_id="company_a")
+```
+
+## Development Commands
+
+```bash
+# Install packages in development mode
+pip install -e packages/artefact-store
+pip install -e .
+
+# Run all tests (main + artefact store)
+hatch run test-all
+
+# Test main package only
+hatch run test
+
+# Format code
+hatch run format
+```
+
 ## Testing
 
 Run the comprehensive test suite:
 
 ```bash
-# All tests
+# All tests (main + artefact store packages)
+hatch run test-all
+
+# Main package tests only
 pytest impact_engine/tests/
 
-# Specific components
-pytest impact_engine/tests/test_metrics_manager.py
-pytest impact_engine/tests/test_models_interrupted_time_series.py
+# Artefact store package tests only  
+pytest packages/artefact-store/artefact_store/tests/
 ```
 
 ## Documentation

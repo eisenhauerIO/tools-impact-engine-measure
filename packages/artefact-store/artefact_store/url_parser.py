@@ -1,4 +1,4 @@
-"""URL parsing utilities for storage backends."""
+"""URL parsing utilities for artefact store backends."""
 
 def parse_storage_url(input_path: str) -> dict:
     """
