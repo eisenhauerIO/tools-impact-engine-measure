@@ -1,4 +1,4 @@
-"""Interrupted Time Series model implementation."""
+"""Interrupted Time Series Model Adapter - adapts SARIMAX to Model interface."""
 
 import pandas as pd
 import numpy as np
@@ -10,14 +10,14 @@ from datetime import datetime
 
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 
-from .base import ModelInterface
+from .base import Model
 
 
-class InterruptedTimeSeriesModel(ModelInterface):
+class InterruptedTimeSeriesAdapter(Model):
     """
-    Interrupted Time Series (ITS) model for causal impact analysis.
+    Adapter for Interrupted Time Series (ITS) model that implements Model interface.
     
-    This model uses SARIMAX from statsmodels to fit a time series model
+    This adapter uses SARIMAX from statsmodels to fit a time series model
     with an intervention dummy variable to estimate the causal impact
     of an intervention on a business metric.
     
@@ -28,7 +28,7 @@ class InterruptedTimeSeriesModel(ModelInterface):
     """
     
     def __init__(self):
-        """Initialize the InterruptedTimeSeriesModel."""
+        """Initialize the InterruptedTimeSeriesAdapter."""
         self.logger = logging.getLogger(__name__)
         self.model = None
         self.results = None
@@ -144,7 +144,7 @@ class InterruptedTimeSeriesModel(ModelInterface):
             return str(result_file)
             
         except Exception as e:
-            self.logger.error(f"Error fitting InterruptedTimeSeriesModel: {e}")
+            self.logger.error(f"Error fitting InterruptedTimeSeriesAdapter: {e}")
             raise RuntimeError(f"Model fitting failed: {e}") from e
     
     def validate_data(self, data: pd.DataFrame) -> bool:

@@ -1,4 +1,4 @@
-"""Tests for ModelingEngine."""
+"""Tests for ModelsManager."""
 
 import pytest
 import pandas as pd
@@ -7,11 +7,11 @@ import json
 from pathlib import Path
 from unittest.mock import Mock, MagicMock
 
-from impact_engine.modeling import ModelingEngine, ModelInterface
+from impact_engine.models import ModelsManager, Model
 from impact_engine.config import ConfigurationError
 
 
-class MockModel(ModelInterface):
+class MockModel(Model):
     """Mock model for testing."""
     
     def fit(self, data: pd.DataFrame, intervention_date: str, output_path: str, **kwargs) -> str:
@@ -39,12 +39,12 @@ class MockModel(ModelInterface):
         return ['date', 'value']
 
 
-class TestModelingEngineRegistration:
+class TestModelsManagerRegistration:
     """Tests for model registration functionality."""
     
     def test_register_model_success(self):
         """Test successful model registration."""
-        engine = ModelingEngine()
+        engine = ModelsManager()
         engine.register_model("mock", MockModel)
         
         assert "mock" in engine.get_available_models()
@@ -52,17 +52,17 @@ class TestModelingEngineRegistration:
     
     def test_register_model_invalid_class(self):
         """Test registration with invalid model class."""
-        engine = ModelingEngine()
+        engine = ModelsManager()
         
         class InvalidModel:
             pass
         
-        with pytest.raises(ValueError, match="must implement ModelInterface"):
+        with pytest.raises(ValueError, match="must implement Model"):
             engine.register_model("invalid", InvalidModel)
     
     def test_get_available_models(self):
         """Test getting list of available models."""
-        engine = ModelingEngine()
+        engine = ModelsManager()
         engine.register_model("mock1", MockModel)
         engine.register_model("mock2", MockModel)
         
@@ -73,7 +73,7 @@ class TestModelingEngineRegistration:
         assert len(available) == 3
 
 
-class TestModelingEngineConfiguration:
+class TestModelsManagerConfiguration:
     """Tests for configuration loading."""
     
     def test_load_config_success(self):
@@ -100,7 +100,7 @@ class TestModelingEngineConfiguration:
             config_path = f.name
         
         try:
-            engine = ModelingEngine.from_config_file(config_path)
+            engine = ModelsManager.from_config_file(config_path)
             assert engine.measurement_config["MODEL"] == "mock"
         finally:
             Path(config_path).unlink()
@@ -108,11 +108,11 @@ class TestModelingEngineConfiguration:
     def test_load_config_file_not_found(self):
         """Test loading non-existent configuration file."""
         with pytest.raises(FileNotFoundError):
-            ModelingEngine.from_config_file("/nonexistent/path/config.json")
+            ModelsManager.from_config_file("/nonexistent/path/config.json")
     
     def test_get_current_config(self):
         """Test getting current configuration."""
-        engine = ModelingEngine()
+        engine = ModelsManager()
         
         with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
             config = {
@@ -135,19 +135,19 @@ class TestModelingEngineConfiguration:
             config_path = f.name
         
         try:
-            engine = ModelingEngine.from_config_file(config_path)
+            engine = ModelsManager.from_config_file(config_path)
             assert engine.measurement_config is not None
             assert engine.measurement_config["MODEL"] == "mock"
         finally:
             Path(config_path).unlink()
 
 
-class TestModelingEngineGetModel:
+class TestModelsManagerGetModel:
     """Tests for model retrieval."""
     
     def test_get_model_by_type(self):
         """Test getting model by explicit type."""
-        engine = ModelingEngine()
+        engine = ModelsManager()
         engine.register_model("mock", MockModel)
         
         model = engine.get_model("mock")
@@ -155,7 +155,7 @@ class TestModelingEngineGetModel:
     
     def test_get_model_from_config(self):
         """Test getting model from loaded configuration."""
-        engine = ModelingEngine()
+        engine = ModelsManager()
         engine.register_model("mock", MockModel)
         
         with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
@@ -179,7 +179,7 @@ class TestModelingEngineGetModel:
             config_path = f.name
         
         try:
-            engine = ModelingEngine.from_config_file(config_path)
+            engine = ModelsManager.from_config_file(config_path)
             engine.register_model("mock", MockModel)
             model = engine.get_model()
             assert isinstance(model, MockModel)
@@ -188,7 +188,7 @@ class TestModelingEngineGetModel:
     
     def test_get_model_unknown_type(self):
         """Test getting unknown model type."""
-        engine = ModelingEngine()
+        engine = ModelsManager()
         
         with pytest.raises(ValueError, match="Unknown model type"):
             engine.get_model("unknown")
@@ -197,19 +197,19 @@ class TestModelingEngineGetModel:
         """Test getting model without specifying type and no config model."""
         # Create engine with minimal config that doesn't have the requested model
         measurement_config = {"MODEL": "nonexistent", "PARAMS": {}}
-        engine = ModelingEngine(measurement_config)
+        engine = ModelsManager(measurement_config)
         engine.register_model("mock", MockModel)
         
         with pytest.raises(ValueError, match="Unknown model type"):
             engine.get_model()  # Will try to get "nonexistent" model from config
 
 
-class TestModelingEngineFitModel:
+class TestModelsManagerFitModel:
     """Tests for model fitting functionality."""
     
     def test_fit_model_success(self):
         """Test successful model fitting."""
-        engine = ModelingEngine()
+        engine = ModelsManager()
         engine.register_model("mock", MockModel)
         
         data = pd.DataFrame({
@@ -230,7 +230,7 @@ class TestModelingEngineFitModel:
     
     def test_fit_model_empty_data(self):
         """Test fitting with empty data."""
-        engine = ModelingEngine()
+        engine = ModelsManager()
         engine.register_model("mock", MockModel)
         
         data = pd.DataFrame()
@@ -247,7 +247,7 @@ class TestModelingEngineFitModel:
     
     def test_fit_model_invalid_data(self):
         """Test fitting with invalid data."""
-        engine = ModelingEngine()
+        engine = ModelsManager()
         engine.register_model("mock", MockModel)
         
         # Data missing required 'date' column
@@ -265,7 +265,7 @@ class TestModelingEngineFitModel:
     
     def test_fit_model_from_config(self):
         """Test fitting model using configuration."""
-        engine = ModelingEngine()
+        engine = ModelsManager()
         engine.register_model("mock", MockModel)
         
         with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
@@ -289,7 +289,7 @@ class TestModelingEngineFitModel:
             config_path = f.name
         
         try:
-            engine = ModelingEngine.from_config_file(config_path)
+            engine = ModelsManager.from_config_file(config_path)
             engine.register_model("mock", MockModel)
             
             data = pd.DataFrame({
@@ -309,18 +309,18 @@ class TestModelingEngineFitModel:
             Path(config_path).unlink()
 
 
-class TestModelingEngineStatistics:
+class TestModelsManagerStatistics:
     """Tests for operation statistics tracking."""
     
     def test_operation_stats_initialization(self):
         """Test that simplified engine works without stats."""
-        engine = ModelingEngine()
+        engine = ModelsManager()
         # Just verify engine works without stats
         assert len(engine.get_available_models()) > 0
     
     def test_operation_stats_tracking(self):
         """Test that engine works without stats tracking."""
-        engine = ModelingEngine()
+        engine = ModelsManager()
         engine.register_model("mock", MockModel)
         
         data = pd.DataFrame({
@@ -339,19 +339,19 @@ class TestModelingEngineStatistics:
     
     def test_reset_stats(self):
         """Test that simplified engine works without reset stats."""
-        engine = ModelingEngine()
+        engine = ModelsManager()
         # Just verify engine continues to work
         assert len(engine.get_available_models()) > 0
 
 
-class TestInterruptedTimeSeriesModel:
-    """Tests for InterruptedTimeSeriesModel result saving functionality."""
+class TestInterruptedTimeSeriesAdapter:
+    """Tests for InterruptedTimeSeriesAdapter result saving functionality."""
     
     def test_its_model_result_file_creation(self):
         """Test that ITS model creates result file at specified path."""
-        from impact_engine.modeling import InterruptedTimeSeriesModel
+        from impact_engine.models import InterruptedTimeSeriesAdapter
         
-        model = InterruptedTimeSeriesModel()
+        model = InterruptedTimeSeriesAdapter()
         
         # Create sample time series data
         data = pd.DataFrame({
@@ -373,9 +373,9 @@ class TestInterruptedTimeSeriesModel:
     
     def test_its_model_result_file_content(self):
         """Test that ITS model saves valid JSON with required fields."""
-        from impact_engine.modeling import InterruptedTimeSeriesModel
+        from impact_engine.models import InterruptedTimeSeriesAdapter
         
-        model = InterruptedTimeSeriesModel()
+        model = InterruptedTimeSeriesAdapter()
         
         data = pd.DataFrame({
             'date': pd.date_range('2024-01-01', periods=30),
@@ -403,9 +403,9 @@ class TestInterruptedTimeSeriesModel:
     
     def test_its_model_impact_estimates_structure(self):
         """Test that impact estimates have correct structure."""
-        from impact_engine.modeling import InterruptedTimeSeriesModel
+        from impact_engine.models import InterruptedTimeSeriesAdapter
         
-        model = InterruptedTimeSeriesModel()
+        model = InterruptedTimeSeriesAdapter()
         
         data = pd.DataFrame({
             'date': pd.date_range('2024-01-01', periods=30),
@@ -439,9 +439,9 @@ class TestInterruptedTimeSeriesModel:
     
     def test_its_model_model_summary_structure(self):
         """Test that model summary has correct structure."""
-        from impact_engine.modeling import InterruptedTimeSeriesModel
+        from impact_engine.models import InterruptedTimeSeriesAdapter
         
-        model = InterruptedTimeSeriesModel()
+        model = InterruptedTimeSeriesAdapter()
         
         data = pd.DataFrame({
             'date': pd.date_range('2024-01-01', periods=30),
@@ -475,9 +475,9 @@ class TestInterruptedTimeSeriesModel:
     
     def test_its_model_returns_file_path(self):
         """Test that fit method returns the correct file path."""
-        from impact_engine.modeling import InterruptedTimeSeriesModel
+        from impact_engine.models import InterruptedTimeSeriesAdapter
         
-        model = InterruptedTimeSeriesModel()
+        model = InterruptedTimeSeriesAdapter()
         
         data = pd.DataFrame({
             'date': pd.date_range('2024-01-01', periods=30),

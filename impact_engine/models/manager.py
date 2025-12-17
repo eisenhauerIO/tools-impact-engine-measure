@@ -1,20 +1,20 @@
 """
-Modeling Engine for coordinating model operations.
+Models Manager for coordinating model operations.
 """
 
 from typing import Dict, List, Any, Optional
 import pandas as pd
 from pathlib import Path
 
-from .base import ModelInterface
-from .interrupted_time_series import InterruptedTimeSeriesModel
+from .base import Model
+from .adapter_interrupted_time_series import InterruptedTimeSeriesAdapter
 
 
-class ModelingEngine:
+class ModelsManager:
     """Central coordinator for model management."""
     
     def __init__(self, measurement_config: Optional[Dict[str, Any]] = None):
-        """Initialize the ModelingEngine with MEASUREMENT configuration block."""
+        """Initialize the ModelsManager with MEASUREMENT configuration block."""
         self.model_registry: Dict[str, type] = {}
         self.measurement_config = measurement_config or {"MODEL": "interrupted_time_series", "PARAMS": {}}
         
@@ -26,8 +26,8 @@ class ModelingEngine:
             self._validate_measurement_config(measurement_config)
     
     @classmethod
-    def from_config_file(cls, config_path: str) -> 'ModelingEngine':
-        """Create ModelingEngine from config file, extracting MEASUREMENT block."""
+    def from_config_file(cls, config_path: str) -> 'ModelsManager':
+        """Create ModelsManager from config file, extracting MEASUREMENT block."""
         from ..config import ConfigurationParser
         config_parser = ConfigurationParser()
         full_config = config_parser.parse_config(config_path)
@@ -35,7 +35,7 @@ class ModelingEngine:
     
     def _register_builtin_models(self) -> None:
         """Register built-in model implementations."""
-        self.register_model("interrupted_time_series", InterruptedTimeSeriesModel)
+        self.register_model("interrupted_time_series", InterruptedTimeSeriesAdapter)
     
     def _validate_measurement_config(self, measurement_config: Dict[str, Any]) -> None:
         """Validate MEASUREMENT configuration block."""
@@ -47,11 +47,11 @@ class ModelingEngine:
     
     def register_model(self, model_type: str, model_class: type) -> None:
         """Register a new model implementation."""
-        if not issubclass(model_class, ModelInterface):
-            raise ValueError(f"Model class {model_class.__name__} must implement ModelInterface")
+        if not issubclass(model_class, Model):
+            raise ValueError(f"Model class {model_class.__name__} must implement Model")
         self.model_registry[model_type] = model_class
     
-    def get_model(self, model_type: Optional[str] = None) -> ModelInterface:
+    def get_model(self, model_type: Optional[str] = None) -> Model:
         """Get model implementation based on configuration or specified type."""
         if model_type is None:
             model_type = self.measurement_config["MODEL"]

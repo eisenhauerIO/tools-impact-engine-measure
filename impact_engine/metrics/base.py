@@ -1,5 +1,5 @@
 """
-Base interfaces and common classes for the data abstraction layer.
+Base interfaces and common classes for the metrics layer.
 """
 
 from abc import ABC, abstractmethod
@@ -9,12 +9,12 @@ from datetime import datetime
 from dataclasses import dataclass
 
 
-class DataSourceInterface(ABC):
-    """Abstract base class defining the contract for all data source implementations."""
+class MetricsInterface(ABC):
+    """Abstract base class defining the contract for all metrics implementations."""
     
     @abstractmethod
     def connect(self, config: Dict[str, Any]) -> bool:
-        """Establish connection to the data source."""
+        """Establish connection to the metrics source."""
         pass
     
     @abstractmethod
@@ -33,17 +33,14 @@ class DataSourceInterface(ABC):
     
     @abstractmethod
     def validate_connection(self) -> bool:
-        """Validate that the data source connection is active and functional."""
+        """Validate that the metrics source connection is active and functional."""
         pass
     
-    @abstractmethod
-    def get_available_metrics(self) -> List[str]:
-        """Return list of available metric types supported by this data source."""
-        pass
 
 
-class DataNotFoundError(Exception):
-    """Exception raised when no data is found for the specified criteria."""
+
+class MetricsNotFoundError(Exception):
+    """Exception raised when no metrics are found for the specified criteria."""
     pass
 
 

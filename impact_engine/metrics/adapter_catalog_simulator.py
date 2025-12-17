@@ -1,19 +1,19 @@
 """
-Interface for catalog simulator - connects to online_retail_simulator package.
+Catalog Simulator Adapter - adapts online_retail_simulator package to MetricsInterface.
 """
 
 import pandas as pd
 from typing import Dict, List, Any
 from datetime import datetime
 
-from .base import DataSourceInterface, DataNotFoundError
+from .base import MetricsInterface, MetricsNotFoundError
 
 
-class CatalogSimulatorInterface(DataSourceInterface):
-    """Interface to catalog simulator for generating business metrics."""
+class CatalogSimulatorAdapter(MetricsInterface):
+    """Adapter for catalog simulator that implements MetricsInterface."""
     
     def __init__(self):
-        """Initialize the CatalogSimulatorInterface."""
+        """Initialize the CatalogSimulatorAdapter."""
         self.is_connected = False
         self.config = None
         self.available_metrics = ['sales_volume', 'revenue', 'inventory_level', 'customer_engagement']
@@ -114,7 +114,7 @@ class CatalogSimulatorInterface(DataSourceInterface):
             return pd.DataFrame(columns=[
                 'product_id', 'name', 'category', 'price', 'date',
                 'sales_volume', 'revenue', 'inventory_level', 'customer_engagement',
-                'data_source', 'retrieval_timestamp'
+                'metrics_source', 'retrieval_timestamp'
             ])
         
         standardized = raw_metrics.copy()
@@ -144,7 +144,7 @@ class CatalogSimulatorInterface(DataSourceInterface):
             standardized['customer_engagement'] = standardized['customer_engagement'].fillna(0.0)
         
         # Add metadata fields
-        standardized['data_source'] = 'catalog_simulator'
+        standardized['metrics_source'] = 'catalog_simulator'
         standardized['retrieval_timestamp'] = datetime.now()
         
         # Ensure proper data types
@@ -159,7 +159,7 @@ class CatalogSimulatorInterface(DataSourceInterface):
         column_order = [
             'product_id', 'name', 'category', 'price', 'date',
             'sales_volume', 'revenue', 'inventory_level', 'customer_engagement',
-            'data_source', 'retrieval_timestamp'
+            'metrics_source', 'retrieval_timestamp'
         ]
         available_columns = [col for col in column_order if col in standardized.columns]
         return standardized[available_columns]
@@ -175,6 +175,3 @@ class CatalogSimulatorInterface(DataSourceInterface):
         except ImportError:
             return False
     
-    def get_available_metrics(self) -> List[str]:
-        """Return list of available metric types supported by the catalog simulator."""
-        return self.available_metrics.copy()

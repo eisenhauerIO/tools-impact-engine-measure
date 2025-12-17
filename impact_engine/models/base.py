@@ -5,7 +5,7 @@ from typing import List
 import pandas as pd
 
 
-class ModelInterface(ABC):
+class Model(ABC):
     """Abstract base class for impact models.
     
     Defines the unified interface that all impact models must implement.
