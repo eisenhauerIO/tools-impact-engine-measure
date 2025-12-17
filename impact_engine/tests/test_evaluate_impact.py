@@ -17,19 +17,18 @@ class TestEvaluateImpactIntegration:
         # Create a temporary configuration file
         with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
             config = {
-                "data_source": {
-                    "type": "simulator",
-                    "connection": {"mode": "rule"}
+                "DATA": {
+                    "TYPE": "simulator",
+                    "MODE": "rule",
+                    "SEED": 42
                 },
-                "model": {
-                    "type": "interrupted_time_series",
-                    "parameters": {
-                        "intervention_date": "2024-01-15",
-                        "dependent_variable": "revenue"
-                    },
-                    "time_range": {
-                        "start_date": "2024-01-01",
-                        "end_date": "2024-01-31"
+                "MEASUREMENT": {
+                    "MODEL": "interrupted_time_series",
+                    "PARAMS": {
+                        "DEPENDENT_VARIABLE": "revenue",
+                        "INTERVENTION_DATE": "2024-01-15",
+                        "START_DATE": "2024-01-01",
+                        "END_DATE": "2024-01-31"
                     }
                 }
             }
@@ -74,18 +73,17 @@ class TestEvaluateImpactIntegration:
         # Create a configuration without intervention_date
         with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
             config = {
-                "data_source": {
-                    "type": "simulator",
-                    "connection": {"mode": "rule"}
+                "DATA": {
+                    "TYPE": "simulator",
+                    "MODE": "rule",
+                    "SEED": 42
                 },
-                "model": {
-                    "type": "interrupted_time_series",
-                    "parameters": {
-                        "dependent_variable": "revenue"
-                    },
-                    "time_range": {
-                        "start_date": "2024-01-01",
-                        "end_date": "2024-01-31"
+                "MEASUREMENT": {
+                    "MODEL": "interrupted_time_series",
+                    "PARAMS": {
+                        "DEPENDENT_VARIABLE": "revenue",
+                        "START_DATE": "2024-01-01",
+                        "END_DATE": "2024-01-31"
                     }
                 }
             }
@@ -95,7 +93,7 @@ class TestEvaluateImpactIntegration:
         try:
             with tempfile.TemporaryDirectory() as tmpdir:
                 # Should raise ValueError for missing intervention_date
-                with pytest.raises(ValueError, match="intervention_date must be specified"):
+                with pytest.raises(ValueError, match="INTERVENTION_DATE must be specified"):
                     evaluate_impact(
                         config_path=config_path,
                         products=["product_1"],
@@ -108,19 +106,18 @@ class TestEvaluateImpactIntegration:
         """Test that evaluate_impact returns path to model results, not CSV."""
         with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
             config = {
-                "data_source": {
-                    "type": "simulator",
-                    "connection": {"mode": "rule"}
+                "DATA": {
+                    "TYPE": "simulator",
+                    "MODE": "rule",
+                    "SEED": 42
                 },
-                "model": {
-                    "type": "interrupted_time_series",
-                    "parameters": {
-                        "intervention_date": "2024-01-15",
-                        "dependent_variable": "revenue"
-                    },
-                    "time_range": {
-                        "start_date": "2024-01-01",
-                        "end_date": "2024-01-31"
+                "MEASUREMENT": {
+                    "MODEL": "interrupted_time_series",
+                    "PARAMS": {
+                        "DEPENDENT_VARIABLE": "revenue",
+                        "INTERVENTION_DATE": "2024-01-15",
+                        "START_DATE": "2024-01-01",
+                        "END_DATE": "2024-01-31"
                     }
                 }
             }

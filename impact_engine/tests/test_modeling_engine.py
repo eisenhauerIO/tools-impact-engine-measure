@@ -81,18 +81,17 @@ class TestModelingEngineConfiguration:
         
         with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
             config = {
-                "data_source": {
-                    "type": "simulator",
-                    "connection": {"mode": "rule"}
+                "DATA": {
+                    "TYPE": "simulator",
+                    "MODE": "rule",
+                    "SEED": 42
                 },
-                "model": {
-                    "type": "mock",
-                    "parameters": {
-                        "dependent_variable": "revenue"
-                    },
-                    "time_range": {
-                        "start_date": "2024-01-01",
-                        "end_date": "2024-01-31"
+                "MEASUREMENT": {
+                    "MODEL": "mock",
+                    "PARAMS": {
+                        "DEPENDENT_VARIABLE": "revenue",
+                        "START_DATE": "2024-01-01",
+                        "END_DATE": "2024-01-31"
                     }
                 }
             }
@@ -101,7 +100,7 @@ class TestModelingEngineConfiguration:
         
         try:
             loaded_config = engine.load_config(config_path)
-            assert loaded_config["model"]["type"] == "mock"
+            assert loaded_config["MEASUREMENT"]["MODEL"] == "mock"
             assert engine.current_config is not None
         finally:
             Path(config_path).unlink()
@@ -119,15 +118,16 @@ class TestModelingEngineConfiguration:
         
         with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
             config = {
-                "data_source": {
-                    "type": "simulator",
-                    "connection": {"mode": "rule"}
+                "DATA": {
+                    "TYPE": "simulator",
+                    "MODE": "rule",
+                    "SEED": 42
                 },
-                "model": {
-                    "type": "mock",
-                    "time_range": {
-                        "start_date": "2024-01-01",
-                        "end_date": "2024-01-31"
+                "MEASUREMENT": {
+                    "MODEL": "mock",
+                    "PARAMS": {
+                        "START_DATE": "2024-01-01",
+                        "END_DATE": "2024-01-31"
                     }
                 }
             }
@@ -138,7 +138,7 @@ class TestModelingEngineConfiguration:
             engine.load_config(config_path)
             current = engine.get_current_config()
             assert current is not None
-            assert current["model"]["type"] == "mock"
+            assert current["MEASUREMENT"]["MODEL"] == "mock"
         finally:
             Path(config_path).unlink()
 
@@ -161,15 +161,16 @@ class TestModelingEngineGetModel:
         
         with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
             config = {
-                "data_source": {
-                    "type": "simulator",
-                    "connection": {"mode": "rule"}
+                "DATA": {
+                    "TYPE": "simulator",
+                    "MODE": "rule",
+                    "SEED": 42
                 },
-                "model": {
-                    "type": "mock",
-                    "time_range": {
-                        "start_date": "2024-01-01",
-                        "end_date": "2024-01-31"
+                "MEASUREMENT": {
+                    "MODEL": "mock",
+                    "PARAMS": {
+                        "START_DATE": "2024-01-01",
+                        "END_DATE": "2024-01-31"
                     }
                 }
             }
@@ -263,15 +264,16 @@ class TestModelingEngineFitModel:
         
         with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
             config = {
-                "data_source": {
-                    "type": "simulator",
-                    "connection": {"mode": "rule"}
+                "DATA": {
+                    "TYPE": "simulator",
+                    "MODE": "rule",
+                    "SEED": 42
                 },
-                "model": {
-                    "type": "mock",
-                    "time_range": {
-                        "start_date": "2024-01-01",
-                        "end_date": "2024-01-31"
+                "MEASUREMENT": {
+                    "MODEL": "mock",
+                    "PARAMS": {
+                        "START_DATE": "2024-01-01",
+                        "END_DATE": "2024-01-31"
                     }
                 }
             }

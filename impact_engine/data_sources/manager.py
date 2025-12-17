@@ -40,7 +40,7 @@ class DataSourceManager:
         if source_type is None:
             if self.current_config is None:
                 raise ValueError("No configuration loaded. Call load_config() first or provide source_type.")
-            source_type = self.current_config["data_source"]["type"]
+            source_type = self.current_config["DATA"]["TYPE"]
         
         if source_type not in self.data_source_registry:
             raise ValueError(f"Unknown data source type '{source_type}'. Available: {list(self.data_source_registry.keys())}")
@@ -48,7 +48,12 @@ class DataSourceManager:
         data_source = self.data_source_registry[source_type]()
         
         if self.current_config is not None:
-            connection_config = self.current_config["data_source"]["connection"]
+            # Build connection config from DATA section
+            data_config = self.current_config["DATA"]
+            connection_config = {
+                "mode": data_config.get("MODE", "rule"),
+                "seed": data_config.get("SEED", 42)
+            }
             if not data_source.connect(connection_config):
                 raise ConnectionError(f"Failed to connect to {source_type} data source")
         
@@ -67,9 +72,9 @@ class DataSourceManager:
         if time_range is None:
             if self.current_config is None:
                 raise ValueError("No configuration loaded. Provide time_range or call load_config() first.")
-            # Get time_range from model section (new format)
-            time_config = self.current_config["model"]["time_range"]
-            time_range = TimeRange.from_strings(time_config["start_date"], time_config["end_date"])
+            # Get time_range from measurement params (new format)
+            params = self.current_config["MEASUREMENT"]["PARAMS"]
+            time_range = TimeRange.from_strings(params["START_DATE"], params["END_DATE"])
         
         if data_source is None:
             data_source = self.get_data_source()

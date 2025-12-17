@@ -1,20 +1,18 @@
-{
-  "data_source": {
-    "type": "simulator",
-    "connection": {
-      "mode": "rule",
-      "seed": 42
-    }
-  },
-  "model": {
-    "type": "interrupted_time_series",
-    "parameters": {
-      "dependent_variable": "revenue",
-      "intervention_date": "2024-11-15"
-    },
-    "time_range": {
-      "start_date": "2024-11-01",
-      "end_date": "2024-11-30"
-    }
-  }
-}
+# Impact Engine Configuration
+# Clean, readable YAML format following simulator config style
+
+DATA:
+  TYPE: simulator
+  MODE: rule
+  SEED: 42
+
+MEASUREMENT:
+  MODEL: interrupted_time_series
+  PARAMS:
+    DEPENDENT_VARIABLE: revenue
+    INTERVENTION_DATE: "2024-11-15"
+    START_DATE: "2024-11-01"
+    END_DATE: "2024-11-30"
+
+OUTPUT:
+  PATH: demo/impact/results

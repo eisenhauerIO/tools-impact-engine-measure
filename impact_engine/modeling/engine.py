@@ -120,8 +120,9 @@ class ModelingEngine:
             self.logger.info(f"Successfully loaded configuration from {config_path} in {load_time:.3f}s")
             
             if self.debug_logging:
-                self.logger.debug(f"Configuration contains model type: {self.current_config.get('model', {}).get('type', 'unknown')}")
-                self.logger.debug(f"Model parameters: {self.current_config.get('model', {}).get('parameters', {})}")
+                measurement = self.current_config.get('MEASUREMENT', {})
+                self.logger.debug(f"Configuration contains model type: {measurement.get('MODEL', 'unknown')}")
+                self.logger.debug(f"Model parameters: {measurement.get('PARAMS', {})}")
             
             return self.current_config
             
@@ -171,7 +172,7 @@ class ModelingEngine:
                     error_msg = "No configuration loaded. Call load_config() first or provide model_type."
                     self.logger.error(error_msg)
                     raise ConfigurationError(error_msg)
-                model_type = self.current_config["model"]["type"]
+                model_type = self.current_config["MEASUREMENT"]["MODEL"]
                 
                 if self.debug_logging:
                     self.logger.debug(f"Using model type from config: {model_type}")

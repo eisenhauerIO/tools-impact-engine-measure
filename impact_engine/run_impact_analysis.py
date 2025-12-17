@@ -47,12 +47,13 @@ def evaluate_impact(
     modeling_engine.load_config(config_path)
     
     # Extract intervention date from configuration
-    model_config = config.get("model", {})
-    intervention_date = model_config.get("parameters", {}).get("intervention_date")
-    dependent_variable = model_config.get("parameters", {}).get("dependent_variable", "revenue")
+    measurement_config = config.get("MEASUREMENT", {})
+    params = measurement_config.get("PARAMS", {})
+    intervention_date = params.get("INTERVENTION_DATE")
+    dependent_variable = params.get("DEPENDENT_VARIABLE", "revenue")
     
     if not intervention_date:
-        raise ValueError("intervention_date must be specified in model configuration parameters")
+        raise ValueError("INTERVENTION_DATE must be specified in MEASUREMENT.PARAMS configuration")
     
     # Create output directory if it doesn't exist
     output_dir = Path(output_path)

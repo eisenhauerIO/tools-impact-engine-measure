@@ -48,44 +48,44 @@ class ConfigurationParser:
             raise ConfigurationError("Configuration must be a dictionary/object")
         
         # Check required sections
-        if "data_source" not in config:
-            raise ConfigurationError("Missing required configuration section: data_source")
+        if "DATA" not in config:
+            raise ConfigurationError("Missing required configuration section: DATA")
         
-        if "model" not in config:
-            raise ConfigurationError("Missing required configuration section: model")
+        if "MEASUREMENT" not in config:
+            raise ConfigurationError("Missing required configuration section: MEASUREMENT")
         
-        # Validate data source
-        data_source = config["data_source"]
-        if "type" not in data_source:
-            raise ConfigurationError("Missing required field 'type' in data_source section")
+        # Validate data section
+        data = config["DATA"]
+        if "TYPE" not in data:
+            raise ConfigurationError("Missing required field 'TYPE' in DATA section")
         
-        if "connection" not in data_source:
-            raise ConfigurationError("Missing required field 'connection' in data_source section")
+        # Validate measurement section
+        measurement = config["MEASUREMENT"]
+        if "MODEL" not in measurement:
+            raise ConfigurationError("Missing required field 'MODEL' in MEASUREMENT section")
         
-        # Validate model section
-        model = config["model"]
-        if "time_range" not in model:
-            raise ConfigurationError("Missing required field 'time_range' in model section")
+        if "PARAMS" not in measurement:
+            raise ConfigurationError("Missing required field 'PARAMS' in MEASUREMENT section")
         
-        # Validate time range
-        time_range = model["time_range"]
-        if "start_date" not in time_range:
-            raise ConfigurationError("Missing required field 'start_date' in model.time_range section")
+        # Validate measurement params
+        params = measurement["PARAMS"]
+        if "START_DATE" not in params:
+            raise ConfigurationError("Missing required field 'START_DATE' in MEASUREMENT.PARAMS section")
         
-        if "end_date" not in time_range:
-            raise ConfigurationError("Missing required field 'end_date' in model.time_range section")
+        if "END_DATE" not in params:
+            raise ConfigurationError("Missing required field 'END_DATE' in MEASUREMENT.PARAMS section")
         
         # Validate date format
         try:
-            start_date = datetime.strptime(time_range["start_date"], "%Y-%m-%d")
-            end_date = datetime.strptime(time_range["end_date"], "%Y-%m-%d")
+            start_date = datetime.strptime(params["START_DATE"], "%Y-%m-%d")
+            end_date = datetime.strptime(params["END_DATE"], "%Y-%m-%d")
         except ValueError as e:
             raise ConfigurationError(f"Invalid date format. Expected YYYY-MM-DD: {e}")
         
         # Validate logical consistency
         if start_date > end_date:
             raise ConfigurationError(
-                f"start_date ({time_range['start_date']}) must be before or equal to end_date ({time_range['end_date']})"
+                f"START_DATE ({params['START_DATE']}) must be before or equal to END_DATE ({params['END_DATE']})"
             )
 
 
