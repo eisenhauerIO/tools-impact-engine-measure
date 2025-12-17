@@ -420,7 +420,7 @@ class DataSourceManager:
         
         # Required columns based on standardized schema
         required_columns = [
-            'product_id', 'name', 'category', 'price', 'date',
+            'asin', 'name', 'category', 'price', 'date',
             'sales_volume', 'revenue', 'inventory_level', 'customer_engagement',
             'data_source', 'retrieval_timestamp'
         ]
@@ -431,7 +431,7 @@ class DataSourceManager:
             issues.append(f"Missing required columns: {missing_columns}")
         
         # Check for null values in critical fields
-        critical_fields = ['product_id', 'date', 'data_source']
+        critical_fields = ['asin', 'date', 'data_source']
         for field in critical_fields:
             if field in metrics.columns and metrics[field].isnull().any():
                 null_count = metrics[field].isnull().sum()

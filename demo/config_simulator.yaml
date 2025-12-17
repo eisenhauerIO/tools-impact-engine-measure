@@ -1,0 +1,14 @@
+STORAGE:
+  PATH: demo/simulate/output/sim_demo
+
+RULE:
+  CHARACTERISTICS:
+    FUNCTION: default
+    PARAMS:
+      num_products: 50
+  METRICS:
+    FUNCTION: default
+    PARAMS:
+      date_start: "2024-11-01"
+      date_end: "2024-11-30"
+      sale_prob: 0.7

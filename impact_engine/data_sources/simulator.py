@@ -184,19 +184,19 @@ class SimulatorDataSource(DataSourceInterface):
             pd.DataFrame: Products matching the requested IDs
         """
         # Filter existing products
-        existing_products = all_products[all_products['product_id'].isin(requested_products)]
+        existing_products = all_products[all_products['asin'].isin(requested_products)]
         
         # Create missing products with default values
-        missing_product_ids = set(requested_products) - set(existing_products['product_id'])
+        missing_asins = set(requested_products) - set(existing_products['asin'])
         
-        if missing_product_ids:
-            self.logger.warning(f"Creating default entries for missing products: {list(missing_product_ids)}")
+        if missing_asins:
+            self.logger.warning(f"Creating default entries for missing products: {list(missing_asins)}")
             
             missing_products = []
-            for product_id in missing_product_ids:
+            for asin in missing_asins:
                 missing_products.append({
-                    'product_id': product_id,
-                    'name': f'Product {product_id}',
+                    'asin': asin,
+                    'name': f'Product {asin}',
                     'category': 'Unknown',
                     'price': 100.0  # Default price
                 })
@@ -212,7 +212,7 @@ class SimulatorDataSource(DataSourceInterface):
         """
         Transform simulator output to standardized business metrics schema.
         
-        The simulator returns: product_id, name, category, price, date, quantity, revenue
+        The simulator returns: asin, name, category, price, date, quantity, revenue
         We need to transform this to the standard schema with additional fields and
         apply time range filtering based on configuration.
         
@@ -227,7 +227,7 @@ class SimulatorDataSource(DataSourceInterface):
         if raw_metrics.empty:
             # Return empty DataFrame with correct schema
             return pd.DataFrame(columns=[
-                'product_id', 'name', 'category', 'price', 'date',
+                'asin', 'name', 'category', 'price', 'date',
                 'sales_volume', 'revenue', 'inventory_level', 'customer_engagement',
                 'data_source', 'retrieval_timestamp'
             ])
@@ -253,7 +253,7 @@ class SimulatorDataSource(DataSourceInterface):
         # If no data remains after filtering, return empty DataFrame with correct schema
         if standardized.empty:
             return pd.DataFrame(columns=[
-                'product_id', 'name', 'category', 'price', 'date',
+                'asin', 'name', 'category', 'price', 'date',
                 'sales_volume', 'revenue', 'inventory_level', 'customer_engagement',
                 'data_source', 'retrieval_timestamp'
             ])
@@ -296,7 +296,7 @@ class SimulatorDataSource(DataSourceInterface):
         
         # Reorder columns to match standard schema
         column_order = [
-            'product_id', 'name', 'category', 'price', 'date',
+            'asin', 'name', 'category', 'price', 'date',
             'sales_volume', 'revenue', 'inventory_level', 'customer_engagement',
             'data_source', 'retrieval_timestamp'
         ]

@@ -35,11 +35,10 @@ def evaluate_impact(
     manager = DataSourceManager()
     config = manager.load_config(config_path)
     
-    print(config)
 
     # Retrieve business metrics using data abstraction layer
     business_metrics = manager.retrieve_metrics(products)
-    
+
     # Initialize modeling engine and register models
     modeling_engine = ModelingEngine()
     modeling_engine.register_model("interrupted_time_series", InterruptedTimeSeriesModel)

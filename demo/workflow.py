@@ -7,14 +7,11 @@ from impact_engine import evaluate_impact
 
 
 if __name__ == "__main__":
-	# Get product characteristics to determine which products to analyze
-	config_path = "config_simulator.json"
+	
+	config_path = "config_simulator.yaml"
 	products_df = simulate_characteristics(config_path)
 	
-	# Extract product IDs for the new data abstraction layer approach
-	product_ids = products_df['product_id'].tolist()
-	print(f"Analyzing {len(product_ids)} products: {product_ids[:5]}...")
+
+	config_path = "config_impact_engine.yaml"
+	result_path = evaluate_impact(config_path, products_df)
 	
-	# Use the data abstraction layer for impact analysis
-	result_path = evaluate_impact("config_request.json", product_ids)
-	print(f"Analysis result saved to: {result_path}")

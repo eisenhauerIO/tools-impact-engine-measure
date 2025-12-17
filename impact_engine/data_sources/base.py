@@ -60,7 +60,7 @@ class DataSourceInterface(ABC):
         
         Returns:
             pd.DataFrame: Standardized business metrics with the following schema:
-                - product_id (str): Unique product identifier
+                - asin (str): Unique product identifier
                 - name (str): Product name
                 - category (str): Product category
                 - price (float): Product price
