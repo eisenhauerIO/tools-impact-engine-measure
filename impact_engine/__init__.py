@@ -1,4 +1,4 @@
-from .run_impact_analysis import evaluate_impact
+from .engine import evaluate_impact
 from .metrics import MetricsInterface, MetricsManager, CatalogSimulatorAdapter
 from .models import Model, ModelsManager, InterruptedTimeSeriesAdapter
 from .config import ConfigurationParser, ConfigurationError, parse_config_file

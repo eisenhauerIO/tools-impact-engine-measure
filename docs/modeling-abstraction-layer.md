@@ -1,11 +1,11 @@
-# Modeling Abstraction Layer
+# Models Layer Architecture
 
 ## Design Philosophy
 
-The modeling abstraction layer follows a **unified interface architecture** with three core principles:
+The models layer follows a **unified interface architecture** with three core principles:
 
 ### 1. **Consistent Model Interface**
-All models implement the same `ModelInterface`, ensuring uniform behavior regardless of the underlying statistical approach. Whether using interrupted time series, causal inference, or regression discontinuity, the interface remains identical.
+All models implement the same `Model` interface, ensuring uniform behavior regardless of the underlying statistical approach. Whether using interrupted time series, causal inference, or regression discontinuity, the interface remains identical.
 
 ### 2. **Runtime Model Registration**
 New models can be registered at runtime without modifying core code. This enables:
@@ -20,9 +20,9 @@ Models are selected via configuration, not code changes. The same analysis pipel
 
 ```
 ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│  evaluate_impact │───▶│ ModelingEngine   │───▶│ ModelInterface  │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
-                                │                         ▲
+│  engine.py      │───▶│ ModelsManager    │───▶│ Model           │
+│ (evaluate_impact)│    └──────────────────┘    └─────────────────┘
+└─────────────────┘             │                         ▲
                                 ▼                         │
                        ┌──────────────────┐              │
                        │ Configuration    │              │
@@ -34,38 +34,66 @@ Models are selected via configuration, not code changes. The same analysis pipel
             ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
             │ Interrupted  │  │ Causal       │  │ Regression   │  │ Custom       │
             │ Time Series  │  │ Impact       │  │ Discontinuity│  │ Model        │
+            │ Adapter      │  │ Adapter      │  │ Adapter      │  │ Adapter      │
             └──────────────┘  └──────────────┘  └──────────────┘  └──────────────┘
 ```
 
 ## Package Structure
 
 ```
-impact_engine/modeling/
-├── __init__.py                    # Public API exports
-├── base.py                       # ModelInterface + common utilities
-├── engine.py                     # ModelingEngine coordination logic
-└── interrupted_time_series.py   # Built-in ITS implementation
+impact_engine/
+├── engine.py                    # Main orchestration engine
+├── models/
+│   ├── __init__.py             # Public API exports
+│   ├── base.py                 # Model interface + common utilities
+│   ├── manager.py              # ModelsManager coordination logic
+│   └── adapter_interrupted_time_series.py  # Built-in ITS implementation
+└── metrics/
+    ├── __init__.py             # Public API exports
+    ├── base.py                 # MetricsInterface + common utilities
+    ├── manager.py              # MetricsManager coordination logic
+    └── adapter_catalog_simulator.py  # Built-in simulator implementation
 ```
 
-**Design Rationale**: Each file has a single responsibility, making the codebase easier to navigate, test, and extend. The engine acts as a coordinator while models focus on their specific algorithms.
+**Design Rationale**: Each file has a single responsibility, making the codebase easier to navigate, test, and extend. The manager acts as a coordinator while model adapters focus on their specific algorithms.
 
 ## Registration API
 
 ### Direct Registration
 ```python
-from impact_engine.modeling import ModelingEngine
+from impact_engine.models import ModelsManager
 
-engine = ModelingEngine()
-engine.register_model("causal_impact", CausalImpactModel)
+manager = ModelsManager(config)
+manager.register_model("causal_impact", CausalImpactModelAdapter)
 ```
 
 **Why Direct Registration**: Simplest approach that covers 90% of use cases. No complex setup, no packaging requirements, immediate availability.
 
 ## Standardized Model Interface
 
-All models implement the same interface:
+All models implement the same interface with connection and transformation methods:
 ```python
-class ModelInterface(ABC):
+class Model(ABC):
+    @abstractmethod
+    def connect(self, config: Dict[str, Any]) -> bool:
+        """Initialize model with configuration parameters."""
+        pass
+    
+    @abstractmethod
+    def validate_connection(self) -> bool:
+        """Validate that the model is properly initialized."""
+        pass
+    
+    @abstractmethod
+    def transform_outbound(self, data: pd.DataFrame, intervention_date: str, **kwargs) -> Dict[str, Any]:
+        """Transform impact engine format to model library format."""
+        pass
+    
+    @abstractmethod
+    def transform_inbound(self, model_results: Any) -> Dict[str, Any]:
+        """Transform model library results to impact engine format."""
+        pass
+    
     @abstractmethod
     def fit(self, data: pd.DataFrame, intervention_date: str, 
             output_path: str, **kwargs) -> str:
@@ -83,7 +111,7 @@ class ModelInterface(ABC):
         pass
 ```
 
-**Design Rationale**: Consistent interface enables analysis code to work with any model. Model-specific logic happens within each implementation.
+**Design Rationale**: Consistent interface with explicit transformation methods enables analysis code to work with any model while maintaining clean separation between impact engine format and model library formats.
 
 ## Standardized Output Format
 
@@ -120,11 +148,18 @@ All models produce the same JSON output structure:
 Models are configured declaratively:
 ```json
 {
-  "model": {
-    "type": "interrupted_time_series",
-    "parameters": {
-      "intervention_date": "2024-01-15",
-      "dependent_variable": "revenue",
+  "DATA": {
+    "TYPE": "simulator",
+    "MODE": "rule",
+    "SEED": 42,
+    "START_DATE": "2024-01-01",
+    "END_DATE": "2024-01-31"
+  },
+  "MEASUREMENT": {
+    "MODEL": "interrupted_time_series",
+    "PARAMS": {
+      "INTERVENTION_DATE": "2024-01-15",
+      "DEPENDENT_VARIABLE": "revenue",
       "order": [1, 0, 0],
       "seasonal_order": [0, 0, 0, 0]
     }
@@ -134,9 +169,10 @@ Models are configured declaratively:
 
 **Benefits**:
 - Same analysis pipeline works with different models
-- Model-specific parameters are isolated
+- Model-specific parameters are isolated in PARAMS
 - No code changes required to switch models
 - Easy A/B testing of different modeling approaches
+- Clear separation between data and measurement configuration
 
 ## Built-in Models
 
@@ -149,16 +185,18 @@ Models are configured declaratively:
 ### Extension Points
 
 #### For Model Authors
-1. Implement `ModelInterface`
-2. Handle model-specific fitting logic
-3. Validate input data requirements
-4. Produce standardized JSON output
-5. Register with `ModelingEngine`
+1. Implement `Model` interface
+2. Implement `connect()` and `validate_connection()` methods
+3. Implement `transform_outbound()` and `transform_inbound()` methods
+4. Handle model-specific fitting logic
+5. Validate input data requirements
+6. Produce standardized JSON output
+7. Register with `ModelsManager`
 
 #### For Application Developers
 1. Create configuration file with model parameters
 2. Register custom models (if needed)
-3. Call `evaluate_impact()` or use `ModelingEngine` directly
+3. Call `evaluate_impact()` from `engine.py` or use `ModelsManager` directly
 
 ## Error Handling Strategy
 
@@ -167,36 +205,70 @@ Models are configured declaratively:
 - **Configuration Errors**: Validate early, provide parameter guidance
 - **Output Generation**: Ensure consistent format even with partial results
 
-## Performance Monitoring
+## Usage Example
 
-The `ModelingEngine` tracks operation statistics:
+### Basic Usage
 ```python
-engine.get_operation_stats()
-# Returns:
-{
-    'config_loads': 5,
-    'model_fits': 12,
-    'model_instantiations': 12,
-    'total_fit_time': 45.2,
-    'avg_fit_time': 3.77,
-    'failed_operations': 1
-}
+from impact_engine import evaluate_impact
+import pandas as pd
+
+# Define products to analyze
+products = pd.DataFrame({
+    'product_id': ['prod1', 'prod2'],
+    'name': ['Product 1', 'Product 2']
+})
+
+# Run impact analysis
+result_path = evaluate_impact(
+    config_path='config.json',
+    products=products,
+    output_path='results/'
+)
+
+print(f"Results saved to: {result_path}")
 ```
 
-**Benefits**: Performance monitoring helps identify bottlenecks and optimize model selection for production workloads.
-
-## Debug and Logging
-
-Enable detailed execution traces:
+### Advanced Usage with Direct Manager Access
 ```python
-engine = ModelingEngine(enable_debug_logging=True)
-# Or enable later:
-engine.enable_debug_logging()
+from impact_engine.models import ModelsManager
+from impact_engine.metrics import MetricsManager
+
+# Initialize managers
+metrics_manager = MetricsManager.from_config_file('config.json')
+models_manager = ModelsManager.from_config_file('config.json')
+
+# Retrieve metrics
+business_metrics = metrics_manager.retrieve_metrics(products)
+
+# Fit model
+result_path = models_manager.fit_model(
+    data=business_metrics,
+    output_path='results/'
+)
 ```
 
-**Use Cases**:
-- Troubleshooting model fitting issues
-- Performance optimization
-- Understanding data flow through the pipeline
+### Custom Model Registration
+```python
+from impact_engine.models import ModelsManager, Model
+
+class CustomModel(Model):
+    def connect(self, config):
+        # Initialize model
+        return True
+    
+    def transform_outbound(self, data, intervention_date, **kwargs):
+        # Transform to model format
+        return transformed_data
+    
+    def transform_inbound(self, model_results):
+        # Transform to standard format
+        return standardized_results
+    
+    # ... implement other required methods
+
+# Register and use
+manager = ModelsManager(config)
+manager.register_model("custom", CustomModel)
+```
 
 This approach ensures robust operation while providing clear feedback for development and production monitoring.

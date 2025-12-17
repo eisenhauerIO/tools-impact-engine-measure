@@ -1,5 +1,5 @@
 """
-Impact analysis function for the impact_engine package.
+Impact analysis engine for the impact_engine package.
 """
 import pandas as pd
 from typing import Optional
