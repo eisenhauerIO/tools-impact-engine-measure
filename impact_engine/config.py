@@ -51,8 +51,8 @@ class ConfigurationParser:
         if "data_source" not in config:
             raise ConfigurationError("Missing required configuration section: data_source")
         
-        if "time_range" not in config:
-            raise ConfigurationError("Missing required configuration section: time_range")
+        if "model" not in config:
+            raise ConfigurationError("Missing required configuration section: model")
         
         # Validate data source
         data_source = config["data_source"]
@@ -62,13 +62,18 @@ class ConfigurationParser:
         if "connection" not in data_source:
             raise ConfigurationError("Missing required field 'connection' in data_source section")
         
+        # Validate model section
+        model = config["model"]
+        if "time_range" not in model:
+            raise ConfigurationError("Missing required field 'time_range' in model section")
+        
         # Validate time range
-        time_range = config["time_range"]
+        time_range = model["time_range"]
         if "start_date" not in time_range:
-            raise ConfigurationError("Missing required field 'start_date' in time_range section")
+            raise ConfigurationError("Missing required field 'start_date' in model.time_range section")
         
         if "end_date" not in time_range:
-            raise ConfigurationError("Missing required field 'end_date' in time_range section")
+            raise ConfigurationError("Missing required field 'end_date' in model.time_range section")
         
         # Validate date format
         try:

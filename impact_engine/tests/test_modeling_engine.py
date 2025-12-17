@@ -85,14 +85,14 @@ class TestModelingEngineConfiguration:
                     "type": "simulator",
                     "connection": {"mode": "rule"}
                 },
-                "time_range": {
-                    "start_date": "2024-01-01",
-                    "end_date": "2024-01-31"
-                },
                 "model": {
                     "type": "mock",
                     "parameters": {
                         "dependent_variable": "revenue"
+                    },
+                    "time_range": {
+                        "start_date": "2024-01-01",
+                        "end_date": "2024-01-31"
                     }
                 }
             }
@@ -123,11 +123,13 @@ class TestModelingEngineConfiguration:
                     "type": "simulator",
                     "connection": {"mode": "rule"}
                 },
-                "time_range": {
-                    "start_date": "2024-01-01",
-                    "end_date": "2024-01-31"
-                },
-                "model": {"type": "mock"}
+                "model": {
+                    "type": "mock",
+                    "time_range": {
+                        "start_date": "2024-01-01",
+                        "end_date": "2024-01-31"
+                    }
+                }
             }
             json.dump(config, f)
             config_path = f.name
@@ -163,11 +165,13 @@ class TestModelingEngineGetModel:
                     "type": "simulator",
                     "connection": {"mode": "rule"}
                 },
-                "time_range": {
-                    "start_date": "2024-01-01",
-                    "end_date": "2024-01-31"
-                },
-                "model": {"type": "mock"}
+                "model": {
+                    "type": "mock",
+                    "time_range": {
+                        "start_date": "2024-01-01",
+                        "end_date": "2024-01-31"
+                    }
+                }
             }
             json.dump(config, f)
             config_path = f.name
@@ -263,11 +267,13 @@ class TestModelingEngineFitModel:
                     "type": "simulator",
                     "connection": {"mode": "rule"}
                 },
-                "time_range": {
-                    "start_date": "2024-01-01",
-                    "end_date": "2024-01-31"
-                },
-                "model": {"type": "mock"}
+                "model": {
+                    "type": "mock",
+                    "time_range": {
+                        "start_date": "2024-01-01",
+                        "end_date": "2024-01-31"
+                    }
+                }
             }
             json.dump(config, f)
             config_path = f.name

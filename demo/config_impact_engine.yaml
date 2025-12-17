@@ -6,15 +6,15 @@
       "seed": 42
     }
   },
-  "time_range": {
-    "start_date": "2024-11-01",
-    "end_date": "2024-11-30"
-  },
   "model": {
     "type": "interrupted_time_series",
     "parameters": {
       "dependent_variable": "revenue",
       "intervention_date": "2024-11-15"
+    },
+    "time_range": {
+      "start_date": "2024-11-01",
+      "end_date": "2024-11-30"
     }
   }
 }

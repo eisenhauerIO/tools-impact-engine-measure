@@ -21,15 +21,15 @@ class TestEvaluateImpactIntegration:
                     "type": "simulator",
                     "connection": {"mode": "rule"}
                 },
-                "time_range": {
-                    "start_date": "2024-01-01",
-                    "end_date": "2024-01-31"
-                },
                 "model": {
                     "type": "interrupted_time_series",
                     "parameters": {
                         "intervention_date": "2024-01-15",
                         "dependent_variable": "revenue"
+                    },
+                    "time_range": {
+                        "start_date": "2024-01-01",
+                        "end_date": "2024-01-31"
                     }
                 }
             }
@@ -78,14 +78,14 @@ class TestEvaluateImpactIntegration:
                     "type": "simulator",
                     "connection": {"mode": "rule"}
                 },
-                "time_range": {
-                    "start_date": "2024-01-01",
-                    "end_date": "2024-01-31"
-                },
                 "model": {
                     "type": "interrupted_time_series",
                     "parameters": {
                         "dependent_variable": "revenue"
+                    },
+                    "time_range": {
+                        "start_date": "2024-01-01",
+                        "end_date": "2024-01-31"
                     }
                 }
             }
@@ -112,15 +112,15 @@ class TestEvaluateImpactIntegration:
                     "type": "simulator",
                     "connection": {"mode": "rule"}
                 },
-                "time_range": {
-                    "start_date": "2024-01-01",
-                    "end_date": "2024-01-31"
-                },
                 "model": {
                     "type": "interrupted_time_series",
                     "parameters": {
                         "intervention_date": "2024-01-15",
                         "dependent_variable": "revenue"
+                    },
+                    "time_range": {
+                        "start_date": "2024-01-01",
+                        "end_date": "2024-01-31"
                     }
                 }
             }

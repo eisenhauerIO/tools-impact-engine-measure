@@ -67,7 +67,8 @@ class DataSourceManager:
         if time_range is None:
             if self.current_config is None:
                 raise ValueError("No configuration loaded. Provide time_range or call load_config() first.")
-            time_config = self.current_config["time_range"]
+            # Get time_range from model section (new format)
+            time_config = self.current_config["model"]["time_range"]
             time_range = TimeRange.from_strings(time_config["start_date"], time_config["end_date"])
         
         if data_source is None:
