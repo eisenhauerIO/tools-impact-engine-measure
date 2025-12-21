@@ -28,7 +28,8 @@ dev = [
   "pytest",
   "pytest-cov",
   "black",
-  "ruff"
+  "ruff",
+  "pre-commit"
 ]
 
 [tool.hatch.metadata]
@@ -40,7 +41,8 @@ packages = ["science/impact_engine"]
 [tool.hatch.envs.default]
 dependencies = [
   "pytest",
-  "black"
+  "black",
+  "pre-commit"
 ]
 
 [tool.hatch.envs.default.scripts]
