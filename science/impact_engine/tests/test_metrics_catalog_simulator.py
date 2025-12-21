@@ -5,6 +5,7 @@ import pandas as pd
 import tempfile
 from unittest.mock import patch, MagicMock
 
+from artifact_store import create_job
 from impact_engine.metrics import CatalogSimulatorAdapter
 
 
@@ -14,16 +15,18 @@ class TestCatalogSimulatorAdapter:
     def test_connect_success(self):
         """Test successful adapter connection."""
         adapter = CatalogSimulatorAdapter()
-        
+
         config = {
             'mode': 'rule',
             'seed': 42
         }
-        
+
         result = adapter.connect(config)
         assert result is True
         assert adapter.is_connected is True
-        assert adapter.config == config
+        # Check that provided config values are stored (adapter may add additional fields)
+        assert adapter.config['mode'] == config['mode']
+        assert adapter.config['seed'] == config['seed']
     
     def test_connect_invalid_mode(self):
         """Test connection with invalid mode."""
@@ -200,44 +203,43 @@ class TestCatalogSimulatorAdapter:
     
     def test_retrieve_business_metrics_success(self):
         """Test successful business metrics retrieval."""
-        adapter = CatalogSimulatorAdapter()
-        adapter.connect({'mode': 'rule', 'seed': 42})
+        with tempfile.TemporaryDirectory() as tmpdir:
+            # Create a parent job for nested job creation
+            parent_job = create_job(tmpdir, prefix="test-parent")
 
-        # Mock RuleBackend class and instance
-        mock_backend = MagicMock()
-        mock_backend_cls = MagicMock(return_value=mock_backend)
+            adapter = CatalogSimulatorAdapter()
+            adapter.connect({'mode': 'rule', 'seed': 42, 'parent_job': parent_job})
 
-        # Mock simulate_metrics return value (RuleBackend output format)
-        mock_backend.simulate_metrics.return_value = pd.DataFrame({
-            'asin': ['prod1'],
-            'name': ['Product 1'],
-            'category': ['Electronics'],
-            'price': [100.0],
-            'date': ['2024-01-01'],
-            'ordered_units': [5],
-            'revenue': [500.0]
-        })
+            products = pd.DataFrame({
+                'product_id': ['prod1'],
+                'name': ['Product 1']
+            })
 
-        # Mock the core module with RuleBackend
-        mock_core = MagicMock()
-        mock_core.RuleBackend = mock_backend_cls
+            # Mock simulate_metrics to save sales.csv to the job
+            def mock_simulate_metrics(job_info, config_path):
+                # Simulate what the real function does: save sales to job
+                sales_df = pd.DataFrame({
+                    'asin': ['prod1'],
+                    'name': ['Product 1'],
+                    'category': ['Electronics'],
+                    'price': [100.0],
+                    'date': ['2024-01-01'],
+                    'ordered_units': [5],
+                    'revenue': [500.0]
+                })
+                job_info.save_df("sales", sales_df)
+                return job_info
 
-        products = pd.DataFrame({
-            'product_id': ['prod1'],
-            'name': ['Product 1']
-        })
+            mock_simulate_module = MagicMock()
+            mock_simulate_module.simulate_metrics = mock_simulate_metrics
 
-        with patch.dict('sys.modules', {'online_retail_simulator.core': mock_core}):
-            result = adapter.retrieve_business_metrics(products, '2024-01-01', '2024-01-31')
+            with patch.dict('sys.modules', {'online_retail_simulator.simulate': mock_simulate_module}):
+                result = adapter.retrieve_business_metrics(products, '2024-01-01', '2024-01-31')
 
-        assert isinstance(result, pd.DataFrame)
-        assert len(result) > 0
-        assert 'product_id' in result.columns
-        assert 'sales_volume' in result.columns
-
-        # Verify mock was called
-        mock_backend_cls.assert_called_once()
-        mock_backend.simulate_metrics.assert_called_once()
+            assert isinstance(result, pd.DataFrame)
+            assert len(result) > 0
+            assert 'product_id' in result.columns
+            assert 'sales_volume' in result.columns
     
     def test_retrieve_business_metrics_not_connected(self):
         """Test retrieving metrics without connection."""
@@ -272,7 +274,7 @@ class TestCatalogSimulatorAdapter:
         products = pd.DataFrame({'product_id': ['prod1']})
 
         # Remove the module from sys.modules to simulate it not being available
-        with patch.dict('sys.modules', {'online_retail_simulator.core': None}):
+        with patch.dict('sys.modules', {'online_retail_simulator.simulate': None}):
             with pytest.raises(ConnectionError, match="online_retail_simulator package not available"):
                 adapter.retrieve_business_metrics(products, '2024-01-01', '2024-01-31')
     
@@ -281,18 +283,16 @@ class TestCatalogSimulatorAdapter:
         adapter = CatalogSimulatorAdapter()
         adapter.connect({'mode': 'rule'})
 
-        # Mock RuleBackend instance that raises an exception
-        mock_backend = MagicMock()
-        mock_backend_cls = MagicMock(return_value=mock_backend)
-        mock_backend.simulate_metrics.side_effect = Exception("Simulation failed")
-
-        # Mock the core module with RuleBackend
-        mock_core = MagicMock()
-        mock_core.RuleBackend = mock_backend_cls
-
         products = pd.DataFrame({'product_id': ['prod1']})
 
-        with patch.dict('sys.modules', {'online_retail_simulator.core': mock_core}):
+        # Mock simulate_metrics to raise an exception
+        def mock_simulate_metrics_error(job_info, config_path):
+            raise Exception("Simulation failed")
+
+        mock_simulate_module = MagicMock()
+        mock_simulate_module.simulate_metrics = mock_simulate_metrics_error
+
+        with patch.dict('sys.modules', {'online_retail_simulator.simulate': mock_simulate_module}):
             with pytest.raises(RuntimeError, match="Failed to retrieve metrics"):
                 adapter.retrieve_business_metrics(products, '2024-01-01', '2024-01-31')
     

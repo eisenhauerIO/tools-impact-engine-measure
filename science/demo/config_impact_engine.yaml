@@ -1,7 +1,7 @@
 DATA:
   END_DATE: '2024-11-30'
   MODE: rule
-  PATH: demo/simulate/output/sim_demo/job-20251221-105912-fd16fefd/products.csv
+  PATH: output/job-20251221-143202-555fb8f9/products.csv
   SEED: 42
   START_DATE: '2024-11-01'
   TYPE: simulator
@@ -13,4 +13,4 @@ MEASUREMENT:
     INTERVENTION_DATE: '2024-11-15'
     START_DATE: '2024-11-01'
 OUTPUT:
-  PATH: demo/impact/results
+  PATH: output

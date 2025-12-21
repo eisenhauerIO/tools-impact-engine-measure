@@ -5,6 +5,7 @@ Metrics Manager for coordinating metrics operations.
 import pandas as pd
 from typing import Dict, List, Any, Optional
 
+from artifact_store import JobInfo
 from .base import MetricsInterface
 from .adapter_catalog_simulator import CatalogSimulatorAdapter
 from ..config import ConfigurationParser
@@ -12,22 +13,23 @@ from ..config import ConfigurationParser
 
 class MetricsManager:
     """Central coordinator for metrics management."""
-    
-    def __init__(self, data_config: Dict[str, Any]):
+
+    def __init__(self, data_config: Dict[str, Any], parent_job: Optional[JobInfo] = None):
         """Initialize the MetricsManager with DATA configuration block."""
         self.metrics_registry: Dict[str, type] = {}
         self.data_config = data_config
+        self.parent_job = parent_job
         self._register_builtin_metrics()
-        
+
         # Validate the data config
         self._validate_data_config(data_config)
-    
+
     @classmethod
-    def from_config_file(cls, config_path: str) -> 'MetricsManager':
+    def from_config_file(cls, config_path: str, parent_job: Optional[JobInfo] = None) -> 'MetricsManager':
         """Create MetricsManager from config file, extracting DATA block."""
         config_parser = ConfigurationParser()
         full_config = config_parser.parse_config(config_path)
-        return cls(full_config["DATA"])
+        return cls(full_config["DATA"], parent_job=parent_job)
     
     def _register_builtin_metrics(self) -> None:
         """Register built-in metrics implementations."""
@@ -62,20 +64,26 @@ class MetricsManager:
         """Get metrics implementation based on configuration or specified type."""
         if source_type is None:
             source_type = self.data_config["TYPE"]
-        
+
         if source_type not in self.metrics_registry:
             raise ValueError(f"Unknown metrics type '{source_type}'. Available: {list(self.metrics_registry.keys())}")
-        
+
         metrics_source = self.metrics_registry[source_type]()
-        
+
         # Build connection config from DATA configuration
         connection_config = {
             "mode": self.data_config.get("MODE", "rule"),
-            "seed": self.data_config.get("SEED", 42)
+            "seed": self.data_config.get("SEED", 42),
+            "parent_job": self.parent_job,
         }
+
+        # Pass enrichment config if present
+        if "ENRICHMENT" in self.data_config:
+            connection_config["enrichment"] = self.data_config["ENRICHMENT"]
+
         if not metrics_source.connect(connection_config):
             raise ConnectionError(f"Failed to connect to {source_type} metrics source")
-        
+
         return metrics_source
     
     def retrieve_metrics(self, products: pd.DataFrame) -> pd.DataFrame:

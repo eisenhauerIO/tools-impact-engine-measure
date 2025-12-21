@@ -56,13 +56,13 @@ class TestEvaluateImpactIntegration:
                 storage_url=tmpdir
             )
 
-            # Verify result path format
+            # Verify result path format (now includes job ID)
             assert result_path.endswith('.json')
+            assert 'job-impact-engine-' in result_path  # Job ID prefix
 
-            # Load result data using storage backend to verify it exists
-            from artifact_store import ArtifactStore
-            storage = ArtifactStore(tmpdir)
-            result_data = storage.read_json("results/impact_results.json")
+            # Load result data directly from the returned path
+            with open(result_path, 'r') as f:
+                result_data = json.load(f)
 
             # Verify model output structure
             assert result_data["model_type"] == "interrupted_time_series"
@@ -211,13 +211,13 @@ class TestEvaluateImpactIntegration:
                 storage_url=tmpdir
             )
 
-            # Verify result path format
+            # Verify result path format (now includes job ID)
             assert result_path.endswith('.json')
+            assert 'job-impact-engine-' in result_path  # Job ID prefix
 
-            # Load result data using storage backend to verify it exists
-            from artifact_store import ArtifactStore
-            storage = ArtifactStore(tmpdir)
-            result_data = storage.read_json("results/impact_results.json")
+            # Load result data directly from the returned path
+            with open(result_path, 'r') as f:
+                result_data = json.load(f)
 
             # Verify model output structure
             assert result_data["model_type"] == "interrupted_time_series"

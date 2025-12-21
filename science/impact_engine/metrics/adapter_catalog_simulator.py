@@ -3,39 +3,54 @@ Catalog Simulator Adapter - adapts online_retail_simulator package to MetricsInt
 """
 
 import pandas as pd
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 from datetime import datetime
 
+from artifact_store import JobInfo, create_job
 from .base import MetricsInterface
 
 
 class CatalogSimulatorAdapter(MetricsInterface):
     """Adapter for catalog simulator that implements MetricsInterface."""
-    
+
     def __init__(self):
         """Initialize the CatalogSimulatorAdapter."""
         self.is_connected = False
         self.config = None
+        self.parent_job: Optional[JobInfo] = None
+        self.simulation_job: Optional[JobInfo] = None
         self.available_metrics = ['sales_volume', 'revenue', 'inventory_level', 'customer_engagement']
-    
+
     def connect(self, config: Dict[str, Any]) -> bool:
         """Establish connection to the catalog simulator."""
         # Validate mode
         mode = config.get('mode', 'rule')
         if mode not in ['rule', 'ml']:
             raise ValueError(f"Invalid simulator mode '{mode}'. Must be 'rule' or 'ml'")
-        
+
         # Validate seed
         seed = config.get('seed', 42)
         if not isinstance(seed, int) or seed < 0:
             raise ValueError("Simulator seed must be a non-negative integer")
-        
-        self.config = {'mode': mode, 'seed': seed}
+
+        # Store parent job for nested job creation
+        self.parent_job = config.get('parent_job')
+
+        self.config = {
+            'mode': mode,
+            'seed': seed,
+        }
+
+        # Store enrichment config if provided
+        enrichment = config.get('enrichment')
+        if enrichment:
+            self.config['enrichment'] = enrichment
+
         self.is_connected = True
         return True
     
     def retrieve_business_metrics(self, products: pd.DataFrame, start_date: str, end_date: str) -> pd.DataFrame:
-        """Retrieve business metrics for specified products using catalog simulator."""
+        """Retrieve business metrics using catalog simulator's job-aware API."""
         if not self.is_connected:
             raise ConnectionError("Not connected to simulator. Call connect() first.")
 
@@ -43,24 +58,87 @@ class CatalogSimulatorAdapter(MetricsInterface):
             raise ValueError("Products DataFrame cannot be empty")
 
         try:
-            from online_retail_simulator.core import RuleBackend
+            from online_retail_simulator.simulate import simulate_metrics
+            import tempfile
+            import yaml
+            import os
 
-            # Transform input to simulator format
+            # 1. Create nested job for simulation artifacts
+            self._create_simulation_job()
+
+            # 2. Transform input and save products to job (simulate_metrics expects them there)
             transformed_input = self.transform_outbound(products, start_date, end_date)
+            self.simulation_job.save_df("products", transformed_input["product_characteristics"])
 
-            # Create RuleBackend with config
-            backend = RuleBackend(transformed_input["rule_config"])
+            # 3. Build full simulator config
+            simulator_config = {"RULE": transformed_input["rule_config"]}
 
-            # Generate metrics using the backend
-            raw_metrics = backend.simulate_metrics(transformed_input["product_characteristics"])
+            # 4. Write config to temp file for simulate_metrics
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+                yaml.dump(simulator_config, f)
+                config_path = f.name
 
-            # Transform response to impact engine format
-            return self.transform_inbound(raw_metrics)
+            try:
+                # 5. Call catalog_simulator's simulate_metrics (handles backend + storage)
+                simulate_metrics(self.simulation_job, config_path)
+            finally:
+                # Clean up temp file
+                os.unlink(config_path)
+
+            # 6. Load sales from job
+            sales_df = self.simulation_job.load_df("sales")
+
+            # 7. Apply enrichment if configured
+            if self.config.get('enrichment'):
+                sales_df = self._apply_enrichment(sales_df)
+
+            # 8. Transform to impact engine format
+            return self.transform_inbound(sales_df)
 
         except ImportError as e:
             raise ConnectionError(f"online_retail_simulator package not available: {e}")
         except Exception as e:
             raise RuntimeError(f"Failed to retrieve metrics: {e}")
+
+    def _create_simulation_job(self) -> None:
+        """Create a job for simulation artifacts. Uses nested job if parent provided."""
+        if self.parent_job is not None:
+            # Create nested job inside parent job directory
+            self.simulation_job = create_job(self.parent_job.full_path, prefix="job-catalog-simulator-simulation")
+        else:
+            # Create standalone job in default output directory
+            self.simulation_job = create_job("output", prefix="job-catalog-simulator-simulation")
+
+    def _apply_enrichment(self, sales_df: pd.DataFrame) -> pd.DataFrame:
+        """Apply enrichment using catalog simulator's config-based interface."""
+        from online_retail_simulator.enrich.enrichment import enrich
+
+        # Create job for enrichment artifacts
+        if self.parent_job is not None:
+            enrichment_job = create_job(self.parent_job.full_path, prefix="job-catalog-simulator-enrichment")
+        else:
+            enrichment_job = create_job("output", prefix="job-catalog-simulator-enrichment")
+
+        # Build catalog simulator IMPACT config format
+        impact_config = {
+            "IMPACT": {
+                "FUNCTION": self.config['enrichment']['function'],
+                "PARAMS": self.config['enrichment']['params']
+            }
+        }
+
+        # Write config to enrichment job
+        enrichment_store = enrichment_job.get_store()
+        config_path = enrichment_store.full_path("config.yaml")
+        enrichment_store.write_yaml("config.yaml", impact_config)
+
+        # Apply enrichment
+        enriched_df = enrich(config_path, sales_df)
+
+        # Save enriched output
+        enrichment_job.save_df("enriched", enriched_df)
+
+        return enriched_df
     
 
     

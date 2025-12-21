@@ -14,7 +14,7 @@ if __name__ == "__main__":
 	job_info = simulate_characteristics(config_path)
 
 	# Step 2: Get path to products CSV from job info
-	products_path = f"{job_info.storage_path}/{job_info.job_id}/products.csv"
+	products_path = f"{job_info.full_path}/products.csv"
 
 	# Step 3: Update impact engine config with products path
 	with open("config_impact_engine.yaml", "r") as f:
