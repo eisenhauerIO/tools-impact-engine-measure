@@ -44,7 +44,6 @@ dependencies = [
 
 [tool.hatch.envs.default.scripts]
 test = "pytest science/impact_engine/tests/ -v"
-test-all = "pytest science/impact_engine/tests/ -v"
 format = "black ."
 
 [tool.hatch.envs.docs]

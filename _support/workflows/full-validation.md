@@ -28,7 +28,7 @@ Ask the user how to proceed (commit, stash, discard changes, or add untracked fi
 
 Run:
 ```bash
-hatch run test-all
+hatch run pytest .
 ```
 If any test fails (non-zero exit code), STOP. Ask the user for input before continuing.
 
