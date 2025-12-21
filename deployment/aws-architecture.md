@@ -45,10 +45,13 @@ flowchart LR
 ## S3 Bucket Structure
 
 ```
-s3://impact-engine-{env}/
-├── input/
-│   ├── config/
-│   └── data/
-└── output/
-    └── results/
+s3://impact-engine/
+└── {job_id}/
+    ├── input/
+    │   ├── config.json
+    │   └── data/
+    └── output/
+        └── results/
 ```
+
+Job-based structure emphasizes the stateless, job-oriented nature of the system.
