@@ -38,24 +38,24 @@ class InterruptedTimeSeriesAdapter(Model):
     def connect(self, config: Dict[str, Any]) -> bool:
         """Initialize model with configuration parameters."""
         # Validate order parameter
-        order = config.get('order', (1, 0, 0))
+        order = config.get("order", (1, 0, 0))
         if not isinstance(order, tuple) or len(order) != 3:
             raise ValueError("Order must be a tuple of 3 integers (p, d, q)")
 
         # Validate seasonal_order parameter
-        seasonal_order = config.get('seasonal_order', (0, 0, 0, 0))
+        seasonal_order = config.get("seasonal_order", (0, 0, 0, 0))
         if not isinstance(seasonal_order, tuple) or len(seasonal_order) != 4:
             raise ValueError("Seasonal order must be a tuple of 4 integers (P, D, Q, s)")
 
         # Validate dependent_variable
-        dependent_variable = config.get('dependent_variable', 'revenue')
+        dependent_variable = config.get("dependent_variable", "revenue")
         if not isinstance(dependent_variable, str):
             raise ValueError("Dependent variable must be a string")
 
         self.config = {
-            'order': order,
-            'seasonal_order': seasonal_order,
-            'dependent_variable': dependent_variable
+            "order": order,
+            "seasonal_order": seasonal_order,
+            "dependent_variable": dependent_variable,
         }
         self.is_connected = True
         return True
@@ -68,6 +68,7 @@ class InterruptedTimeSeriesAdapter(Model):
         try:
             # Check if statsmodels is available
             from statsmodels.tsa.statespace.sarimax import SARIMAX  # noqa: F401
+
             return True
         except ImportError:
             return False
@@ -78,7 +79,7 @@ class InterruptedTimeSeriesAdapter(Model):
         intervention_date: str,
         output_path: str,
         dependent_variable: str = "revenue",
-        **kwargs
+        **kwargs,
     ) -> str:
         """
         Fit the interrupted time series model and save results.
@@ -122,12 +123,12 @@ class InterruptedTimeSeriesAdapter(Model):
 
             # Fit model with intervention as exogenous variable
             self.model = SARIMAX(
-                transformed_input['y'],
-                exog=transformed_input['exog'],
-                order=transformed_input['order'],
-                seasonal_order=transformed_input['seasonal_order'],
+                transformed_input["y"],
+                exog=transformed_input["exog"],
+                order=transformed_input["order"],
+                seasonal_order=transformed_input["seasonal_order"],
                 enforce_stationarity=False,
-                enforce_invertibility=False
+                enforce_invertibility=False,
             )
 
             self.results = self.model.fit(disp=False)
@@ -172,7 +173,7 @@ class InterruptedTimeSeriesAdapter(Model):
 
         # Check that date column can be converted to datetime
         try:
-            pd.to_datetime(data['date'])
+            pd.to_datetime(data["date"])
         except Exception as e:
             self.logger.warning(f"Cannot convert 'date' column to datetime: {e}")
             return False
@@ -191,7 +192,7 @@ class InterruptedTimeSeriesAdapter(Model):
         Returns:
             List[str]: Column names that must be present in input data.
         """
-        return ['date']
+        return ["date"]
 
     def _calculate_impact_estimates(self, df: pd.DataFrame, y: np.ndarray) -> dict:
         """
@@ -205,8 +206,8 @@ class InterruptedTimeSeriesAdapter(Model):
             dict: Dictionary containing impact estimates.
         """
         # Get pre and post period data
-        pre_mask = df['intervention'] == 0
-        post_mask = df['intervention'] == 1
+        pre_mask = df["intervention"] == 0
+        post_mask = df["intervention"] == 1
 
         pre_values = y[pre_mask]
         post_values = y[post_mask]
@@ -219,7 +220,7 @@ class InterruptedTimeSeriesAdapter(Model):
 
         # Get coefficient for intervention from model
         try:
-            intervention_coef = float(self.results.params.get('intervention', intervention_effect))
+            intervention_coef = float(self.results.params.get("intervention", intervention_effect))
         except (KeyError, AttributeError, TypeError):
             intervention_coef = intervention_effect
 
@@ -228,13 +229,17 @@ class InterruptedTimeSeriesAdapter(Model):
             "pre_intervention_mean": pre_mean,
             "post_intervention_mean": post_mean,
             "absolute_change": intervention_effect,
-            "percent_change": (intervention_effect / pre_mean * 100) if pre_mean != 0 else 0.0
+            "percent_change": (intervention_effect / pre_mean * 100) if pre_mean != 0 else 0.0,
         }
 
-    def transform_outbound(self, data: pd.DataFrame, intervention_date: str, **kwargs) -> Dict[str, Any]:
+    def transform_outbound(
+        self, data: pd.DataFrame, intervention_date: str, **kwargs
+    ) -> Dict[str, Any]:
         """Transform impact engine format to SARIMAX model format."""
         # Get dependent variable from config or kwargs
-        dependent_variable = kwargs.get('dependent_variable', self.config.get('dependent_variable', 'revenue'))
+        dependent_variable = kwargs.get(
+            "dependent_variable", self.config.get("dependent_variable", "revenue")
+        )
 
         # Check if dependent variable exists
         if dependent_variable not in data.columns:
@@ -245,20 +250,22 @@ class InterruptedTimeSeriesAdapter(Model):
 
         # Prepare data
         df = data.copy()
-        df['date'] = pd.to_datetime(df['date'])
-        df = df.sort_values('date').reset_index(drop=True)
+        df["date"] = pd.to_datetime(df["date"])
+        df = df.sort_values("date").reset_index(drop=True)
 
         # Create intervention dummy variable
         intervention_dt = pd.to_datetime(intervention_date)
-        df['intervention'] = (df['date'] >= intervention_dt).astype(int)
+        df["intervention"] = (df["date"] >= intervention_dt).astype(int)
 
         # Extract time series and exogenous variables
         y = df[dependent_variable].values
-        exog = df[['intervention']]
+        exog = df[["intervention"]]
 
         # Get model parameters from config or kwargs
-        order = kwargs.get('order', self.config.get('order', (1, 0, 0)))
-        seasonal_order = kwargs.get('seasonal_order', self.config.get('seasonal_order', (0, 0, 0, 0)))
+        order = kwargs.get("order", self.config.get("order", (1, 0, 0)))
+        seasonal_order = kwargs.get(
+            "seasonal_order", self.config.get("seasonal_order", (0, 0, 0, 0))
+        )
 
         # Store for later use in transform_inbound
         self.dependent_variable = dependent_variable
@@ -266,18 +273,18 @@ class InterruptedTimeSeriesAdapter(Model):
         self._transformed_data = df
 
         return {
-            'y': y,
-            'exog': exog,
-            'order': order,
-            'seasonal_order': seasonal_order,
-            'data': df,
-            'dependent_variable': dependent_variable,
-            'intervention_date': intervention_date
+            "y": y,
+            "exog": exog,
+            "order": order,
+            "seasonal_order": seasonal_order,
+            "data": df,
+            "dependent_variable": dependent_variable,
+            "intervention_date": intervention_date,
         }
 
     def transform_inbound(self, model_results: Any) -> Dict[str, Any]:
         """Transform SARIMAX results to impact engine format."""
-        if not hasattr(model_results, 'params'):
+        if not hasattr(model_results, "params"):
             raise ValueError("Expected SARIMAX results object with params attribute")
 
         # Calculate impact estimates using stored data
@@ -293,9 +300,9 @@ class InterruptedTimeSeriesAdapter(Model):
             "impact_estimates": impact_estimates,
             "model_summary": {
                 "n_observations": int(len(df)),
-                "pre_period_length": int((df['intervention'] == 0).sum()),
-                "post_period_length": int((df['intervention'] == 1).sum()),
+                "pre_period_length": int((df["intervention"] == 0).sum()),
+                "post_period_length": int((df["intervention"] == 1).sum()),
                 "aic": float(model_results.aic),
-                "bic": float(model_results.bic)
-            }
+                "bic": float(model_results.bic),
+            },
         }

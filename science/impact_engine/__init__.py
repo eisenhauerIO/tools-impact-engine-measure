@@ -11,7 +11,6 @@ __version__ = "0.1.0"
 __author__ = "Impact Engine Team"
 
 
-
 __all__ = [
     "evaluate_impact",
     "MetricsInterface",

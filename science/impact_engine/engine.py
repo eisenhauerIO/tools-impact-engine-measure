@@ -1,6 +1,7 @@
 """
 Impact analysis engine for the impact_engine package.
 """
+
 import pandas as pd
 from artifact_store import create_job
 
@@ -9,10 +10,7 @@ from .metrics import MetricsManager
 from .models import ModelsManager
 
 
-def evaluate_impact(
-    config_path: str,
-    storage_url: str = "./data"
-) -> str:
+def evaluate_impact(config_path: str, storage_url: str = "./data") -> str:
     """
     Evaluate impact using business metrics retrieved through the metrics layer
     and models layer for statistical analysis.
@@ -50,15 +48,13 @@ def evaluate_impact(
 
     # Aggregate metrics by date for time series analysis
     # Sum numeric columns, keep date
-    numeric_cols = business_metrics.select_dtypes(include=['number']).columns.tolist()
-    aggregated_metrics = business_metrics.groupby('date')[numeric_cols].sum().reset_index()
+    numeric_cols = business_metrics.select_dtypes(include=["number"]).columns.tolist()
+    aggregated_metrics = business_metrics.groupby("date")[numeric_cols].sum().reset_index()
 
     # Fit model using models manager with job store
     # fit_model returns the full path to the results file
     model_results_path = models_manager.fit_model(
-        data=aggregated_metrics,
-        output_path="results",
-        storage=job_store
+        data=aggregated_metrics, output_path="results", storage=job_store
     )
 
     return model_results_path

@@ -27,7 +27,9 @@ class MetricsManager:
         self._validate_data_config(data_config)
 
     @classmethod
-    def from_config_file(cls, config_path: str, parent_job: Optional[JobInfo] = None) -> 'MetricsManager':
+    def from_config_file(
+        cls, config_path: str, parent_job: Optional[JobInfo] = None
+    ) -> "MetricsManager":
         """Create MetricsManager from config file, extracting DATA block."""
         config_parser = ConfigurationParser()
         full_config = config_parser.parse_config(config_path)
@@ -40,7 +42,9 @@ class MetricsManager:
     def register_metrics(self, source_type: str, source_class: type) -> None:
         """Register a new metrics implementation."""
         if not issubclass(source_class, MetricsInterface):
-            raise ValueError(f"Metrics class {source_class.__name__} must implement MetricsInterface")
+            raise ValueError(
+                f"Metrics class {source_class.__name__} must implement MetricsInterface"
+            )
         self.metrics_registry[source_type] = source_class
 
     def _validate_data_config(self, data_config: Dict[str, Any]) -> None:
@@ -67,7 +71,9 @@ class MetricsManager:
             source_type = self.data_config["TYPE"]
 
         if source_type not in self.metrics_registry:
-            raise ValueError(f"Unknown metrics type '{source_type}'. Available: {list(self.metrics_registry.keys())}")
+            raise ValueError(
+                f"Unknown metrics type '{source_type}'. Available: {list(self.metrics_registry.keys())}"
+            )
 
         metrics_source = self.metrics_registry[source_type]()
 
@@ -100,9 +106,7 @@ class MetricsManager:
         metrics_source = self.get_metrics_source()
 
         return metrics_source.retrieve_business_metrics(
-            products=products,
-            start_date=start_date,
-            end_date=end_date
+            products=products, start_date=start_date, end_date=end_date
         )
 
     def get_available_metrics(self) -> List[str]:

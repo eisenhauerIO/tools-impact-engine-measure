@@ -30,18 +30,11 @@ class MockModel(Model):
 
     def transform_outbound(self, data, intervention_date, **kwargs):
         """Mock transform_outbound method."""
-        return {
-            'data': data,
-            'intervention_date': intervention_date,
-            'kwargs': kwargs
-        }
+        return {"data": data, "intervention_date": intervention_date, "kwargs": kwargs}
 
     def transform_inbound(self, model_results):
         """Mock transform_inbound method."""
-        return {
-            'model_type': 'mock',
-            'results': model_results
-        }
+        return {"model_type": "mock", "results": model_results}
 
     def fit(self, data: pd.DataFrame, intervention_date: str, output_path: str, **kwargs) -> str:
         """Mock fit method."""
@@ -54,7 +47,7 @@ class MockModel(Model):
         result_data = {
             "model_type": "mock",
             "intervention_date": intervention_date,
-            "rows_processed": len(data)
+            "rows_processed": len(data),
         }
 
         result_path = f"{output_path}/mock_results.json"
@@ -65,11 +58,11 @@ class MockModel(Model):
 
     def validate_data(self, data: pd.DataFrame) -> bool:
         """Mock validate_data method."""
-        return not data.empty and 'date' in data.columns
+        return not data.empty and "date" in data.columns
 
     def get_required_columns(self) -> list:
         """Mock get_required_columns method."""
-        return ['date', 'value']
+        return ["date", "value"]
 
 
 class TestModelsManagerRegistration:
@@ -113,7 +106,7 @@ class TestModelsManagerConfiguration:
         """Test successful configuration loading from file."""
         with tempfile.TemporaryDirectory() as tmpdir:
             products_path = str(Path(tmpdir) / "products.csv")
-            pd.DataFrame({'product_id': ['p1']}).to_csv(products_path, index=False)
+            pd.DataFrame({"product_id": ["p1"]}).to_csv(products_path, index=False)
 
             config = {
                 "DATA": {
@@ -122,19 +115,20 @@ class TestModelsManagerConfiguration:
                     "MODE": "rule",
                     "SEED": 42,
                     "START_DATE": "2024-01-01",
-                    "END_DATE": "2024-01-31"
+                    "END_DATE": "2024-01-31",
                 },
                 "MEASUREMENT": {
                     "MODEL": "mock",
                     "PARAMS": {
                         "DEPENDENT_VARIABLE": "revenue",
+                        "INTERVENTION_DATE": "2024-01-15",
                         "START_DATE": "2024-01-01",
-                        "END_DATE": "2024-01-31"
-                    }
-                }
+                        "END_DATE": "2024-01-31",
+                    },
+                },
             }
             config_path = str(Path(tmpdir) / "config.json")
-            with open(config_path, 'w') as f:
+            with open(config_path, "w") as f:
                 json.dump(config, f)
 
             engine = ModelsManager.from_config_file(config_path)
@@ -149,7 +143,7 @@ class TestModelsManagerConfiguration:
         """Test getting current configuration."""
         with tempfile.TemporaryDirectory() as tmpdir:
             products_path = str(Path(tmpdir) / "products.csv")
-            pd.DataFrame({'product_id': ['p1']}).to_csv(products_path, index=False)
+            pd.DataFrame({"product_id": ["p1"]}).to_csv(products_path, index=False)
 
             config = {
                 "DATA": {
@@ -158,18 +152,19 @@ class TestModelsManagerConfiguration:
                     "MODE": "rule",
                     "SEED": 42,
                     "START_DATE": "2024-01-01",
-                    "END_DATE": "2024-01-31"
+                    "END_DATE": "2024-01-31",
                 },
                 "MEASUREMENT": {
                     "MODEL": "mock",
                     "PARAMS": {
+                        "INTERVENTION_DATE": "2024-01-15",
                         "START_DATE": "2024-01-01",
-                        "END_DATE": "2024-01-31"
-                    }
-                }
+                        "END_DATE": "2024-01-31",
+                    },
+                },
             }
             config_path = str(Path(tmpdir) / "config.json")
-            with open(config_path, 'w') as f:
+            with open(config_path, "w") as f:
                 json.dump(config, f)
 
             engine = ModelsManager.from_config_file(config_path)
@@ -192,7 +187,7 @@ class TestModelsManagerGetModel:
         """Test getting model from loaded configuration."""
         with tempfile.TemporaryDirectory() as tmpdir:
             products_path = str(Path(tmpdir) / "products.csv")
-            pd.DataFrame({'product_id': ['p1']}).to_csv(products_path, index=False)
+            pd.DataFrame({"product_id": ["p1"]}).to_csv(products_path, index=False)
 
             config = {
                 "DATA": {
@@ -201,18 +196,19 @@ class TestModelsManagerGetModel:
                     "MODE": "rule",
                     "SEED": 42,
                     "START_DATE": "2024-01-01",
-                    "END_DATE": "2024-01-31"
+                    "END_DATE": "2024-01-31",
                 },
                 "MEASUREMENT": {
                     "MODEL": "mock",
                     "PARAMS": {
+                        "INTERVENTION_DATE": "2024-01-15",
                         "START_DATE": "2024-01-01",
-                        "END_DATE": "2024-01-31"
-                    }
-                }
+                        "END_DATE": "2024-01-31",
+                    },
+                },
             }
             config_path = str(Path(tmpdir) / "config.json")
-            with open(config_path, 'w') as f:
+            with open(config_path, "w") as f:
                 json.dump(config, f)
 
             engine = ModelsManager.from_config_file(config_path)
@@ -248,10 +244,7 @@ class TestModelsManagerFitModel:
         engine = ModelsManager()
         engine.register_model("mock", MockModel)
 
-        data = pd.DataFrame({
-            'date': pd.date_range('2024-01-01', periods=10),
-            'value': range(10)
-        })
+        data = pd.DataFrame({"date": pd.date_range("2024-01-01", periods=10), "value": range(10)})
 
         with tempfile.TemporaryDirectory() as tmpdir:
             storage = ArtifactStore(tmpdir)
@@ -263,7 +256,7 @@ class TestModelsManagerFitModel:
                 storage=storage,
             )
 
-            assert result_path.endswith('.json')
+            assert result_path.endswith(".json")
 
     def test_fit_model_empty_data(self):
         """Test fitting with empty data."""
@@ -294,7 +287,7 @@ class TestModelsManagerFitModel:
         engine.register_model("mock", MockModel)
 
         # Data missing required 'date' column
-        data = pd.DataFrame({'value': range(10)})
+        data = pd.DataFrame({"value": range(10)})
 
         with tempfile.TemporaryDirectory() as tmpdir:
             storage = ArtifactStore(tmpdir)
@@ -312,7 +305,7 @@ class TestModelsManagerFitModel:
         """Test fitting model using configuration."""
         with tempfile.TemporaryDirectory() as tmpdir:
             products_path = str(Path(tmpdir) / "products.csv")
-            pd.DataFrame({'product_id': ['p1']}).to_csv(products_path, index=False)
+            pd.DataFrame({"product_id": ["p1"]}).to_csv(products_path, index=False)
 
             config = {
                 "DATA": {
@@ -321,29 +314,30 @@ class TestModelsManagerFitModel:
                     "MODE": "rule",
                     "SEED": 42,
                     "START_DATE": "2024-01-01",
-                    "END_DATE": "2024-01-31"
+                    "END_DATE": "2024-01-31",
                 },
                 "MEASUREMENT": {
                     "MODEL": "mock",
                     "PARAMS": {
+                        "INTERVENTION_DATE": "2024-01-15",
                         "START_DATE": "2024-01-01",
-                        "END_DATE": "2024-01-31"
-                    }
-                }
+                        "END_DATE": "2024-01-31",
+                    },
+                },
             }
             config_path = str(Path(tmpdir) / "config.json")
-            with open(config_path, 'w') as f:
+            with open(config_path, "w") as f:
                 json.dump(config, f)
 
             engine = ModelsManager.from_config_file(config_path)
             engine.register_model("mock", MockModel)
 
-            data = pd.DataFrame({
-                'date': pd.date_range('2024-01-01', periods=10),
-                'value': range(10)
-            })
+            data = pd.DataFrame(
+                {"date": pd.date_range("2024-01-01", periods=10), "value": range(10)}
+            )
 
             from artifact_store import ArtifactStore
+
             storage = ArtifactStore(tmpdir)
 
             result_path = engine.fit_model(
@@ -353,7 +347,7 @@ class TestModelsManagerFitModel:
                 storage=storage,
             )
 
-            assert result_path.endswith('.json')
+            assert result_path.endswith(".json")
 
 
 class TestModelsManagerStatistics:
@@ -370,13 +364,11 @@ class TestModelsManagerStatistics:
         engine = ModelsManager()
         engine.register_model("mock", MockModel)
 
-        data = pd.DataFrame({
-            'date': pd.date_range('2024-01-01', periods=10),
-            'value': range(10)
-        })
+        data = pd.DataFrame({"date": pd.date_range("2024-01-01", periods=10), "value": range(10)})
 
         with tempfile.TemporaryDirectory() as tmpdir:
             from artifact_store import ArtifactStore
+
             storage = ArtifactStore(tmpdir)
 
             result = engine.fit_model(
@@ -393,5 +385,3 @@ class TestModelsManagerStatistics:
         engine = ModelsManager()
         # Just verify engine continues to work
         assert len(engine.get_available_models()) > 0
-
-

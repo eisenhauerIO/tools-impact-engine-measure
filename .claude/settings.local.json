@@ -21,7 +21,13 @@
       "Bash(git commit:*)",
       "Bash(git push:*)",
       "Bash(git rev-parse:*)",
-      "Bash(ruff check:*)"
+      "Bash(ruff check:*)",
+      "Bash(python:*)",
+      "Bash(make:*)",
+      "Bash(pip show:*)",
+      "Bash(ls:*)",
+      "Bash(wc:*)",
+      "Bash(pre-commit run:*)"
     ]
   }
 }

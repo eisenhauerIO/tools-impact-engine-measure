@@ -12,6 +12,7 @@ import yaml
 
 class ConfigurationError(Exception):
     """Exception raised for configuration-related errors."""
+
     pass
 
 
@@ -26,10 +27,10 @@ class ConfigurationParser:
             raise FileNotFoundError(f"Configuration file not found: {config_path}")
 
         # Parse file based on extension
-        with open(config_file, 'r', encoding='utf-8') as f:
-            if config_file.suffix.lower() in ['.json']:
+        with open(config_file, "r", encoding="utf-8") as f:
+            if config_file.suffix.lower() in [".json"]:
                 config = json.load(f)
-            elif config_file.suffix.lower() in ['.yaml', '.yml']:
+            elif config_file.suffix.lower() in [".yaml", ".yml"]:
                 config = yaml.safe_load(f)
             else:
                 # Try JSON first, then YAML
@@ -74,7 +75,9 @@ class ConfigurationParser:
             data_start_date = datetime.strptime(data["START_DATE"], "%Y-%m-%d")
             data_end_date = datetime.strptime(data["END_DATE"], "%Y-%m-%d")
         except ValueError as e:
-            raise ConfigurationError(f"Invalid date format in DATA section. Expected YYYY-MM-DD: {e}")
+            raise ConfigurationError(
+                f"Invalid date format in DATA section. Expected YYYY-MM-DD: {e}"
+            )
 
         # Validate DATA section date consistency
         if data_start_date > data_end_date:
@@ -92,24 +95,16 @@ class ConfigurationParser:
 
         # Validate measurement params
         params = measurement["PARAMS"]
-        if "START_DATE" not in params:
-            raise ConfigurationError("Missing required field 'START_DATE' in MEASUREMENT.PARAMS section")
-
-        if "END_DATE" not in params:
-            raise ConfigurationError("Missing required field 'END_DATE' in MEASUREMENT.PARAMS section")
-
-        # Validate date format
-        try:
-            start_date = datetime.strptime(params["START_DATE"], "%Y-%m-%d")
-            end_date = datetime.strptime(params["END_DATE"], "%Y-%m-%d")
-        except ValueError as e:
-            raise ConfigurationError(f"Invalid date format. Expected YYYY-MM-DD: {e}")
-
-        # Validate logical consistency
-        if start_date > end_date:
+        if "INTERVENTION_DATE" not in params:
             raise ConfigurationError(
-                f"START_DATE ({params['START_DATE']}) must be before or equal to END_DATE ({params['END_DATE']})"
+                "Missing required field 'INTERVENTION_DATE' in MEASUREMENT.PARAMS section"
             )
+
+        # Validate intervention date format
+        try:
+            datetime.strptime(params["INTERVENTION_DATE"], "%Y-%m-%d")
+        except ValueError as e:
+            raise ConfigurationError(f"Invalid INTERVENTION_DATE format. Expected YYYY-MM-DD: {e}")
 
 
 def parse_config_file(config_path: str) -> Dict[str, Any]:

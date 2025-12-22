@@ -8,11 +8,11 @@ RULE:
   CHARACTERISTICS:
     FUNCTION: simulate_characteristics_rule_based
     PARAMS:
-      num_products: 100  # More products for statistical power
+      num_products: 10000  # 10k products for statistical power
   METRICS:
     FUNCTION: default
     PARAMS:
-      date_start: "2024-11-01"
-      date_end: "2024-12-15"  # 45 days for robust pre/post analysis
+      date_start: "2024-11-16"
+      date_end: "2024-11-30"  # 1 week before/after intervention
       sale_prob: 0.7
       seed: 42  # Fixed seed for reproducibility

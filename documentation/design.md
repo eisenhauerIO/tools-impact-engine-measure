@@ -91,7 +91,7 @@ class MetricsInterface(ABC):
     def validate_connection(self) -> bool
     def transform_outbound(self, products, start_date, end_date) -> Dict[str, Any]
     def transform_inbound(self, external_data) -> pd.DataFrame
-    def retrieve_metrics(self, products, start_date, end_date) -> pd.DataFrame
+    def retrieve_business_metrics(self, products, start_date, end_date) -> pd.DataFrame
 ```
 
 ### Model Interface

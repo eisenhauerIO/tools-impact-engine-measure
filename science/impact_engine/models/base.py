@@ -36,13 +36,7 @@ class Model(ABC):
         pass
 
     @abstractmethod
-    def fit(
-        self,
-        data: pd.DataFrame,
-        intervention_date: str,
-        output_path: str,
-        **kwargs
-    ) -> str:
+    def fit(self, data: pd.DataFrame, intervention_date: str, output_path: str, **kwargs) -> str:
         """Fit the model to the provided data and save results.
 
         Args:
@@ -84,7 +78,9 @@ class Model(ABC):
         pass
 
     @abstractmethod
-    def transform_outbound(self, data: pd.DataFrame, intervention_date: str, **kwargs) -> Dict[str, Any]:
+    def transform_outbound(
+        self, data: pd.DataFrame, intervention_date: str, **kwargs
+    ) -> Dict[str, Any]:
         """Transform impact engine format to model library format.
 
         Args:

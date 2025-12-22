@@ -16,7 +16,10 @@ class ModelsManager:
     def __init__(self, measurement_config: Optional[Dict[str, Any]] = None):
         """Initialize the ModelsManager with MEASUREMENT configuration block."""
         self.model_registry: Dict[str, type] = {}
-        self.measurement_config = measurement_config or {"MODEL": "interrupted_time_series", "PARAMS": {}}
+        self.measurement_config = measurement_config or {
+            "MODEL": "interrupted_time_series",
+            "PARAMS": {},
+        }
 
         # Register built-in models
         self._register_builtin_models()
@@ -26,9 +29,10 @@ class ModelsManager:
             self._validate_measurement_config(measurement_config)
 
     @classmethod
-    def from_config_file(cls, config_path: str) -> 'ModelsManager':
+    def from_config_file(cls, config_path: str) -> "ModelsManager":
         """Create ModelsManager from config file, extracting MEASUREMENT block."""
         from ..config import ConfigurationParser
+
         config_parser = ConfigurationParser()
         full_config = config_parser.parse_config(config_path)
         return cls(full_config["MEASUREMENT"])
@@ -57,7 +61,9 @@ class ModelsManager:
             model_type = self.measurement_config["MODEL"]
 
         if model_type not in self.model_registry:
-            raise ValueError(f"Unknown model type '{model_type}'. Available: {list(self.model_registry.keys())}")
+            raise ValueError(
+                f"Unknown model type '{model_type}'. Available: {list(self.model_registry.keys())}"
+            )
 
         model = self.model_registry[model_type]()
 
@@ -88,7 +94,9 @@ class ModelsManager:
             dependent_variable = params.get("DEPENDENT_VARIABLE", "revenue")
 
         if not intervention_date:
-            raise ValueError("INTERVENTION_DATE must be specified in MEASUREMENT.PARAMS configuration")
+            raise ValueError(
+                "INTERVENTION_DATE must be specified in MEASUREMENT.PARAMS configuration"
+            )
 
         # Get model
         model = self.get_model(model_type)
@@ -105,7 +113,7 @@ class ModelsManager:
             data=data,
             intervention_date=intervention_date,
             output_path=output_path,
-            dependent_variable=dependent_variable
+            dependent_variable=dependent_variable,
         )
 
     def get_available_models(self) -> List[str]:

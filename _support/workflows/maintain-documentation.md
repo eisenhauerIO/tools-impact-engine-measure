@@ -8,15 +8,12 @@ Each piece of content has a single source of truth. When updating documentation,
 
 | Content | Primary Location | Cross-references Allowed |
 |---------|------------------|--------------------------|
-| Installation | [user-guide.md#installation](../../documentation/user-guide.md#installation) | [README.md](../../README.md) (summary only) |
-| User stories & use cases | [user-guide.md#who-should-use-this](../../documentation/user-guide.md#who-should-use-this) | [README.md](../../README.md) (1-line summary) |
-| Basic usage examples | [user-guide.md#getting-started](../../documentation/user-guide.md#getting-started) | [README.md](../../README.md) (1 minimal example) |
-| Configuration examples | [configuration.md](../../documentation/configuration.md) | [user-guide.md](../../documentation/user-guide.md) (context-specific tutorials) |
-| Data schemas | [user-guide.md#understanding-output](../../documentation/user-guide.md#understanding-output) | None - link only from other files |
-| API patterns | [user-guide.md#advanced-usage](../../documentation/user-guide.md#advanced-usage) | [README.md](../../README.md) (quick reference only) |
+| User stories | [user-stories.md](../../documentation/user-stories.md) | [README.md](../../README.md) (1-line summary) |
+| Configuration | [configuration.md](../../documentation/configuration.md) | [user-stories.md](../../documentation/user-stories.md) (in examples) |
 | Architecture & design | [design.md](../../documentation/design.md) | None - technical reference only |
 | API reference | [api_reference.rst](../../documentation/api_reference.rst) | Auto-generated from code |
-| Artefact Store usage | [README.md#artefact-store-package](../../README.md#artefact-store-package) | [artefact-store/README.md](../../science/artefact-store/README.md) (package-specific) |
+
+> **Note**: External dependencies like `artifact-store` and `online_retail_simulator` (catalog generator) are maintained in separate repositories on GitHub. See [pyproject.toml](../../pyproject.toml) for links.
 
 ## Update Workflow
 
@@ -94,7 +91,7 @@ Here's all the configuration options... [300 lines of duplication]
 <!-- Good: In README.md -->
 - **Data Scientists**: Generate realistic e-commerce data for ML model training
 
-[See complete user guide](documentation/user-guide.md)
+[See user stories](documentation/user-stories.md)
 
 <!-- Bad: In README.md -->
 [Full detailed user story duplicated from user-guide.md]
@@ -106,10 +103,10 @@ Here's all the configuration options... [300 lines of duplication]
 <!-- Good: In README.md -->
 ```python
 from impact_engine import evaluate_impact
-result = evaluate_impact(config_path="config.json", products=products, storage_url="results/")
+result = evaluate_impact(config_path="config.yaml", storage_url="results/")
 ```
 
-For more examples, see the [User Guide](documentation/user-guide.md).
+For more examples, see the [User Stories](documentation/user-stories.md).
 ```
 
 ## Review Checklist

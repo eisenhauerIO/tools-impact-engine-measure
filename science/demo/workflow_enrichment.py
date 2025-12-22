@@ -11,11 +11,12 @@ This demo:
 
 import json
 import os
+
 import pandas as pd
 import yaml
-from online_retail_simulator import simulate_characteristics
 from impact_engine import evaluate_impact
 from impact_engine.metrics import MetricsManager
+from online_retail_simulator import simulate_characteristics
 
 # Fixed products path for reproducible results
 FIXED_PRODUCTS_PATH = "output/fixed_products.csv"
@@ -25,7 +26,7 @@ def calculate_true_effect(
     baseline_metrics: pd.DataFrame,
     enriched_metrics: pd.DataFrame,
     intervention_date: str,
-    metric: str = "sales_volume"
+    metric: str = "sales_volume",
 ) -> dict:
     """
     Calculate the TRUE causal effect by comparing factual vs counterfactual.
@@ -42,14 +43,14 @@ def calculate_true_effect(
     intervention = pd.Timestamp(intervention_date)
 
     # Aggregate by date
-    baseline_daily = baseline_metrics.groupby('date')[metric].sum().reset_index()
-    enriched_daily = enriched_metrics.groupby('date')[metric].sum().reset_index()
-    baseline_daily['date'] = pd.to_datetime(baseline_daily['date'])
-    enriched_daily['date'] = pd.to_datetime(enriched_daily['date'])
+    baseline_daily = baseline_metrics.groupby("date")[metric].sum().reset_index()
+    enriched_daily = enriched_metrics.groupby("date")[metric].sum().reset_index()
+    baseline_daily["date"] = pd.to_datetime(baseline_daily["date"])
+    enriched_daily["date"] = pd.to_datetime(enriched_daily["date"])
 
     # Post-intervention comparison (factual vs counterfactual)
-    baseline_post = baseline_daily[baseline_daily['date'] >= intervention][metric]
-    enriched_post = enriched_daily[enriched_daily['date'] >= intervention][metric]
+    baseline_post = baseline_daily[baseline_daily["date"] >= intervention][metric]
+    enriched_post = enriched_daily[enriched_daily["date"] >= intervention][metric]
 
     baseline_mean = baseline_post.mean()
     enriched_mean = enriched_post.mean()
@@ -119,7 +120,6 @@ def print_comparison(true_effect: dict, its_result_path: str, metric: str) -> No
 
 
 if __name__ == "__main__":
-
     # Step 1: Get or generate product characteristics
     if os.path.exists(FIXED_PRODUCTS_PATH):
         print("\nStep 1: Using existing products file...")
@@ -127,6 +127,7 @@ if __name__ == "__main__":
     else:
         print("\nStep 1: Generating product characteristics (first run)...")
         import shutil
+
         job_info = simulate_characteristics("config_enrichment_simulator.yaml")
         src_path = f"{job_info.full_path}/products.csv"
         os.makedirs(os.path.dirname(FIXED_PRODUCTS_PATH), exist_ok=True)
