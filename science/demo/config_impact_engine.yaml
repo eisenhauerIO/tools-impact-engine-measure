@@ -1,7 +1,7 @@
 DATA:
   END_DATE: '2024-11-30'
   MODE: rule
-  PATH: output/job-catalog-simulator-simulation-characteristics-20251221-180445-817959df/products.csv
+  PATH: output/job-catalog-simulator-simulation-characteristics-20251221-184357-5d908492/products.csv
   SEED: 42
   START_DATE: '2024-11-01'
   TYPE: simulator

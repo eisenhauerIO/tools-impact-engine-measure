@@ -32,13 +32,13 @@ hatch run pytest science/impact_engine/tests/ -v
 ```
 If any test fails (non-zero exit code), STOP. Ask the user for input before continuing.
 
-### 4. Run Demo Workflow Script
+### 4. Run Demo Workflow Scripts
 
-Run:
+Run all workflow scripts in the demo directory:
 ```bash
-cd science/demo && hatch run python workflow.py
+cd science/demo && for f in workflow*.py; do hatch run python "$f"; done
 ```
-If the demo script fails (non-zero exit code), STOP. Ask the user for input before continuing.
+If any demo script fails (non-zero exit code), STOP. Ask the user for input before continuing.
 
 ### 5. Verify Documentation Builds
 

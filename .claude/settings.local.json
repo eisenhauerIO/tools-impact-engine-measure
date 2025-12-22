@@ -28,7 +28,10 @@
       "Bash(ls:*)",
       "Bash(wc:*)",
       "Bash(pre-commit run:*)",
-      "Bash(hatch -e docs run sphinx-build:*)"
+      "Bash(hatch -e docs run sphinx-build:*)",
+      "Bash(git clean:*)",
+      "Bash(for f in workflow*.py)",
+      "Bash(do echo \"=== Running $f ===\")"
     ]
   }
 }

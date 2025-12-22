@@ -5,7 +5,7 @@
 :hidden:
 :maxdepth: 2
 
-user-guide
+user-stories
 configuration
 design
 api_reference
