@@ -1,6 +1,5 @@
 """Tests for CatalogSimulatorAdapter."""
 
-import tempfile
 from unittest.mock import MagicMock, patch
 
 import pandas as pd
@@ -200,46 +199,43 @@ class TestCatalogSimulatorAdapter:
         for col in expected_columns:
             assert col in result.columns
 
-    def test_retrieve_business_metrics_success(self):
+    def test_retrieve_business_metrics_success(self, tmp_path):
         """Test successful business metrics retrieval."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            # Create a parent job for nested job creation
-            parent_job = create_job(tmpdir, prefix="test-parent")
+        # Create a parent job for nested job creation
+        parent_job = create_job(str(tmp_path), prefix="test-parent")
 
-            adapter = CatalogSimulatorAdapter()
-            adapter.connect({"mode": "rule", "seed": 42, "parent_job": parent_job})
+        adapter = CatalogSimulatorAdapter()
+        adapter.connect({"mode": "rule", "seed": 42, "parent_job": parent_job})
 
-            products = pd.DataFrame({"product_id": ["prod1"], "name": ["Product 1"]})
+        products = pd.DataFrame({"product_id": ["prod1"], "name": ["Product 1"]})
 
-            # Mock simulate_metrics to save sales.csv to the job
-            def mock_simulate_metrics(job_info, config_path):
-                # Simulate what the real function does: save sales to job
-                sales_df = pd.DataFrame(
-                    {
-                        "asin": ["prod1"],
-                        "name": ["Product 1"],
-                        "category": ["Electronics"],
-                        "price": [100.0],
-                        "date": ["2024-01-01"],
-                        "ordered_units": [5],
-                        "revenue": [500.0],
-                    }
-                )
-                job_info.save_df("sales", sales_df)
-                return job_info
+        # Mock simulate_metrics to save sales.csv to the job
+        def mock_simulate_metrics(job_info, config_path):
+            # Simulate what the real function does: save sales to job
+            sales_df = pd.DataFrame(
+                {
+                    "asin": ["prod1"],
+                    "name": ["Product 1"],
+                    "category": ["Electronics"],
+                    "price": [100.0],
+                    "date": ["2024-01-01"],
+                    "ordered_units": [5],
+                    "revenue": [500.0],
+                }
+            )
+            job_info.save_df("sales", sales_df)
+            return job_info
 
-            mock_simulate_module = MagicMock()
-            mock_simulate_module.simulate_metrics = mock_simulate_metrics
+        mock_simulate_module = MagicMock()
+        mock_simulate_module.simulate_metrics = mock_simulate_metrics
 
-            with patch.dict(
-                "sys.modules", {"online_retail_simulator.simulate": mock_simulate_module}
-            ):
-                result = adapter.retrieve_business_metrics(products, "2024-01-01", "2024-01-31")
+        with patch.dict("sys.modules", {"online_retail_simulator.simulate": mock_simulate_module}):
+            result = adapter.retrieve_business_metrics(products, "2024-01-01", "2024-01-31")
 
-            assert isinstance(result, pd.DataFrame)
-            assert len(result) > 0
-            assert "product_id" in result.columns
-            assert "sales_volume" in result.columns
+        assert isinstance(result, pd.DataFrame)
+        assert len(result) > 0
+        assert "product_id" in result.columns
+        assert "sales_volume" in result.columns
 
     def test_retrieve_business_metrics_not_connected(self):
         """Test retrieving metrics without connection."""
@@ -266,10 +262,10 @@ class TestCatalogSimulatorAdapter:
         with pytest.raises(ValueError, match="Products DataFrame cannot be empty"):
             adapter.retrieve_business_metrics(None, "2024-01-01", "2024-01-31")
 
-    def test_retrieve_business_metrics_simulator_not_available(self):
+    def test_retrieve_business_metrics_simulator_not_available(self, tmp_path):
         """Test retrieving metrics when simulator package not available."""
         adapter = CatalogSimulatorAdapter()
-        adapter.connect({"mode": "rule"})
+        adapter.connect({"mode": "rule", "storage_path": str(tmp_path)})
 
         products = pd.DataFrame({"product_id": ["prod1"]})
 
@@ -280,10 +276,10 @@ class TestCatalogSimulatorAdapter:
             ):
                 adapter.retrieve_business_metrics(products, "2024-01-01", "2024-01-31")
 
-    def test_retrieve_business_metrics_simulation_error(self):
+    def test_retrieve_business_metrics_simulation_error(self, tmp_path):
         """Test retrieving metrics when simulation fails."""
         adapter = CatalogSimulatorAdapter()
-        adapter.connect({"mode": "rule"})
+        adapter.connect({"mode": "rule", "storage_path": str(tmp_path)})
 
         products = pd.DataFrame({"product_id": ["prod1"]})
 

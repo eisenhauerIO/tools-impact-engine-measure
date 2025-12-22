@@ -6,8 +6,8 @@ import pandas as pd
 from artifact_store import create_job
 
 from .config import parse_config_file
-from .metrics import MetricsManager
-from .models import ModelsManager
+from .metrics import create_metrics_manager
+from .models import create_models_manager
 
 
 def evaluate_impact(config_path: str, storage_url: str = "./data") -> str:
@@ -26,10 +26,10 @@ def evaluate_impact(config_path: str, storage_url: str = "./data") -> str:
     # Parse config to get paths
     config = parse_config_file(config_path)
     data_path = config["DATA"]["PATH"]
-    output_path = config.get("OUTPUT", {}).get("PATH", "results")
 
     # Create parent job for this impact analysis run
-    job = create_job(output_path, prefix="job-impact-engine")
+    # Uses storage_url parameter to allow tests to pass temp directories
+    job = create_job(storage_url, prefix="job-impact-engine")
     job_store = job.get_store()
 
     # Save original config to job directory for observability
@@ -38,10 +38,10 @@ def evaluate_impact(config_path: str, storage_url: str = "./data") -> str:
     # Load products from CSV
     products = pd.read_csv(data_path)
 
-    # Initialize components with parent job
-    # Adapters will create nested jobs inside the parent job directory
-    metrics_manager = MetricsManager.from_config_file(config_path, parent_job=job)
-    models_manager = ModelsManager.from_config_file(config_path)
+    # Initialize components using factory functions
+    # Factories handle adapter/model selection based on configuration
+    metrics_manager = create_metrics_manager(config_path, parent_job=job)
+    models_manager = create_models_manager(config_path)
 
     # Retrieve business metrics using metrics layer
     business_metrics = metrics_manager.retrieve_metrics(products)

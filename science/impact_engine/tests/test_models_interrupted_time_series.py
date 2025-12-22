@@ -102,20 +102,47 @@ class TestInterruptedTimeSeriesAdapter:
         with pytest.raises(ValueError, match="Dependent variable 'missing_column' not found"):
             model.transform_outbound(data, "2024-01-05")
 
-    def test_transform_inbound_success(self):
-        """Test successful inbound transformation."""
+    def test_transform_inbound_raises_not_implemented(self):
+        """Test that transform_inbound raises NotImplementedError (use _format_results instead)."""
         model = InterruptedTimeSeriesAdapter()
         model.connect({"dependent_variable": "revenue"})
 
-        # Set up required internal state
-        model.dependent_variable = "revenue"
-        model.intervention_date = "2024-01-05"
-        model._transformed_data = pd.DataFrame(
+        # Mock SARIMAX results
+        class MockResults:
+            def __init__(self):
+                self.aic = 100.0
+                self.bic = 110.0
+                self.params = {"intervention": 5.0}
+
+        with pytest.raises(NotImplementedError, match="transform_inbound requires prior state"):
+            model.transform_inbound(MockResults())
+
+    def test_format_results_success(self):
+        """Test successful result formatting using stateless _format_results."""
+        import numpy as np
+
+        from impact_engine.models.adapter_interrupted_time_series import TransformedInput
+
+        model = InterruptedTimeSeriesAdapter()
+        model.connect({"dependent_variable": "revenue"})
+
+        # Create TransformedInput with all required data
+        data = pd.DataFrame(
             {
                 "date": pd.date_range("2024-01-01", periods=10),
                 "revenue": range(10),
                 "intervention": [0, 0, 0, 0, 1, 1, 1, 1, 1, 1],
             }
+        )
+
+        transformed = TransformedInput(
+            y=np.array(range(10)),
+            exog=data[["intervention"]],
+            data=data,
+            dependent_variable="revenue",
+            intervention_date="2024-01-05",
+            order=(1, 0, 0),
+            seasonal_order=(0, 0, 0, 0),
         )
 
         # Mock SARIMAX results
@@ -125,8 +152,7 @@ class TestInterruptedTimeSeriesAdapter:
                 self.bic = 110.0
                 self.params = {"intervention": 5.0}
 
-        mock_results = MockResults()
-        result = model.transform_inbound(mock_results)
+        result = model._format_results(MockResults(), transformed)
 
         assert result["model_type"] == "interrupted_time_series"
         assert result["intervention_date"] == "2024-01-05"

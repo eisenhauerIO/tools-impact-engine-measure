@@ -1,13 +1,20 @@
-"""Tests for ModelsManager."""
+"""Tests for ModelsManager with dependency injection."""
 
 import json
 import tempfile
 from pathlib import Path
+from unittest.mock import Mock
 
 import pandas as pd
 import pytest
 
-from impact_engine.models import Model, ModelsManager
+from impact_engine.models import (
+    Model,
+    ModelsManager,
+    create_models_manager,
+    create_models_manager_from_config,
+)
+from impact_engine.models.factory import MODEL_ADAPTERS, register_model_adapter
 
 
 class MockModel(Model):
@@ -65,173 +72,58 @@ class MockModel(Model):
         return ["date", "value"]
 
 
-class TestModelsManagerRegistration:
-    """Tests for model registration functionality."""
+class TestModelsManagerDependencyInjection:
+    """Tests for dependency injection pattern."""
 
-    def test_register_model_success(self):
-        """Test successful model registration."""
-        engine = ModelsManager()
-        engine.register_model("mock", MockModel)
+    def test_create_with_injected_model(self):
+        """Test creating manager with injected model."""
+        mock_model = MockModel()
+        config = {"PARAMS": {"INTERVENTION_DATE": "2024-01-15"}}
 
-        assert "mock" in engine.get_available_models()
-        assert engine.model_registry["mock"] == MockModel
+        manager = ModelsManager(config, mock_model)
 
-    def test_register_model_invalid_class(self):
-        """Test registration with invalid model class."""
-        engine = ModelsManager()
+        assert manager.model is mock_model
+        assert mock_model.is_connected is True
 
-        class InvalidModel:
-            pass
+    def test_create_with_mock_spec(self):
+        """Test creating manager with Mock(spec=Model)."""
+        mock_model = Mock(spec=Model)
+        mock_model.connect.return_value = True
 
-        with pytest.raises(ValueError, match="must implement Model"):
-            engine.register_model("invalid", InvalidModel)
+        config = {"PARAMS": {"INTERVENTION_DATE": "2024-01-15"}}
 
-    def test_get_available_models(self):
-        """Test getting list of available models."""
-        engine = ModelsManager()
-        engine.register_model("mock1", MockModel)
-        engine.register_model("mock2", MockModel)
+        manager = ModelsManager(config, mock_model)
 
-        available = engine.get_available_models()
-        assert "mock1" in available
-        assert "mock2" in available
-        assert "interrupted_time_series" in available  # Built-in model
-        assert len(available) == 3
+        mock_model.connect.assert_called_once()
+        assert manager.model is mock_model
+
+    def test_model_receives_params_config(self):
+        """Test that model receives PARAMS config on connect."""
+        mock_model = MockModel()
+        params = {"INTERVENTION_DATE": "2024-01-15", "order": (1, 0, 0)}
+        config = {"PARAMS": params}
+
+        ModelsManager(config, mock_model)
+
+        assert mock_model.config == params
 
 
 class TestModelsManagerConfiguration:
-    """Tests for configuration loading."""
+    """Tests for configuration handling."""
 
-    def test_load_config_success(self):
-        """Test successful configuration loading from file."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            products_path = str(Path(tmpdir) / "products.csv")
-            pd.DataFrame({"product_id": ["p1"]}).to_csv(products_path, index=False)
-
-            config = {
-                "DATA": {
-                    "TYPE": "simulator",
-                    "PATH": products_path,
-                    "MODE": "rule",
-                    "SEED": 42,
-                    "START_DATE": "2024-01-01",
-                    "END_DATE": "2024-01-31",
-                },
-                "MEASUREMENT": {
-                    "MODEL": "mock",
-                    "PARAMS": {
-                        "DEPENDENT_VARIABLE": "revenue",
-                        "INTERVENTION_DATE": "2024-01-15",
-                        "START_DATE": "2024-01-01",
-                        "END_DATE": "2024-01-31",
-                    },
-                },
-            }
-            config_path = str(Path(tmpdir) / "config.json")
-            with open(config_path, "w") as f:
-                json.dump(config, f)
-
-            engine = ModelsManager.from_config_file(config_path)
-            assert engine.measurement_config["MODEL"] == "mock"
-
-    def test_load_config_file_not_found(self):
-        """Test loading non-existent configuration file."""
-        with pytest.raises(FileNotFoundError):
-            ModelsManager.from_config_file("/nonexistent/path/config.json")
+    def test_validate_config_missing_params(self):
+        """Test validation with missing PARAMS field."""
+        mock_model = MockModel()
+        with pytest.raises(ValueError, match="Missing required field 'PARAMS'"):
+            ModelsManager({}, mock_model)
 
     def test_get_current_config(self):
         """Test getting current configuration."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            products_path = str(Path(tmpdir) / "products.csv")
-            pd.DataFrame({"product_id": ["p1"]}).to_csv(products_path, index=False)
+        mock_model = MockModel()
+        config = {"PARAMS": {"INTERVENTION_DATE": "2024-01-15"}}
 
-            config = {
-                "DATA": {
-                    "TYPE": "simulator",
-                    "PATH": products_path,
-                    "MODE": "rule",
-                    "SEED": 42,
-                    "START_DATE": "2024-01-01",
-                    "END_DATE": "2024-01-31",
-                },
-                "MEASUREMENT": {
-                    "MODEL": "mock",
-                    "PARAMS": {
-                        "INTERVENTION_DATE": "2024-01-15",
-                        "START_DATE": "2024-01-01",
-                        "END_DATE": "2024-01-31",
-                    },
-                },
-            }
-            config_path = str(Path(tmpdir) / "config.json")
-            with open(config_path, "w") as f:
-                json.dump(config, f)
-
-            engine = ModelsManager.from_config_file(config_path)
-            assert engine.measurement_config is not None
-            assert engine.measurement_config["MODEL"] == "mock"
-
-
-class TestModelsManagerGetModel:
-    """Tests for model retrieval."""
-
-    def test_get_model_by_type(self):
-        """Test getting model by explicit type."""
-        engine = ModelsManager()
-        engine.register_model("mock", MockModel)
-
-        model = engine.get_model("mock")
-        assert isinstance(model, MockModel)
-
-    def test_get_model_from_config(self):
-        """Test getting model from loaded configuration."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            products_path = str(Path(tmpdir) / "products.csv")
-            pd.DataFrame({"product_id": ["p1"]}).to_csv(products_path, index=False)
-
-            config = {
-                "DATA": {
-                    "TYPE": "simulator",
-                    "PATH": products_path,
-                    "MODE": "rule",
-                    "SEED": 42,
-                    "START_DATE": "2024-01-01",
-                    "END_DATE": "2024-01-31",
-                },
-                "MEASUREMENT": {
-                    "MODEL": "mock",
-                    "PARAMS": {
-                        "INTERVENTION_DATE": "2024-01-15",
-                        "START_DATE": "2024-01-01",
-                        "END_DATE": "2024-01-31",
-                    },
-                },
-            }
-            config_path = str(Path(tmpdir) / "config.json")
-            with open(config_path, "w") as f:
-                json.dump(config, f)
-
-            engine = ModelsManager.from_config_file(config_path)
-            engine.register_model("mock", MockModel)
-            model = engine.get_model()
-            assert isinstance(model, MockModel)
-
-    def test_get_model_unknown_type(self):
-        """Test getting unknown model type."""
-        engine = ModelsManager()
-
-        with pytest.raises(ValueError, match="Unknown model type"):
-            engine.get_model("unknown")
-
-    def test_get_model_no_config(self):
-        """Test getting model without specifying type and no config model."""
-        # Create engine with minimal config that doesn't have the requested model
-        measurement_config = {"MODEL": "nonexistent", "PARAMS": {}}
-        engine = ModelsManager(measurement_config)
-        engine.register_model("mock", MockModel)
-
-        with pytest.raises(ValueError, match="Unknown model type"):
-            engine.get_model()  # Will try to get "nonexistent" model from config
+        manager = ModelsManager(config, mock_model)
+        assert manager.get_current_config() == config
 
 
 class TestModelsManagerFitModel:
@@ -241,68 +133,123 @@ class TestModelsManagerFitModel:
         """Test successful model fitting."""
         from artifact_store import ArtifactStore
 
-        engine = ModelsManager()
-        engine.register_model("mock", MockModel)
+        mock_model = MockModel()
+        config = {"PARAMS": {"INTERVENTION_DATE": "2024-01-15"}}
+
+        manager = ModelsManager(config, mock_model)
 
         data = pd.DataFrame({"date": pd.date_range("2024-01-01", periods=10), "value": range(10)})
 
         with tempfile.TemporaryDirectory() as tmpdir:
             storage = ArtifactStore(tmpdir)
-            result_path = engine.fit_model(
+            result_path = manager.fit_model(
                 data=data,
-                intervention_date="2024-01-05",
                 output_path="results",
-                model_type="mock",
                 storage=storage,
             )
 
             assert result_path.endswith(".json")
 
-    def test_fit_model_empty_data(self):
-        """Test fitting with empty data."""
+    def test_fit_model_uses_config_intervention_date(self):
+        """Test that fit_model uses intervention date from config."""
         from artifact_store import ArtifactStore
 
-        engine = ModelsManager()
-        engine.register_model("mock", MockModel)
+        mock_model = Mock(spec=Model)
+        mock_model.connect.return_value = True
+        mock_model.fit.return_value = "/path/to/results.json"
 
-        data = pd.DataFrame()
+        config = {"PARAMS": {"INTERVENTION_DATE": "2024-01-15"}}
+        manager = ModelsManager(config, mock_model)
+
+        data = pd.DataFrame({"date": pd.date_range("2024-01-01", periods=10), "value": range(10)})
 
         with tempfile.TemporaryDirectory() as tmpdir:
             storage = ArtifactStore(tmpdir)
-            # Should work with empty data since MockModel handles it
-            result = engine.fit_model(
-                data=data,
-                intervention_date="2024-01-05",
-                output_path="results",
-                model_type="mock",
-                storage=storage,
-            )
-            assert result is not None
+            manager.fit_model(data=data, output_path="results", storage=storage)
 
-    def test_fit_model_invalid_data(self):
-        """Test fitting with invalid data."""
+            # Verify fit was called with intervention_date from config
+            call_kwargs = mock_model.fit.call_args[1]
+            assert call_kwargs["intervention_date"] == "2024-01-15"
+
+    def test_fit_model_missing_intervention_date(self):
+        """Test fit_model raises error when intervention date is missing."""
+        mock_model = MockModel()
+        config = {"PARAMS": {}}  # No INTERVENTION_DATE
+
+        manager = ModelsManager(config, mock_model)
+
+        data = pd.DataFrame({"date": pd.date_range("2024-01-01", periods=10), "value": range(10)})
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            from artifact_store import ArtifactStore
+
+            storage = ArtifactStore(tmpdir)
+
+            with pytest.raises(ValueError, match="INTERVENTION_DATE must be specified"):
+                manager.fit_model(data=data, output_path="results", storage=storage)
+
+    def test_fit_model_missing_storage(self):
+        """Test fit_model raises error when storage is missing."""
+        mock_model = MockModel()
+        config = {"PARAMS": {"INTERVENTION_DATE": "2024-01-15"}}
+
+        manager = ModelsManager(config, mock_model)
+
+        data = pd.DataFrame({"date": pd.date_range("2024-01-01", periods=10), "value": range(10)})
+
+        with pytest.raises(ValueError, match="Storage backend is required"):
+            manager.fit_model(data=data, output_path="results", storage=None)
+
+    def test_fit_model_with_explicit_params(self):
+        """Test fit_model with explicitly provided parameters."""
         from artifact_store import ArtifactStore
 
-        engine = ModelsManager()
-        engine.register_model("mock", MockModel)
+        mock_model = Mock(spec=Model)
+        mock_model.connect.return_value = True
+        mock_model.fit.return_value = "/path/to/results.json"
 
-        # Data missing required 'date' column
-        data = pd.DataFrame({"value": range(10)})
+        config = {"PARAMS": {"INTERVENTION_DATE": "2024-01-15"}}
+        manager = ModelsManager(config, mock_model)
+
+        data = pd.DataFrame({"date": pd.date_range("2024-01-01", periods=10), "value": range(10)})
 
         with tempfile.TemporaryDirectory() as tmpdir:
             storage = ArtifactStore(tmpdir)
-            # Should work since MockModel handles any data
-            result = engine.fit_model(
+            manager.fit_model(
                 data=data,
-                intervention_date="2024-01-05",
+                intervention_date="2024-01-20",  # Override config
+                dependent_variable="sales",
                 output_path="results",
-                model_type="mock",
                 storage=storage,
             )
-            assert result is not None
 
-    def test_fit_model_from_config(self):
-        """Test fitting model using configuration."""
+            call_kwargs = mock_model.fit.call_args[1]
+            assert call_kwargs["intervention_date"] == "2024-01-20"
+            assert call_kwargs["dependent_variable"] == "sales"
+
+
+class TestModelsFactory:
+    """Tests for factory functions."""
+
+    def test_create_models_manager_from_config_dict(self):
+        """Test creating manager from config dict."""
+        register_model_adapter("mock", MockModel)
+
+        try:
+            config = {
+                "MODEL": "mock",
+                "PARAMS": {"INTERVENTION_DATE": "2024-01-15"},
+            }
+
+            manager = create_models_manager_from_config(config)
+
+            assert isinstance(manager, ModelsManager)
+            assert isinstance(manager.model, MockModel)
+        finally:
+            del MODEL_ADAPTERS["mock"]
+
+    def test_create_models_manager_from_file(self):
+        """Test creating manager from config file."""
         with tempfile.TemporaryDirectory() as tmpdir:
             products_path = str(Path(tmpdir) / "products.csv")
             pd.DataFrame({"product_id": ["p1"]}).to_csv(products_path, index=False)
@@ -311,17 +258,13 @@ class TestModelsManagerFitModel:
                 "DATA": {
                     "TYPE": "simulator",
                     "PATH": products_path,
-                    "MODE": "rule",
-                    "SEED": 42,
                     "START_DATE": "2024-01-01",
                     "END_DATE": "2024-01-31",
                 },
                 "MEASUREMENT": {
-                    "MODEL": "mock",
+                    "MODEL": "interrupted_time_series",
                     "PARAMS": {
                         "INTERVENTION_DATE": "2024-01-15",
-                        "START_DATE": "2024-01-01",
-                        "END_DATE": "2024-01-31",
                     },
                 },
             }
@@ -329,59 +272,40 @@ class TestModelsManagerFitModel:
             with open(config_path, "w") as f:
                 json.dump(config, f)
 
-            engine = ModelsManager.from_config_file(config_path)
-            engine.register_model("mock", MockModel)
+            manager = create_models_manager(config_path)
 
-            data = pd.DataFrame(
-                {"date": pd.date_range("2024-01-01", periods=10), "value": range(10)}
-            )
+            assert isinstance(manager, ModelsManager)
+            assert manager.measurement_config == config["MEASUREMENT"]
 
-            from artifact_store import ArtifactStore
+    def test_create_models_manager_unknown_type(self):
+        """Test creating manager with unknown model type."""
+        config = {
+            "MODEL": "unknown_model",
+            "PARAMS": {"INTERVENTION_DATE": "2024-01-15"},
+        }
 
-            storage = ArtifactStore(tmpdir)
+        with pytest.raises(ValueError, match="Unknown model type"):
+            create_models_manager_from_config(config)
 
-            result_path = engine.fit_model(
-                data=data,
-                intervention_date="2024-01-05",
-                output_path="results",
-                storage=storage,
-            )
+    def test_register_invalid_model(self):
+        """Test registering invalid model class."""
 
-            assert result_path.endswith(".json")
+        class InvalidModel:
+            pass
+
+        with pytest.raises(ValueError, match="must implement Model"):
+            register_model_adapter("invalid", InvalidModel)
 
 
-class TestModelsManagerStatistics:
-    """Tests for operation statistics tracking."""
+class TestModelsManagerConnectionFailure:
+    """Tests for connection failure handling."""
 
-    def test_operation_stats_initialization(self):
-        """Test that simplified engine works without stats."""
-        engine = ModelsManager()
-        # Just verify engine works without stats
-        assert len(engine.get_available_models()) > 0
+    def test_connection_failure_raises_error(self):
+        """Test that connection failure raises ConnectionError."""
+        mock_model = Mock(spec=Model)
+        mock_model.connect.return_value = False
 
-    def test_operation_stats_tracking(self):
-        """Test that engine works without stats tracking."""
-        engine = ModelsManager()
-        engine.register_model("mock", MockModel)
+        config = {"PARAMS": {"INTERVENTION_DATE": "2024-01-15"}}
 
-        data = pd.DataFrame({"date": pd.date_range("2024-01-01", periods=10), "value": range(10)})
-
-        with tempfile.TemporaryDirectory() as tmpdir:
-            from artifact_store import ArtifactStore
-
-            storage = ArtifactStore(tmpdir)
-
-            result = engine.fit_model(
-                data=data,
-                intervention_date="2024-01-05",
-                output_path="results",
-                model_type="mock",
-                storage=storage,
-            )
-            assert result is not None
-
-    def test_reset_stats(self):
-        """Test that simplified engine works without reset stats."""
-        engine = ModelsManager()
-        # Just verify engine continues to work
-        assert len(engine.get_available_models()) > 0
+        with pytest.raises(ConnectionError, match="Failed to connect"):
+            ModelsManager(config, mock_model)

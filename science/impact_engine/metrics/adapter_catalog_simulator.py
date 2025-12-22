@@ -46,9 +46,14 @@ class CatalogSimulatorAdapter(MetricsInterface):
         # Store parent job for nested job creation
         self.parent_job = config.get("parent_job")
 
+        # Storage path for standalone jobs (when no parent_job)
+        # Allows tests to pass temp directories instead of hardcoded "output"
+        storage_path = config.get("storage_path", "output")
+
         self.config = {
             "mode": mode,
             "seed": seed,
+            "storage_path": storage_path,
         }
 
         # Store enrichment config if provided
@@ -117,8 +122,10 @@ class CatalogSimulatorAdapter(MetricsInterface):
                 self.parent_job.full_path, prefix="job-catalog-simulator-simulation"
             )
         else:
-            # Create standalone job in default output directory
-            self.simulation_job = create_job("output", prefix="job-catalog-simulator-simulation")
+            # Create standalone job using configured storage path
+            self.simulation_job = create_job(
+                self.config["storage_path"], prefix="job-catalog-simulator-simulation"
+            )
 
     def _apply_enrichment(self, sales_df: pd.DataFrame) -> pd.DataFrame:
         """Apply enrichment using catalog simulator's config-based interface."""
@@ -130,7 +137,9 @@ class CatalogSimulatorAdapter(MetricsInterface):
                 self.parent_job.full_path, prefix="job-catalog-simulator-enrichment"
             )
         else:
-            enrichment_job = create_job("output", prefix="job-catalog-simulator-enrichment")
+            enrichment_job = create_job(
+                self.config["storage_path"], prefix="job-catalog-simulator-enrichment"
+            )
 
         # Use config bridge to build IMPACT config
         impact_config = ConfigBridge.build_enrichment_config(self.config["enrichment"])
