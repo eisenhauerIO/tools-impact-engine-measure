@@ -5,7 +5,11 @@ This module provides a registry of transform functions that can be
 configured via YAML to process data between SOURCE and MODEL.
 """
 
-from .library import aggregate_by_date, aggregate_for_approximation
+from .library import (
+    aggregate_by_date,
+    aggregate_for_approximation,
+    prepare_simulator_for_approximation,
+)
 from .registry import apply_transform, get_transform, register_transform
 
 __all__ = [
@@ -14,4 +18,5 @@ __all__ = [
     "apply_transform",
     "aggregate_by_date",
     "aggregate_for_approximation",
+    "prepare_simulator_for_approximation",
 ]

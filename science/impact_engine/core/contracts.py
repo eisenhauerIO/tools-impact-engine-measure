@@ -76,12 +76,14 @@ MetricsSchema = Schema(
         "price",
         "inventory_level",
         "customer_engagement",
+        "quality_score",
         "metrics_source",
         "retrieval_timestamp",
     ],
     mappings={
         "catalog_simulator": {
             "asin": "product_id",
+            "product_identifier": "product_id",
             "ordered_units": "sales_volume",
         },
         "database": {

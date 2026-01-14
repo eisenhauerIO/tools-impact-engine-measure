@@ -99,8 +99,8 @@ class CatalogSimulatorAdapter(MetricsInterface):
                 # Clean up temp file
                 os.unlink(config_path)
 
-            # 6. Load sales from job
-            sales_df = self.simulation_job.load_df("sales")
+            # 6. Load metrics from job (simulate_metrics saves as "metrics")
+            sales_df = self.simulation_job.load_df("metrics")
 
             # 7. Apply enrichment if configured
             if self.config.get("enrichment"):
@@ -127,35 +127,78 @@ class CatalogSimulatorAdapter(MetricsInterface):
                 self.config["storage_path"], prefix="job-catalog-simulator-simulation"
             )
 
-    def _apply_enrichment(self, sales_df: pd.DataFrame) -> pd.DataFrame:
-        """Apply enrichment using catalog simulator's config-based interface."""
-        from online_retail_simulator.enrich.enrichment import enrich
+    def _apply_enrichment(self, metrics_df: pd.DataFrame) -> pd.DataFrame:
+        """Apply enrichment and add quality_score to metrics based on enrichment_start date.
 
-        # Create job for enrichment artifacts
-        if self.parent_job is not None:
-            enrichment_job = create_job(
-                self.parent_job.full_path, prefix="job-catalog-simulator-enrichment"
-            )
-        else:
-            enrichment_job = create_job(
-                self.config["storage_path"], prefix="job-catalog-simulator-enrichment"
-            )
+        This method:
+        1. Calls simulate_product_details() to generate product_details (needed by enrich)
+        2. Calls enrich() which creates product_details_original and product_details_enriched
+        3. Joins quality_score to metrics based on date vs enrichment_start
+
+        Returns metrics DataFrame with quality_score column added.
+        """
+        from online_retail_simulator.enrich import enrich
+        from online_retail_simulator.simulate import simulate_product_details
+
+        # Generate product_details (required by enrich)
+        product_details_config = {
+            "PRODUCT_DETAILS": {
+                "FUNCTION": "simulate_product_details_mock",
+            }
+        }
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
+            yaml.dump(product_details_config, f)
+            pd_config_path = f.name
+
+        try:
+            self.simulation_job = simulate_product_details(self.simulation_job, pd_config_path)
+        finally:
+            os.unlink(pd_config_path)
 
         # Use config bridge to build IMPACT config
         impact_config = ConfigBridge.build_enrichment_config(self.config["enrichment"])
 
-        # Write config to enrichment job
-        enrichment_store = enrichment_job.get_store()
-        config_path = enrichment_store.full_path("config.yaml")
-        enrichment_store.write_yaml("config.yaml", impact_config)
+        # Write config to temp file
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
+            yaml.dump(impact_config, f)
+            config_path = f.name
 
-        # Apply enrichment
-        enriched_df = enrich(config_path, sales_df)
+        try:
+            # Apply enrichment (creates product_details_original, product_details_enriched)
+            self.simulation_job = enrich(config_path, self.simulation_job)
+        finally:
+            os.unlink(config_path)
 
-        # Save enriched output
-        enrichment_job.save_df("enriched", enriched_df)
+        # Load original and enriched product details
+        products_original = self.simulation_job.load_df("product_details_original")
+        products_enriched = self.simulation_job.load_df("product_details_enriched")
 
-        return enriched_df
+        # Get enrichment_start from config
+        enrichment_params = self.config["enrichment"].get("params", {})
+        enrichment_start = enrichment_params.get("enrichment_start", "2024-11-15")
+        enrichment_date = pd.to_datetime(enrichment_start)
+
+        # Create quality lookup by product
+        orig_quality = products_original.set_index("product_identifier")["quality_score"].to_dict()
+        enr_quality = products_enriched.set_index("product_identifier")["quality_score"].to_dict()
+
+        # Add quality_score to metrics based on date
+        result = metrics_df.copy()
+        result["date"] = pd.to_datetime(result["date"])
+
+        # Detect product ID column
+        id_col = "product_identifier" if "product_identifier" in result.columns else "product_id"
+
+        result["quality_score"] = result.apply(
+            lambda row: (
+                orig_quality.get(row[id_col], 0.5)
+                if row["date"] < enrichment_date
+                else enr_quality.get(row[id_col], 0.5)
+            ),
+            axis=1,
+        )
+
+        return result
 
     def validate_connection(self) -> bool:
         """Validate that the catalog simulator connection is active and functional."""
@@ -218,8 +261,13 @@ class CatalogSimulatorAdapter(MetricsInterface):
         if external_data.empty:
             return pd.DataFrame(columns=MetricsSchema.all_columns())
 
-        # Use contract to transform asin → product_id, ordered_units → sales_volume
-        standardized = MetricsSchema.from_external(external_data, "catalog_simulator")
+        # Handle case where both asin and product_identifier exist - prefer product_identifier
+        df = external_data.copy()
+        if "product_identifier" in df.columns and "asin" in df.columns:
+            df = df.drop(columns=["asin"])
+
+        # Use contract to transform product_identifier/asin → product_id, ordered_units → sales_volume
+        standardized = MetricsSchema.from_external(df, "catalog_simulator")
 
         # Handle legacy 'quantity' column (not in contract, manual fallback)
         if "quantity" in standardized.columns and "sales_volume" not in standardized.columns:

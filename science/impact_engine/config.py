@@ -177,8 +177,24 @@ def get_source_type(config: Dict[str, Any]) -> str:
 
 
 def get_transform_config(config: Dict[str, Any]) -> Dict[str, Any]:
-    """Extract TRANSFORM config from parsed config, or default passthrough."""
-    return config["DATA"].get("TRANSFORM", {"FUNCTION": "passthrough", "PARAMS": {}})
+    """Extract TRANSFORM config from parsed config, or default passthrough.
+
+    If ENRICHMENT is configured, automatically injects enrichment_start into PARAMS.
+    """
+    transform = config["DATA"].get("TRANSFORM", {"FUNCTION": "passthrough", "PARAMS": {}})
+
+    # Ensure PARAMS exists
+    if "PARAMS" not in transform:
+        transform["PARAMS"] = {}
+
+    # Inject enrichment_start from ENRICHMENT config if present
+    enrichment = config["DATA"].get("ENRICHMENT")
+    if enrichment:
+        params = enrichment.get("params", {})
+        if "enrichment_start" in params:
+            transform["PARAMS"]["enrichment_start"] = params["enrichment_start"]
+
+    return transform
 
 
 def get_measurement_config(config: Dict[str, Any]) -> Dict[str, Any]:

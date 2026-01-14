@@ -209,10 +209,10 @@ class TestCatalogSimulatorAdapter:
 
         products = pd.DataFrame({"product_id": ["prod1"], "name": ["Product 1"]})
 
-        # Mock simulate_metrics to save sales.csv to the job
+        # Mock simulate_metrics to save metrics.csv to the job
         def mock_simulate_metrics(job_info, config_path):
-            # Simulate what the real function does: save sales to job
-            sales_df = pd.DataFrame(
+            # Simulate what the real function does: save metrics to job
+            metrics_df = pd.DataFrame(
                 {
                     "asin": ["prod1"],
                     "name": ["Product 1"],
@@ -223,7 +223,7 @@ class TestCatalogSimulatorAdapter:
                     "revenue": [500.0],
                 }
             )
-            job_info.save_df("sales", sales_df)
+            job_info.save_df("metrics", metrics_df)
             return job_info
 
         mock_simulate_module = MagicMock()

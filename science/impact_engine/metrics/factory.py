@@ -65,6 +65,11 @@ def create_metrics_manager_from_source_config(
     source_type = get_source_type(config)
     source_config = get_source_config(config)
 
+    # Include ENRICHMENT config if present (it's at DATA.ENRICHMENT, not SOURCE.CONFIG)
+    enrichment = config["DATA"].get("ENRICHMENT")
+    if enrichment:
+        source_config = {**source_config, "ENRICHMENT": enrichment}
+
     adapter = get_metrics_adapter(source_type)
 
     return MetricsManager(
