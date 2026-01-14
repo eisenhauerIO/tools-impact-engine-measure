@@ -61,18 +61,17 @@ class ModelsManager:
 
         if dependent_variable is None:
             dependent_variable = (
-                params.get("dependent_variable")
-                or params.get("DEPENDENT_VARIABLE")
-                or "revenue"
+                params.get("dependent_variable") or params.get("DEPENDENT_VARIABLE") or "revenue"
             )
 
-        # ITS model requires intervention_date, but metrics_approximation doesn't
-        model_type = self.measurement_config.get("MODEL", "")
-        if model_type == "interrupted_time_series" and not intervention_date:
-            raise ValueError(
-                "intervention_date must be specified in MEASUREMENT.PARAMS configuration "
-                "for interrupted_time_series model"
-            )
+        # Delegate parameter validation to the model
+        self.model.validate_params(
+            {
+                "intervention_date": intervention_date,
+                "output_path": output_path,
+                "dependent_variable": dependent_variable,
+            }
+        )
 
         # Storage backend is required
         if not storage:

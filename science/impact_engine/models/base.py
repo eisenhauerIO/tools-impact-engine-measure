@@ -20,6 +20,7 @@ class Model(ABC):
     Optional methods (have sensible defaults):
         - validate_connection: Check if model is ready
         - validate_data: Check if input data is valid
+        - validate_params: Validate model-specific parameters before fitting
         - get_required_columns: Return list of required columns
         - transform_outbound: Transform data to external format
         - transform_inbound: Transform results from external format
@@ -89,6 +90,24 @@ class Model(ABC):
             List[str]: Column names that must be present in input data.
         """
         return []
+
+    def validate_params(self, params: Dict[str, Any]) -> None:
+        """Validate model-specific parameters before fitting.
+
+        This method is called by ModelsManager before fit() to perform
+        early validation of required parameters. Override to add
+        model-specific validation logic.
+
+        Default implementation does nothing (no validation).
+
+        Args:
+            params: Dictionary containing parameters that will be passed to fit().
+                Typical keys: intervention_date, output_path, dependent_variable.
+
+        Raises:
+            ValueError: If required parameters are missing or invalid.
+        """
+        pass
 
     def transform_outbound(self, data: pd.DataFrame, **kwargs) -> Dict[str, Any]:
         """Transform impact engine format to model library format.

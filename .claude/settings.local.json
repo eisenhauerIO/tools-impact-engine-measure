@@ -31,7 +31,9 @@
       "Bash(hatch -e docs run sphinx-build:*)",
       "Bash(git clean:*)",
       "Bash(for f in workflow*.py)",
-      "Bash(do echo \"=== Running $f ===\")"
+      "Bash(do echo \"=== Running $f ===\")",
+      "Bash(pytest:*)",
+      "Bash(grep:*)"
     ]
   }
 }

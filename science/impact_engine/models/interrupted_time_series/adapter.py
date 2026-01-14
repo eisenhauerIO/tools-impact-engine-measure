@@ -87,6 +87,21 @@ class InterruptedTimeSeriesAdapter(Model):
         except ImportError:
             return False
 
+    def validate_params(self, params: Dict[str, Any]) -> None:
+        """Validate ITS-specific parameters.
+
+        Args:
+            params: Parameters dict with intervention_date, output_path, etc.
+
+        Raises:
+            ValueError: If intervention_date is missing.
+        """
+        if not params.get("intervention_date"):
+            raise ValueError(
+                "intervention_date is required for InterruptedTimeSeriesAdapter. "
+                "Specify in MEASUREMENT.PARAMS configuration."
+            )
+
     def fit(self, data: pd.DataFrame, **kwargs) -> str:
         """
         Fit the interrupted time series model and save results.
@@ -131,7 +146,8 @@ class InterruptedTimeSeriesAdapter(Model):
             # Prepare model input (stateless transformation)
             # Remove extracted params from kwargs to avoid duplicate arguments
             model_kwargs = {
-                k: v for k, v in kwargs.items()
+                k: v
+                for k, v in kwargs.items()
                 if k not in ("intervention_date", "output_path", "dependent_variable")
             }
             transformed = self._prepare_model_input(

@@ -5,10 +5,11 @@ These functions transform raw business metrics into formats suitable
 for different model types (ITS, metrics approximation, etc.).
 """
 
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 import pandas as pd
 
+from ..core import TransformSchema
 from .registry import register_transform
 
 
@@ -108,9 +109,7 @@ def passthrough(data: pd.DataFrame, params: Dict[str, Any]) -> pd.DataFrame:
 
 
 @register_transform("prepare_simulator_for_approximation")
-def prepare_simulator_for_approximation(
-    data: pd.DataFrame, params: Dict[str, Any]
-) -> pd.DataFrame:
+def prepare_simulator_for_approximation(data: pd.DataFrame, params: Dict[str, Any]) -> pd.DataFrame:
     """Transform catalog simulator time-series metrics to metrics approximation input format.
 
     Takes time-series metrics from catalog simulator (with quality_score per row)
@@ -156,19 +155,22 @@ def prepare_simulator_for_approximation(
 
     baseline_metric = params.get("baseline_metric", "revenue")
 
-    # Detect product ID column
-    id_column = _detect_id_column(data)
+    # Normalize column names using schema
+    df = TransformSchema.from_external(data, "catalog_simulator")
 
-    # Validate required columns
-    if "date" not in data.columns:
-        raise ValueError("Data must contain 'date' column")
-    if "quality_score" not in data.columns:
-        raise ValueError("Data must contain 'quality_score' column")
-    if baseline_metric not in data.columns:
-        raise ValueError(f"Data must contain '{baseline_metric}' column")
+    # Detect product ID column (after normalization)
+    id_column = _detect_id_column(df, source="catalog_simulator")
 
-    # Ensure date column is datetime
-    df = data.copy()
+    # Validate required columns after normalization
+    required_cols = ["date", "quality_score", baseline_metric]
+    missing_cols = [col for col in required_cols if col not in df.columns]
+    if missing_cols:
+        raise ValueError(
+            f"Data must contain columns: {missing_cols}. "
+            f"Available after normalization: {list(df.columns)}"
+        )
+
+    # Ensure date column is datetime (df is already a copy from from_external)
     df["date"] = pd.to_datetime(df["date"])
     enrichment_date = pd.to_datetime(enrichment_start)
 
@@ -210,9 +212,34 @@ def prepare_simulator_for_approximation(
     return result[["product_id", "quality_before", "quality_after", "baseline_sales"]]
 
 
-def _detect_id_column(df: pd.DataFrame) -> str:
-    """Auto-detect product ID column in DataFrame."""
-    for col in ["product_identifier", "product_id", "asin"]:
+def _detect_id_column(df: pd.DataFrame, source: str = "catalog_simulator") -> str:
+    """Auto-detect product ID column in DataFrame using schema mappings.
+
+    Args:
+        df: DataFrame to inspect for ID column.
+        source: Source system name for schema lookup (default: catalog_simulator).
+
+    Returns:
+        str: Name of the detected ID column.
+
+    Raises:
+        ValueError: If no ID column found.
+    """
+    # Get all possible ID column names from schema
+    standard_id = "product_id"
+    possible_columns: List[str] = [standard_id]
+
+    # Add external column names from mappings
+    if source in TransformSchema.mappings:
+        for ext_col, std_col in TransformSchema.mappings[source].items():
+            if std_col == "product_id":
+                possible_columns.append(ext_col)
+
+    # Check which column exists
+    for col in possible_columns:
         if col in df.columns:
             return col
-    raise ValueError("Data must contain 'product_identifier', 'product_id', or 'asin' column")
+
+    raise ValueError(
+        f"Data must contain one of: {possible_columns}. " f"Available columns: {list(df.columns)}"
+    )

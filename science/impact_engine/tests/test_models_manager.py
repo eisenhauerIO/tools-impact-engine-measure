@@ -173,11 +173,13 @@ class TestModelsManagerFitModel:
 
     def test_fit_model_missing_intervention_date_for_its(self):
         """Test fit_model raises error when intervention date is missing for ITS model."""
-        mock_model = MockModel()
-        # Set MODEL type to interrupted_time_series to trigger intervention_date requirement
+        from impact_engine.models.interrupted_time_series import InterruptedTimeSeriesAdapter
+
+        # Use actual ITS adapter which validates intervention_date via validate_params()
+        its_model = InterruptedTimeSeriesAdapter()
         config = {"MODEL": "interrupted_time_series", "PARAMS": {}}
 
-        manager = ModelsManager(config, mock_model)
+        manager = ModelsManager(config, its_model)
 
         data = pd.DataFrame({"date": pd.date_range("2024-01-01", periods=10), "value": range(10)})
 
@@ -186,7 +188,7 @@ class TestModelsManagerFitModel:
 
             storage = ArtifactStore(tmpdir)
 
-            with pytest.raises(ValueError, match="intervention_date must be specified"):
+            with pytest.raises(ValueError, match="intervention_date is required"):
                 manager.fit_model(data=data, output_path="results", storage=storage)
 
     def test_fit_model_missing_storage(self):

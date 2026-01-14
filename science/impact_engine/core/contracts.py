@@ -93,3 +93,16 @@ MetricsSchema = Schema(
         },
     },
 )
+
+# Transform schema: defines columns for approximation transforms
+TransformSchema = Schema(
+    required=["product_id", "date"],
+    optional=["quality_score", "revenue", "sales_volume"],
+    mappings={
+        "catalog_simulator": {
+            "asin": "product_id",
+            "product_identifier": "product_id",
+            "ordered_units": "sales_volume",
+        },
+    },
+)
