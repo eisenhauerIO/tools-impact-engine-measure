@@ -1,0 +1,29 @@
+# Config for metrics approximation workflow demo
+# Used by: workflow_metrics_approximation.py
+DATA:
+  SOURCE:
+    TYPE: simulator
+    CONFIG:
+      MODE: rule
+      SEED: 42
+      START_DATE: '2024-01-01'
+      END_DATE: '2024-01-14'
+      PATH: output/demo_metrics_approximation/products.csv
+  ENRICHMENT:
+    function: product_detail_boost
+    params:
+      enrichment_fraction: 1.0
+      enrichment_start: '2024-01-08'
+      quality_boost: 0.15
+      seed: 42
+  TRANSFORM:
+    FUNCTION: prepare_simulator_for_approximation
+    PARAMS: {}  # enrichment_start auto-injected from ENRICHMENT.params
+
+MEASUREMENT:
+  MODEL: metrics_approximation
+  PARAMS:
+    RESPONSE:
+      FUNCTION: linear
+      PARAMS:
+        coefficient: 0.5

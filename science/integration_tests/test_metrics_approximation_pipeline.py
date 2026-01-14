@@ -22,10 +22,7 @@ def products_csv(tmp_path):
 
     Note: quality_score is NOT needed here - enrich() generates it internally.
     """
-    try:
-        from online_retail_simulator.simulate import simulate_characteristics
-    except ImportError:
-        pytest.skip("online_retail_simulator not available")
+    from online_retail_simulator.simulate import simulate_characteristics
 
     sim_config = {
         "STORAGE": {"PATH": str(tmp_path / "simulation")},

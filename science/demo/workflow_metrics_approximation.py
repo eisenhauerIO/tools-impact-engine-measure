@@ -1,104 +1,121 @@
-"""Demo: Metrics-based impact approximation with simulated data.
+"""Demo: Metrics-based impact approximation using evaluate_impact().
 
-This demo shows how to use the MetricsApproximationAdapter to estimate
-treatment impact based on quality score changes.
+This demo shows the typical usage pattern:
+1. User provides products.csv
+2. User provides config.yaml with DATA.ENRICHMENT section
+3. User calls evaluate_impact(config.yaml)
+4. Engine handles everything internally (adapter, enrichment, transform, model)
 
-Input: DataFrame of enriched products with before/after quality scores
-       and baseline sales (simulating data from catalog-generator).
-
-Output: Per-product and aggregate impact approximations.
+Output: Impact approximation results
 """
 
-import pandas as pd
+import tempfile
+from pathlib import Path
 
-from impact_engine.models.metrics_approximation import MetricsApproximationAdapter
+import yaml
+
+from impact_engine import evaluate_impact
 
 
-def create_simulated_data() -> pd.DataFrame:
-    """Create simulated data representing enriched products.
-    
-    In production, this data would come from catalog-generator's
-    enrichment process. Here we simulate 5 products that received
-    quality improvements through enrichment.
-    
-    Returns:
-        DataFrame with columns:
-        - product_id: Product identifier
-        - quality_before: Quality score before enrichment (0.0-1.0)
-        - quality_after: Quality score after enrichment (0.0-1.0)
-        - baseline_sales: Historical baseline sales/revenue
+# Config file for this demo
+CONFIG_PATH = Path(__file__).parent / "config_metrics_approximation_workflow.yaml"
+
+
+def create_products_csv(output_path: str) -> str:
+    """Create products.csv using catalog simulator.
+
+    In production, this would be your actual product catalog.
     """
-    return pd.DataFrame({
-        "product_id": ["P001", "P002", "P003", "P004", "P005"],
-        "quality_before": [0.45, 0.30, 0.55, 0.40, 0.35],
-        "quality_after": [0.85, 0.75, 0.90, 0.80, 0.70],
-        "baseline_sales": [100.0, 150.0, 200.0, 120.0, 180.0],
-    })
+    from online_retail_simulator.simulate import simulate_characteristics
+
+    sim_config = {
+        "STORAGE": {"PATH": str(Path(output_path) / "simulation")},
+        "RULE": {
+            "CHARACTERISTICS": {
+                "FUNCTION": "simulate_characteristics_rule_based",
+                "PARAMS": {"num_products": 5},
+            },
+        },
+    }
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
+        yaml.dump(sim_config, f)
+        sim_config_path = f.name
+
+    job_info = simulate_characteristics(sim_config_path)
+    products = job_info.load_df("products")
+
+    products_path = Path(output_path) / "products.csv"
+    products.to_csv(products_path, index=False)
+    print(f"   Created: {products_path}")
+    print(f"   Products: {len(products)}")
+
+    return str(products_path)
 
 
 def run_demo():
-    """Run the metrics approximation demo."""
+    """Run the metrics approximation demo using evaluate_impact()."""
     print("=" * 60)
     print("Metrics-Based Impact Approximation Demo")
+    print("Using evaluate_impact() - single call does everything!")
     print("=" * 60)
-    
-    # 1. Create simulated data
-    print("\n1. Simulated Input Data (enriched products only):")
-    data = create_simulated_data()
-    print(data.to_string(index=False))
-    
-    # 2. Configure the model
-    print("\n2. Model Configuration:")
-    config = {
-        "metric_before_column": "quality_before",
-        "metric_after_column": "quality_after",
-        "baseline_column": "baseline_sales",
-        "response": {
-            "FUNCTION": "linear",
-            "PARAMS": {"coefficient": 0.5}
-        }
-    }
-    print(f"   - Response Function: {config['response']['FUNCTION']}")
-    print(f"   - Coefficient: {config['response']['PARAMS']['coefficient']}")
-    print("   - Formula: impact = coefficient × Δ_quality × baseline_sales")
-    
-    # 3. Initialize and connect adapter
-    adapter = MetricsApproximationAdapter()
-    adapter.connect(config)
-    print("\n3. Model initialized and connected successfully.")
-    
-    # 4. Run approximation
-    print("\n4. Running impact approximation...")
-    results = adapter.fit(data)
-    
-    # 5. Display results
-    print("\n5. Results:")
+
+    # Create output directory
+    output_path = Path("output/demo_metrics_approximation")
+    output_path.mkdir(parents=True, exist_ok=True)
+
+    # 1. Create products.csv
+    print("\n1. Creating products.csv:")
+    products_path = create_products_csv(str(output_path))
+
+    # 2. Load and display config
+    print(f"\n2. Using config: {CONFIG_PATH}")
+    with open(CONFIG_PATH) as f:
+        config = yaml.safe_load(f)
+    print(f"   ENRICHMENT: {config['DATA']['ENRICHMENT']['function']}")
+    print(f"   TRANSFORM: {config['DATA']['TRANSFORM']['FUNCTION']}")
+    print(f"   MODEL: {config['MEASUREMENT']['MODEL']}")
+
+    # 3. Call evaluate_impact() - single call does everything!
+    print("\n3. Calling evaluate_impact()...")
+    print("   - Engine creates CatalogSimulatorAdapter")
+    print("   - Adapter simulates metrics")
+    print("   - Adapter generates product_details")
+    print("   - Adapter applies enrichment (quality boost)")
+    print("   - Transform extracts quality_before/quality_after")
+    print("   - MetricsApproximationAdapter computes impact")
+
+    results = evaluate_impact(str(CONFIG_PATH), str(output_path / "results"))
+
+    # 4. Display results
+    print("\n4. Results:")
     print("-" * 60)
-    
-    print("\n   Aggregate Impact Estimates:")
+
+    print(f"\n   Model Type: {results['model_type']}")
+    print(f"   Response Function: {results['response_function']}")
+
     estimates = results["impact_estimates"]
+    print("\n   Aggregate Impact Estimates:")
     print(f"   - Total Approximated Impact: ${estimates['total_approximated_impact']:.2f}")
     print(f"   - Mean Approximated Impact:  ${estimates['mean_approximated_impact']:.2f}")
     print(f"   - Mean Quality Change:       {estimates['mean_metric_change']:.4f}")
     print(f"   - Number of Products:        {estimates['n_products']}")
-    
+
     print("\n   Per-Product Breakdown:")
     print("   " + "-" * 56)
-    print(f"   {'Product':<10} {'Δ Quality':<12} {'Baseline':<12} {'Impact':<12}")
+    print(f"   {'Product':<15} {'Δ Quality':<12} {'Baseline':<12} {'Impact':<12}")
     print("   " + "-" * 56)
     for p in results["per_product"]:
-        print(f"   {p['product_id']:<10} {p['delta_metric']:<12.4f} ${p['baseline_outcome']:<11.2f} ${p['approximated_impact']:<11.2f}")
-    
-    # 6. Explain calculation
-    print("\n6. Example Calculation (P001):")
-    p1 = results["per_product"][0]
-    print(f"   Δ_quality = {data.iloc[0]['quality_after']} - {data.iloc[0]['quality_before']} = {p1['delta_metric']}")
-    print(f"   impact = 0.5 × {p1['delta_metric']} × ${p1['baseline_outcome']:.0f} = ${p1['approximated_impact']:.2f}")
-    
+        print(
+            f"   {p['product_id']:<15} {p['delta_metric']:<12.4f} "
+            f"${p['baseline_outcome']:<11.2f} ${p['approximated_impact']:<11.2f}"
+        )
+
     print("\n" + "=" * 60)
     print("Demo Complete!")
+    print(f"Results saved to: {output_path / 'results'}")
     print("=" * 60)
-    
+
     return results
 
 
