@@ -234,19 +234,28 @@ class TestMetricsFactory:
             products_path = str(Path(tmpdir) / "products.csv")
             pd.DataFrame({"product_id": ["p1"]}).to_csv(products_path, index=False)
 
+            # Use new SOURCE/TRANSFORM config structure
             config = {
                 "DATA": {
-                    "TYPE": "simulator",
-                    "PATH": products_path,
-                    "MODE": "rule",
-                    "SEED": 42,
-                    "START_DATE": "2024-01-01",
-                    "END_DATE": "2024-01-31",
+                    "SOURCE": {
+                        "TYPE": "simulator",
+                        "CONFIG": {
+                            "PATH": products_path,
+                            "MODE": "rule",
+                            "SEED": 42,
+                            "START_DATE": "2024-01-01",
+                            "END_DATE": "2024-01-31",
+                        },
+                    },
+                    "TRANSFORM": {
+                        "FUNCTION": "aggregate_by_date",
+                        "PARAMS": {"metric": "revenue"},
+                    },
                 },
                 "MEASUREMENT": {
                     "MODEL": "interrupted_time_series",
                     "PARAMS": {
-                        "INTERVENTION_DATE": "2024-01-15",
+                        "intervention_date": "2024-01-15",
                     },
                 },
             }
@@ -257,7 +266,8 @@ class TestMetricsFactory:
             manager = create_metrics_manager(config_path)
 
             assert isinstance(manager, MetricsManager)
-            assert manager.data_config == config["DATA"]
+            # source_config is now the SOURCE.CONFIG part
+            assert manager.source_config == config["DATA"]["SOURCE"]["CONFIG"]
 
     def test_create_metrics_manager_unknown_type(self):
         """Test creating manager with unknown adapter type."""

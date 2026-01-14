@@ -78,7 +78,7 @@ class TestModelsManagerDependencyInjection:
     def test_create_with_injected_model(self):
         """Test creating manager with injected model."""
         mock_model = MockModel()
-        config = {"PARAMS": {"INTERVENTION_DATE": "2024-01-15"}}
+        config = {"PARAMS": {"intervention_date": "2024-01-15"}}
 
         manager = ModelsManager(config, mock_model)
 
@@ -90,7 +90,7 @@ class TestModelsManagerDependencyInjection:
         mock_model = Mock(spec=Model)
         mock_model.connect.return_value = True
 
-        config = {"PARAMS": {"INTERVENTION_DATE": "2024-01-15"}}
+        config = {"PARAMS": {"intervention_date": "2024-01-15"}}
 
         manager = ModelsManager(config, mock_model)
 
@@ -100,7 +100,7 @@ class TestModelsManagerDependencyInjection:
     def test_model_receives_params_config(self):
         """Test that model receives PARAMS config on connect."""
         mock_model = MockModel()
-        params = {"INTERVENTION_DATE": "2024-01-15", "order": (1, 0, 0)}
+        params = {"intervention_date": "2024-01-15", "order": (1, 0, 0)}
         config = {"PARAMS": params}
 
         ModelsManager(config, mock_model)
@@ -120,7 +120,7 @@ class TestModelsManagerConfiguration:
     def test_get_current_config(self):
         """Test getting current configuration."""
         mock_model = MockModel()
-        config = {"PARAMS": {"INTERVENTION_DATE": "2024-01-15"}}
+        config = {"PARAMS": {"intervention_date": "2024-01-15"}}
 
         manager = ModelsManager(config, mock_model)
         assert manager.get_current_config() == config
@@ -134,7 +134,7 @@ class TestModelsManagerFitModel:
         from artifact_store import ArtifactStore
 
         mock_model = MockModel()
-        config = {"PARAMS": {"INTERVENTION_DATE": "2024-01-15"}}
+        config = {"PARAMS": {"intervention_date": "2024-01-15"}}
 
         manager = ModelsManager(config, mock_model)
 
@@ -158,7 +158,7 @@ class TestModelsManagerFitModel:
         mock_model.connect.return_value = True
         mock_model.fit.return_value = "/path/to/results.json"
 
-        config = {"PARAMS": {"INTERVENTION_DATE": "2024-01-15"}}
+        config = {"PARAMS": {"intervention_date": "2024-01-15"}}
         manager = ModelsManager(config, mock_model)
 
         data = pd.DataFrame({"date": pd.date_range("2024-01-01", periods=10), "value": range(10)})
@@ -171,10 +171,11 @@ class TestModelsManagerFitModel:
             call_kwargs = mock_model.fit.call_args[1]
             assert call_kwargs["intervention_date"] == "2024-01-15"
 
-    def test_fit_model_missing_intervention_date(self):
-        """Test fit_model raises error when intervention date is missing."""
+    def test_fit_model_missing_intervention_date_for_its(self):
+        """Test fit_model raises error when intervention date is missing for ITS model."""
         mock_model = MockModel()
-        config = {"PARAMS": {}}  # No INTERVENTION_DATE
+        # Set MODEL type to interrupted_time_series to trigger intervention_date requirement
+        config = {"MODEL": "interrupted_time_series", "PARAMS": {}}
 
         manager = ModelsManager(config, mock_model)
 
@@ -185,13 +186,13 @@ class TestModelsManagerFitModel:
 
             storage = ArtifactStore(tmpdir)
 
-            with pytest.raises(ValueError, match="INTERVENTION_DATE must be specified"):
+            with pytest.raises(ValueError, match="intervention_date must be specified"):
                 manager.fit_model(data=data, output_path="results", storage=storage)
 
     def test_fit_model_missing_storage(self):
         """Test fit_model raises error when storage is missing."""
         mock_model = MockModel()
-        config = {"PARAMS": {"INTERVENTION_DATE": "2024-01-15"}}
+        config = {"PARAMS": {"intervention_date": "2024-01-15"}}
 
         manager = ModelsManager(config, mock_model)
 
@@ -208,7 +209,7 @@ class TestModelsManagerFitModel:
         mock_model.connect.return_value = True
         mock_model.fit.return_value = "/path/to/results.json"
 
-        config = {"PARAMS": {"INTERVENTION_DATE": "2024-01-15"}}
+        config = {"PARAMS": {"intervention_date": "2024-01-15"}}
         manager = ModelsManager(config, mock_model)
 
         data = pd.DataFrame({"date": pd.date_range("2024-01-01", periods=10), "value": range(10)})
@@ -238,7 +239,7 @@ class TestModelsFactory:
         try:
             config = {
                 "MODEL": "mock",
-                "PARAMS": {"INTERVENTION_DATE": "2024-01-15"},
+                "PARAMS": {"intervention_date": "2024-01-15"},
             }
 
             manager = create_models_manager_from_config(config)
@@ -254,17 +255,22 @@ class TestModelsFactory:
             products_path = str(Path(tmpdir) / "products.csv")
             pd.DataFrame({"product_id": ["p1"]}).to_csv(products_path, index=False)
 
+            # Use new SOURCE/TRANSFORM config structure
             config = {
                 "DATA": {
-                    "TYPE": "simulator",
-                    "PATH": products_path,
-                    "START_DATE": "2024-01-01",
-                    "END_DATE": "2024-01-31",
+                    "SOURCE": {
+                        "TYPE": "simulator",
+                        "CONFIG": {
+                            "PATH": products_path,
+                            "START_DATE": "2024-01-01",
+                            "END_DATE": "2024-01-31",
+                        },
+                    },
                 },
                 "MEASUREMENT": {
                     "MODEL": "interrupted_time_series",
                     "PARAMS": {
-                        "INTERVENTION_DATE": "2024-01-15",
+                        "intervention_date": "2024-01-15",
                     },
                 },
             }
@@ -281,7 +287,7 @@ class TestModelsFactory:
         """Test creating manager with unknown model type."""
         config = {
             "MODEL": "unknown_model",
-            "PARAMS": {"INTERVENTION_DATE": "2024-01-15"},
+            "PARAMS": {"intervention_date": "2024-01-15"},
         }
 
         with pytest.raises(ValueError, match="Unknown model type"):
@@ -305,7 +311,7 @@ class TestModelsManagerConnectionFailure:
         mock_model = Mock(spec=Model)
         mock_model.connect.return_value = False
 
-        config = {"PARAMS": {"INTERVENTION_DATE": "2024-01-15"}}
+        config = {"PARAMS": {"intervention_date": "2024-01-15"}}
 
         with pytest.raises(ConnectionError, match="Failed to connect"):
             ModelsManager(config, mock_model)

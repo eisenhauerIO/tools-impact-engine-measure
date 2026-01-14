@@ -2,7 +2,11 @@
 
 from .adapter_catalog_simulator import CatalogSimulatorAdapter
 from .base import MetricsInterface
-from .factory import create_metrics_manager, create_metrics_manager_from_config
+from .factory import (
+    create_metrics_manager,
+    create_metrics_manager_from_config,
+    create_metrics_manager_from_source_config,
+)
 from .manager import MetricsManager
 
 __all__ = [
@@ -11,4 +15,5 @@ __all__ = [
     "CatalogSimulatorAdapter",
     "create_metrics_manager",
     "create_metrics_manager_from_config",
+    "create_metrics_manager_from_source_config",
 ]

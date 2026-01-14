@@ -55,15 +55,23 @@ class ModelsManager:
         # Get parameters from config if not provided
         params = self.measurement_config["PARAMS"]
 
+        # Support both lowercase and uppercase param names for backward compatibility
         if intervention_date is None:
-            intervention_date = params.get("INTERVENTION_DATE")
+            intervention_date = params.get("intervention_date") or params.get("INTERVENTION_DATE")
 
         if dependent_variable is None:
-            dependent_variable = params.get("DEPENDENT_VARIABLE", "revenue")
+            dependent_variable = (
+                params.get("dependent_variable")
+                or params.get("DEPENDENT_VARIABLE")
+                or "revenue"
+            )
 
-        if not intervention_date:
+        # ITS model requires intervention_date, but metrics_approximation doesn't
+        model_type = self.measurement_config.get("MODEL", "")
+        if model_type == "interrupted_time_series" and not intervention_date:
             raise ValueError(
-                "INTERVENTION_DATE must be specified in MEASUREMENT.PARAMS configuration"
+                "intervention_date must be specified in MEASUREMENT.PARAMS configuration "
+                "for interrupted_time_series model"
             )
 
         # Storage backend is required

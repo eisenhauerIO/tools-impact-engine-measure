@@ -1,16 +1,22 @@
 DATA:
-  END_DATE: '2024-11-30'
-  MODE: rule
-  PATH: output/job-catalog-simulator-simulation-characteristics-20251221-184357-5d908492/products.csv
-  SEED: 42
-  START_DATE: '2024-11-01'
-  TYPE: simulator
+  SOURCE:
+    TYPE: simulator
+    CONFIG:
+      MODE: rule
+      SEED: 42
+      START_DATE: '2024-11-01'
+      END_DATE: '2024-11-30'
+      PATH: output/job-catalog-simulator-simulation-characteristics-20251221-184357-5d908492/products.csv
+  TRANSFORM:
+    FUNCTION: aggregate_by_date
+    PARAMS:
+      metric: revenue
+
 MEASUREMENT:
   MODEL: interrupted_time_series
   PARAMS:
-    DEPENDENT_VARIABLE: revenue
-    END_DATE: '2024-11-30'
-    INTERVENTION_DATE: '2024-11-15'
-    START_DATE: '2024-11-01'
+    dependent_variable: revenue
+    intervention_date: '2024-11-15'
+
 OUTPUT:
   PATH: output
