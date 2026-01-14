@@ -1,0 +1,45 @@
+# Default configuration for impact_engine
+# These values are merged with user configuration, with user values taking precedence.
+
+DATA:
+  SOURCE:
+    TYPE: simulator
+    CONFIG:
+      MODE: rule
+      SEED: 42
+      # PATH, START_DATE, END_DATE must be provided by user
+      PATH: null
+      START_DATE: null
+      END_DATE: null
+
+  # Default transform is passthrough (no transformation)
+  TRANSFORM:
+    FUNCTION: passthrough
+    PARAMS: {}
+
+# Measurement configuration with model-specific defaults
+MEASUREMENT:
+  # Model type - must be specified by user or defaults to interrupted_time_series
+  MODEL: interrupted_time_series
+
+  PARAMS:
+    # ITS model parameters
+    interrupted_time_series:
+      dependent_variable: revenue
+      intervention_date: null  # Must be provided by user
+      order: [1, 0, 0]
+      seasonal_order: [0, 0, 0, 0]
+
+    # Metrics approximation parameters
+    metrics_approximation:
+      metric_before_column: quality_before
+      metric_after_column: quality_after
+      baseline_column: baseline_sales
+      RESPONSE:
+        FUNCTION: linear
+        PARAMS:
+          coefficient: 1.0
+
+# Output configuration defaults
+OUTPUT:
+  PATH: output

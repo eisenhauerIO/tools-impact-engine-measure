@@ -288,7 +288,12 @@ class TestModelsFactory:
             manager = create_models_manager(config_path)
 
             assert isinstance(manager, ModelsManager)
-            assert manager.measurement_config == config["MEASUREMENT"]
+            # Check that user-provided params are present (defaults are also merged in)
+            assert manager.measurement_config["MODEL"] == "interrupted_time_series"
+            assert manager.measurement_config["PARAMS"]["intervention_date"] == "2024-01-15"
+            # Defaults should be merged in (order, seasonal_order, dependent_variable)
+            assert "order" in manager.measurement_config["PARAMS"]
+            assert "dependent_variable" in manager.measurement_config["PARAMS"]
 
     def test_create_models_manager_unknown_type(self):
         """Test creating manager with unknown model type."""
