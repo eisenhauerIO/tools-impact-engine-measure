@@ -20,7 +20,7 @@ Run:
 ```bash
 git status --porcelain
 ```
-If any files are listed (output is not empty), STOP. This means there are either uncommitted changes or files not under version control (untracked files).
+If any files are listed (output is not empty), STOP. This means there are either uncommitted changes or files not under version control (untracked files).s
 
 Ask the user how to proceed (commit, stash, discard changes, or add untracked files to version control).
 
@@ -28,7 +28,7 @@ Ask the user how to proceed (commit, stash, discard changes, or add untracked fi
 
 Run:
 ```bash
-hatch run pytest science/tests/ -v
+hatch run pytest science/ -v
 ```
 If any test fails (non-zero exit code), STOP. Ask the user for input before continuing.
 

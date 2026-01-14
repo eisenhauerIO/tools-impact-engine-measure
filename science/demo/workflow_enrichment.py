@@ -9,6 +9,7 @@ This demo:
 5. Compares ITS estimate to true effect to validate the model
 """
 
+import copy
 import json
 import os
 
@@ -126,37 +127,35 @@ if __name__ == "__main__":
         products_path = FIXED_PRODUCTS_PATH
     else:
         print("\nStep 1: Generating product characteristics (first run)...")
-        import shutil
 
         job_info = simulate_characteristics("config_enrichment_simulator.yaml")
-        src_path = f"{job_info.full_path}/products.csv"
+        products = job_info.load_df("products")
         os.makedirs(os.path.dirname(FIXED_PRODUCTS_PATH), exist_ok=True)
-        shutil.copy(src_path, FIXED_PRODUCTS_PATH)
+        products.to_csv(FIXED_PRODUCTS_PATH, index=False)
         products_path = FIXED_PRODUCTS_PATH
         print(f"  Saved to: {products_path}")
 
     # Load config
     with open("config_enrichment.yaml", "r") as f:
         config = yaml.safe_load(f)
-    config["DATA"]["PATH"] = products_path
+    config["DATA"]["SOURCE"]["CONFIG"]["PATH"] = products_path
 
     enrichment_config = config["DATA"]["ENRICHMENT"]
     intervention_date = enrichment_config["params"]["enrichment_start"]
-    effect_size = enrichment_config["params"]["effect_size"]
-    metric = config["MEASUREMENT"]["PARAMS"]["DEPENDENT_VARIABLE"]
+    quality_boost = enrichment_config["params"]["quality_boost"]
+    metric = config["MEASUREMENT"]["PARAMS"]["dependent_variable"]
 
     print(f"  Products: {products_path}")
-    print(f"  Enrichment: {effect_size*100:.0f}% boost starting {intervention_date}")
+    print(f"  Enrichment: {quality_boost*100:.0f}% quality boost starting {intervention_date}")
     print(f"  Metric: {metric}")
 
     # Step 2: Get BASELINE metrics (counterfactual - no enrichment)
     print("\nStep 2: Generating counterfactual (no enrichment)...")
     products = pd.read_csv(products_path)
 
-    # Create config without enrichment
-    baseline_config = config.copy()
-    baseline_config["DATA"] = {k: v for k, v in config["DATA"].items() if k != "ENRICHMENT"}
-    baseline_config["DATA"]["PATH"] = products_path
+    # Create config without enrichment (deep copy needed to avoid modifying original)
+    baseline_config = copy.deepcopy(config)
+    del baseline_config["DATA"]["ENRICHMENT"]
 
     with open("_temp_baseline.yaml", "w") as f:
         yaml.dump(baseline_config, f)
