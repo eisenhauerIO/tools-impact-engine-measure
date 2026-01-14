@@ -11,7 +11,18 @@ class Model(ABC):
 
     Defines the unified interface that all impact models must implement.
     This ensures consistent behavior across different modeling approaches
-    (interrupted time series, causal inference, regression discontinuity, etc.).
+    (interrupted time series, causal inference, metrics approximation, etc.).
+
+    Required methods (must override):
+        - connect: Initialize model with configuration
+        - fit: Fit model to data
+
+    Optional methods (have sensible defaults):
+        - validate_connection: Check if model is ready
+        - validate_data: Check if input data is valid
+        - get_required_columns: Return list of required columns
+        - transform_outbound: Transform data to external format
+        - transform_inbound: Transform results from external format
     """
 
     @abstractmethod
@@ -27,28 +38,16 @@ class Model(ABC):
         pass
 
     @abstractmethod
-    def validate_connection(self) -> bool:
-        """Validate that the model is properly initialized and ready to use.
-
-        Returns:
-            bool: True if model is ready, False otherwise
-        """
-        pass
-
-    @abstractmethod
-    def fit(self, data: pd.DataFrame, intervention_date: str, output_path: str, **kwargs) -> str:
-        """Fit the model to the provided data and save results.
+    def fit(self, data: pd.DataFrame, **kwargs) -> Any:
+        """Fit the model to the provided data.
 
         Args:
-            data: DataFrame containing time series data with required columns.
-                  Must include 'date' column and dependent variable column.
-            intervention_date: Date string (YYYY-MM-DD format) indicating when
-                             the intervention occurred.
-            output_path: Directory path where model results should be saved.
-            **kwargs: Additional model-specific parameters.
+            data: DataFrame containing data for model fitting.
+            **kwargs: Model-specific parameters (e.g., intervention_date,
+                     output_path, dependent_variable).
 
         Returns:
-            str: Path to the saved results file.
+            Model-specific results (Dict, str path, etc.)
 
         Raises:
             ValueError: If data validation fails or required columns are missing.
@@ -56,9 +55,21 @@ class Model(ABC):
         """
         pass
 
-    @abstractmethod
+    def validate_connection(self) -> bool:
+        """Validate that the model is properly initialized and ready to use.
+
+        Default implementation returns True. Override for custom validation.
+
+        Returns:
+            bool: True if model is ready, False otherwise.
+        """
+        return True
+
     def validate_data(self, data: pd.DataFrame) -> bool:
         """Validate that the input data meets model requirements.
+
+        Default implementation checks if data is non-empty.
+        Override for custom validation.
 
         Args:
             data: DataFrame to validate.
@@ -66,36 +77,39 @@ class Model(ABC):
         Returns:
             bool: True if data is valid, False otherwise.
         """
-        pass
+        return data is not None and not data.empty
 
-    @abstractmethod
     def get_required_columns(self) -> List[str]:
         """Get the list of required columns for this model.
+
+        Default implementation returns empty list.
+        Override if model requires specific columns.
 
         Returns:
             List[str]: Column names that must be present in input data.
         """
-        pass
+        return []
 
-    @abstractmethod
-    def transform_outbound(
-        self, data: pd.DataFrame, intervention_date: str, **kwargs
-    ) -> Dict[str, Any]:
+    def transform_outbound(self, data: pd.DataFrame, **kwargs) -> Dict[str, Any]:
         """Transform impact engine format to model library format.
+
+        Default implementation is pass-through.
+        Override for models that need data transformation.
 
         Args:
             data: DataFrame with impact engine standardized format
-            intervention_date: Date string (YYYY-MM-DD format) for intervention
             **kwargs: Additional model-specific parameters
 
         Returns:
             Dictionary with parameters formatted for the model library
         """
-        pass
+        return {"data": data, **kwargs}
 
-    @abstractmethod
     def transform_inbound(self, model_results: Any) -> Dict[str, Any]:
         """Transform model library results to impact engine format.
+
+        Default implementation returns results as-is (or wrapped in dict).
+        Override for models that need result transformation.
 
         Args:
             model_results: Raw results from the model library
@@ -103,4 +117,6 @@ class Model(ABC):
         Returns:
             Dictionary with standardized impact analysis results
         """
-        pass
+        if isinstance(model_results, dict):
+            return model_results
+        return {"results": model_results}

@@ -8,13 +8,15 @@ keeping the ModelsManager class simple and focused on coordination.
 from typing import Any, Dict
 
 from ..config import parse_config_file
-from .adapter_interrupted_time_series import InterruptedTimeSeriesAdapter
 from .base import Model
+from .interrupted_time_series import InterruptedTimeSeriesAdapter
 from .manager import ModelsManager
+from .metrics_approximation import MetricsApproximationAdapter
 
 # Registry of available models
 MODEL_ADAPTERS: Dict[str, type] = {
     "interrupted_time_series": InterruptedTimeSeriesAdapter,
+    "metrics_approximation": MetricsApproximationAdapter,
 }
 
 

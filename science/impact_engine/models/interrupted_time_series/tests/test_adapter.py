@@ -6,7 +6,8 @@ import pandas as pd
 import pytest
 from artifact_store import ArtifactStore
 
-from impact_engine.models import InterruptedTimeSeriesAdapter
+from impact_engine.models.interrupted_time_series import InterruptedTimeSeriesAdapter
+from impact_engine.models.interrupted_time_series.adapter import TransformedInput
 
 
 class TestInterruptedTimeSeriesAdapter:
@@ -121,8 +122,6 @@ class TestInterruptedTimeSeriesAdapter:
         """Test successful result formatting using stateless _format_results."""
         import numpy as np
 
-        from impact_engine.models.adapter_interrupted_time_series import TransformedInput
-
         model = InterruptedTimeSeriesAdapter()
         model.connect({"dependent_variable": "revenue"})
 
@@ -167,7 +166,7 @@ class TestInterruptedTimeSeriesAdapter:
         data = pd.DataFrame({"date": pd.date_range("2024-01-01", periods=10), "revenue": range(10)})
 
         with pytest.raises(ConnectionError, match="Model not connected"):
-            model.fit(data, "2024-01-05", "/tmp")
+            model.fit(data, intervention_date="2024-01-05", output_path="/tmp")
 
     def test_fit_no_storage(self):
         """Test fitting without storage backend."""
@@ -184,7 +183,7 @@ class TestInterruptedTimeSeriesAdapter:
         data = pd.DataFrame({"date": pd.date_range("2024-01-01", periods=10), "revenue": range(10)})
 
         with pytest.raises(RuntimeError, match="Storage backend is required"):
-            model.fit(data, "2024-01-05", "results")
+            model.fit(data, intervention_date="2024-01-05", output_path="results")
 
     def test_fit_result_file_creation(self):
         """Test that ITS model creates result file at specified path."""

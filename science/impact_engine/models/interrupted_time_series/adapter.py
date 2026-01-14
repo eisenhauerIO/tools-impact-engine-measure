@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 
-from .base import Model
+from ..base import Model
 
 
 @dataclass
@@ -87,25 +87,19 @@ class InterruptedTimeSeriesAdapter(Model):
         except ImportError:
             return False
 
-    def fit(
-        self,
-        data: pd.DataFrame,
-        intervention_date: str,
-        output_path: str,
-        dependent_variable: str = "revenue",
-        **kwargs,
-    ) -> str:
+    def fit(self, data: pd.DataFrame, **kwargs) -> str:
         """
         Fit the interrupted time series model and save results.
 
         Args:
             data: DataFrame containing time series data with 'date' column
                   and dependent variable column.
-            intervention_date: Date string (YYYY-MM-DD format) indicating when
-                             the intervention occurred.
-            output_path: Directory path where model results should be saved.
-            dependent_variable: Name of the column to model (default: "revenue").
-            **kwargs: Additional parameters (e.g., order, seasonal_order for SARIMAX).
+            **kwargs: Model parameters:
+                - intervention_date (str): Date (YYYY-MM-DD) when intervention occurred. Required.
+                - output_path (str): Directory path for saving results. Required.
+                - dependent_variable (str): Column to model (default: "revenue").
+                - order (tuple): SARIMAX order (p, d, q).
+                - seasonal_order (tuple): SARIMAX seasonal order (P, D, Q, s).
 
         Returns:
             str: Path to the saved results file.
@@ -114,6 +108,16 @@ class InterruptedTimeSeriesAdapter(Model):
             ValueError: If data validation fails or required columns are missing.
             RuntimeError: If model fitting fails.
         """
+        # Extract required kwargs
+        intervention_date = kwargs.get("intervention_date")
+        output_path = kwargs.get("output_path")
+        dependent_variable = kwargs.get("dependent_variable", "revenue")
+
+        if not intervention_date:
+            raise ValueError("intervention_date is required for InterruptedTimeSeriesAdapter")
+        if not output_path:
+            raise ValueError("output_path is required for InterruptedTimeSeriesAdapter")
+
         if not self.is_connected:
             raise ConnectionError("Model not connected. Call connect() first.")
 
@@ -125,8 +129,13 @@ class InterruptedTimeSeriesAdapter(Model):
                 )
 
             # Prepare model input (stateless transformation)
+            # Remove extracted params from kwargs to avoid duplicate arguments
+            model_kwargs = {
+                k: v for k, v in kwargs.items()
+                if k not in ("intervention_date", "output_path", "dependent_variable")
+            }
             transformed = self._prepare_model_input(
-                data, intervention_date, dependent_variable, **kwargs
+                data, intervention_date, dependent_variable, **model_kwargs
             )
 
             # Fit SARIMAX model
