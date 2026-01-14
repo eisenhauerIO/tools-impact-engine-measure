@@ -7,8 +7,6 @@ These tests verify the full pipeline:
 4. MetricsApproximationAdapter computes impact approximations
 """
 
-from unittest.mock import MagicMock, patch
-
 import pandas as pd
 import pytest
 
@@ -146,7 +144,7 @@ class TestMetricsApproximationPipeline:
         expected_total = 66.0 + 141.75 + 85.75
         assert results["impact_estimates"]["total_approximated_impact"] == expected_total
 
-    def test_catalog_simulator_transform_and_approximate(self, tmp_path):
+    def test_catalog_simulator_transform_and_approximate(self):
         """
         Test using CatalogSimulatorAdapter's transform_inbound to 
         convert data format, then run approximation.
