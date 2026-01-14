@@ -16,6 +16,9 @@ class MetricsManager:
 
     Uses dependency injection - the metrics source is passed in via constructor,
     making the manager easy to test with mock implementations.
+
+    Implements lazy connection - the metrics source is only connected when
+    first needed (e.g., when retrieve_metrics is called).
     """
 
     def __init__(
@@ -23,6 +26,7 @@ class MetricsManager:
         source_config: Dict[str, Any],
         metrics_source: MetricsInterface,
         parent_job: Optional[JobInfo] = None,
+        lazy_connect: bool = True,
     ):
         """Initialize the MetricsManager with injected metrics source.
 
@@ -30,18 +34,30 @@ class MetricsManager:
             source_config: SOURCE.CONFIG configuration block containing date range and settings.
             metrics_source: The metrics implementation to use for data retrieval.
             parent_job: Optional parent job for artifact management.
+            lazy_connect: If True (default), defer connection until first use.
+                         If False, connect immediately in constructor.
         """
         self.source_config = source_config
         self.metrics_source = metrics_source
         self.parent_job = parent_job
+        self._connected = False
 
-        # Validate the source config
+        # Validate the source config (always done eagerly)
         self._validate_source_config(source_config)
 
-        # Connect the injected metrics source
+        # Connect immediately if lazy_connect is disabled (for backward compatibility)
+        if not lazy_connect:
+            self._ensure_connected()
+
+    def _ensure_connected(self) -> None:
+        """Ensure the metrics source is connected, connecting if necessary."""
+        if self._connected:
+            return
+
         connection_config = self._build_connection_config()
         if not self.metrics_source.connect(connection_config):
             raise ConnectionError("Failed to connect to metrics source")
+        self._connected = True
 
     def _validate_source_config(self, source_config: Dict[str, Any]) -> None:
         """Validate SOURCE.CONFIG configuration block."""
@@ -81,6 +97,8 @@ class MetricsManager:
 
     def retrieve_metrics(self, products: pd.DataFrame) -> pd.DataFrame:
         """Retrieve business metrics for specified products using SOURCE.CONFIG date range."""
+        self._ensure_connected()
+
         if products is None or len(products) == 0:
             raise ValueError("Products DataFrame cannot be empty")
 
@@ -95,3 +113,8 @@ class MetricsManager:
     def get_current_config(self) -> Optional[Dict[str, Any]]:
         """Get the currently loaded configuration."""
         return self.source_config
+
+    @property
+    def is_connected(self) -> bool:
+        """Check if the metrics source is connected."""
+        return self._connected

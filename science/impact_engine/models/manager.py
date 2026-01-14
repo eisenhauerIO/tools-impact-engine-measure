@@ -14,29 +14,45 @@ class ModelsManager:
 
     Uses dependency injection - the model is passed in via constructor,
     making the manager easy to test with mock implementations.
+
+    Implements lazy connection - the model is only connected when
+    first needed (e.g., when fit_model is called).
     """
 
     def __init__(
         self,
         measurement_config: Dict[str, Any],
         model: Model,
+        lazy_connect: bool = True,
     ):
         """Initialize the ModelsManager with injected model.
 
         Args:
             measurement_config: MEASUREMENT configuration block containing model params.
             model: The model implementation to use for fitting.
+            lazy_connect: If True (default), defer connection until first use.
+                         If False, connect immediately in constructor.
         """
         self.measurement_config = measurement_config
         self.model = model
+        self._connected = False
 
-        # Validate the measurement config
+        # Validate the measurement config (always done eagerly)
         self._validate_measurement_config(measurement_config)
 
-        # Connect the injected model with configuration
-        model_config = measurement_config.get("PARAMS", {})
+        # Connect immediately if lazy_connect is disabled (for backward compatibility)
+        if not lazy_connect:
+            self._ensure_connected()
+
+    def _ensure_connected(self) -> None:
+        """Ensure the model is connected, connecting if necessary."""
+        if self._connected:
+            return
+
+        model_config = self.measurement_config.get("PARAMS", {})
         if not self.model.connect(model_config):
             raise ConnectionError("Failed to connect to model")
+        self._connected = True
 
     def _validate_measurement_config(self, measurement_config: Dict[str, Any]) -> None:
         """Validate MEASUREMENT configuration block."""
@@ -52,6 +68,8 @@ class ModelsManager:
         storage=None,
     ) -> str:
         """Fit model using configuration parameters."""
+        self._ensure_connected()
+
         # Get parameters from config if not provided
         params = self.measurement_config["PARAMS"]
 
@@ -92,3 +110,8 @@ class ModelsManager:
     def get_current_config(self) -> Optional[Dict[str, Any]]:
         """Get the currently loaded configuration."""
         return self.measurement_config
+
+    @property
+    def is_connected(self) -> bool:
+        """Check if the model is connected."""
+        return self._connected

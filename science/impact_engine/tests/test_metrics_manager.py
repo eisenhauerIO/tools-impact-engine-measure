@@ -62,23 +62,23 @@ class TestMetricsManagerDependencyInjection:
     """Tests for dependency injection pattern."""
 
     def test_create_with_injected_adapter(self):
-        """Test creating manager with injected adapter."""
+        """Test creating manager with injected adapter (eager connection)."""
         mock_adapter = MockMetricsAdapter()
         config = {"START_DATE": "2024-01-01", "END_DATE": "2024-01-31"}
 
-        manager = MetricsManager(config, mock_adapter)
+        manager = MetricsManager(config, mock_adapter, lazy_connect=False)
 
         assert manager.metrics_source is mock_adapter
         assert mock_adapter.is_connected is True
 
     def test_create_with_mock_spec(self):
-        """Test creating manager with Mock(spec=MetricsInterface)."""
+        """Test creating manager with Mock(spec=MetricsInterface) (eager connection)."""
         mock_adapter = Mock(spec=MetricsInterface)
         mock_adapter.connect.return_value = True
 
         config = {"START_DATE": "2024-01-01", "END_DATE": "2024-01-31"}
 
-        manager = MetricsManager(config, mock_adapter)
+        manager = MetricsManager(config, mock_adapter, lazy_connect=False)
 
         mock_adapter.connect.assert_called_once()
         assert manager.metrics_source is mock_adapter
@@ -93,7 +93,7 @@ class TestMetricsManagerDependencyInjection:
             "SEED": 123,
         }
 
-        MetricsManager(config, mock_adapter)
+        MetricsManager(config, mock_adapter, lazy_connect=False)
 
         assert mock_adapter.config["mode"] == "ml"
         assert mock_adapter.config["seed"] == 123
@@ -108,9 +108,63 @@ class TestMetricsManagerDependencyInjection:
             "ENRICHMENT": enrichment,
         }
 
-        MetricsManager(config, mock_adapter)
+        MetricsManager(config, mock_adapter, lazy_connect=False)
 
         assert mock_adapter.config["enrichment"] == enrichment
+
+
+class TestMetricsManagerLazyConnection:
+    """Tests for lazy connection pattern."""
+
+    def test_lazy_connect_default(self):
+        """Test that lazy_connect is enabled by default."""
+        mock_adapter = MockMetricsAdapter()
+        config = {"START_DATE": "2024-01-01", "END_DATE": "2024-01-31"}
+
+        manager = MetricsManager(config, mock_adapter)
+
+        # Connection should not happen in constructor with lazy_connect=True (default)
+        assert manager.is_connected is False
+        assert mock_adapter.is_connected is False
+
+    def test_lazy_connect_on_first_use(self):
+        """Test that connection happens on first use."""
+        mock_adapter = MockMetricsAdapter()
+        config = {"START_DATE": "2024-01-01", "END_DATE": "2024-01-31"}
+
+        manager = MetricsManager(config, mock_adapter)
+
+        # Not connected yet
+        assert manager.is_connected is False
+
+        # Trigger connection by retrieving metrics
+        products = pd.DataFrame({"product_id": ["p1"]})
+        manager.retrieve_metrics(products)
+
+        # Now connected
+        assert manager.is_connected is True
+        assert mock_adapter.is_connected is True
+
+    def test_lazy_connect_idempotent(self):
+        """Test that multiple calls don't reconnect."""
+        mock_adapter = Mock(spec=MetricsInterface)
+        mock_adapter.connect.return_value = True
+        mock_adapter.retrieve_business_metrics.return_value = pd.DataFrame(
+            {"product_id": ["p1"], "revenue": [100], "date": ["2024-01-01"]}
+        )
+
+        config = {"START_DATE": "2024-01-01", "END_DATE": "2024-01-31"}
+        manager = MetricsManager(config, mock_adapter)
+
+        products = pd.DataFrame({"product_id": ["p1"]})
+
+        # Call multiple times
+        manager.retrieve_metrics(products)
+        manager.retrieve_metrics(products)
+        manager.retrieve_metrics(products)
+
+        # Connect should only be called once
+        assert mock_adapter.connect.call_count == 1
 
 
 class TestMetricsManagerConfiguration:
@@ -293,12 +347,27 @@ class TestMetricsFactory:
 class TestMetricsManagerConnectionFailure:
     """Tests for connection failure handling."""
 
-    def test_connection_failure_raises_error(self):
-        """Test that connection failure raises ConnectionError."""
+    def test_connection_failure_raises_error_eager(self):
+        """Test that connection failure raises ConnectionError with eager connection."""
         mock_adapter = Mock(spec=MetricsInterface)
         mock_adapter.connect.return_value = False
 
         config = {"START_DATE": "2024-01-01", "END_DATE": "2024-01-31"}
 
         with pytest.raises(ConnectionError, match="Failed to connect"):
-            MetricsManager(config, mock_adapter)
+            MetricsManager(config, mock_adapter, lazy_connect=False)
+
+    def test_connection_failure_raises_error_lazy(self):
+        """Test that connection failure raises ConnectionError with lazy connection."""
+        mock_adapter = Mock(spec=MetricsInterface)
+        mock_adapter.connect.return_value = False
+
+        config = {"START_DATE": "2024-01-01", "END_DATE": "2024-01-31"}
+
+        # Constructor succeeds with lazy connection
+        manager = MetricsManager(config, mock_adapter, lazy_connect=True)
+
+        # Error occurs on first use
+        products = pd.DataFrame({"product_id": ["p1"]})
+        with pytest.raises(ConnectionError, match="Failed to connect"):
+            manager.retrieve_metrics(products)

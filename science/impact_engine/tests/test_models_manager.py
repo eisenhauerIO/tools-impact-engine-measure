@@ -76,23 +76,23 @@ class TestModelsManagerDependencyInjection:
     """Tests for dependency injection pattern."""
 
     def test_create_with_injected_model(self):
-        """Test creating manager with injected model."""
+        """Test creating manager with injected model (eager connection)."""
         mock_model = MockModel()
         config = {"PARAMS": {"intervention_date": "2024-01-15"}}
 
-        manager = ModelsManager(config, mock_model)
+        manager = ModelsManager(config, mock_model, lazy_connect=False)
 
         assert manager.model is mock_model
         assert mock_model.is_connected is True
 
     def test_create_with_mock_spec(self):
-        """Test creating manager with Mock(spec=Model)."""
+        """Test creating manager with Mock(spec=Model) (eager connection)."""
         mock_model = Mock(spec=Model)
         mock_model.connect.return_value = True
 
         config = {"PARAMS": {"intervention_date": "2024-01-15"}}
 
-        manager = ModelsManager(config, mock_model)
+        manager = ModelsManager(config, mock_model, lazy_connect=False)
 
         mock_model.connect.assert_called_once()
         assert manager.model is mock_model
@@ -103,9 +103,73 @@ class TestModelsManagerDependencyInjection:
         params = {"intervention_date": "2024-01-15", "order": (1, 0, 0)}
         config = {"PARAMS": params}
 
-        ModelsManager(config, mock_model)
+        ModelsManager(config, mock_model, lazy_connect=False)
 
         assert mock_model.config == params
+
+
+class TestModelsManagerLazyConnection:
+    """Tests for lazy connection pattern."""
+
+    def test_lazy_connect_default(self):
+        """Test that lazy_connect is enabled by default."""
+        mock_model = MockModel()
+        config = {"PARAMS": {"intervention_date": "2024-01-15"}}
+
+        manager = ModelsManager(config, mock_model)
+
+        # Connection should not happen in constructor with lazy_connect=True (default)
+        assert manager.is_connected is False
+        assert mock_model.is_connected is False
+
+    def test_lazy_connect_on_first_use(self):
+        """Test that connection happens on first use."""
+        from artifact_store import ArtifactStore
+        import tempfile
+
+        mock_model = MockModel()
+        config = {"PARAMS": {"intervention_date": "2024-01-15"}}
+
+        manager = ModelsManager(config, mock_model)
+
+        # Not connected yet
+        assert manager.is_connected is False
+
+        # Trigger connection by fitting model
+        data = pd.DataFrame({"date": pd.date_range("2024-01-01", periods=10), "value": range(10)})
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            storage = ArtifactStore(tmpdir)
+            manager.fit_model(data=data, output_path="results", storage=storage)
+
+        # Now connected
+        assert manager.is_connected is True
+        assert mock_model.is_connected is True
+
+    def test_lazy_connect_idempotent(self):
+        """Test that multiple calls don't reconnect."""
+        from artifact_store import ArtifactStore
+        import tempfile
+
+        mock_model = Mock(spec=Model)
+        mock_model.connect.return_value = True
+        mock_model.fit.return_value = "/path/to/results.json"
+
+        config = {"PARAMS": {"intervention_date": "2024-01-15"}}
+        manager = ModelsManager(config, mock_model)
+
+        data = pd.DataFrame({"date": pd.date_range("2024-01-01", periods=10), "value": range(10)})
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            storage = ArtifactStore(tmpdir)
+
+            # Call multiple times
+            manager.fit_model(data=data, output_path="results", storage=storage)
+            manager.fit_model(data=data, output_path="results", storage=storage)
+            manager.fit_model(data=data, output_path="results", storage=storage)
+
+        # Connect should only be called once
+        assert mock_model.connect.call_count == 1
 
 
 class TestModelsManagerConfiguration:
@@ -306,12 +370,33 @@ class TestModelsFactory:
 class TestModelsManagerConnectionFailure:
     """Tests for connection failure handling."""
 
-    def test_connection_failure_raises_error(self):
-        """Test that connection failure raises ConnectionError."""
+    def test_connection_failure_raises_error_eager(self):
+        """Test that connection failure raises ConnectionError with eager connection."""
         mock_model = Mock(spec=Model)
         mock_model.connect.return_value = False
 
         config = {"PARAMS": {"intervention_date": "2024-01-15"}}
 
         with pytest.raises(ConnectionError, match="Failed to connect"):
-            ModelsManager(config, mock_model)
+            ModelsManager(config, mock_model, lazy_connect=False)
+
+    def test_connection_failure_raises_error_lazy(self):
+        """Test that connection failure raises ConnectionError with lazy connection."""
+        from artifact_store import ArtifactStore
+        import tempfile
+
+        mock_model = Mock(spec=Model)
+        mock_model.connect.return_value = False
+
+        config = {"PARAMS": {"intervention_date": "2024-01-15"}}
+
+        # Constructor succeeds with lazy connection
+        manager = ModelsManager(config, mock_model, lazy_connect=True)
+
+        # Error occurs on first use
+        data = pd.DataFrame({"date": pd.date_range("2024-01-01", periods=10), "value": range(10)})
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            storage = ArtifactStore(tmpdir)
+            with pytest.raises(ConnectionError, match="Failed to connect"):
+                manager.fit_model(data=data, output_path="results", storage=storage)
