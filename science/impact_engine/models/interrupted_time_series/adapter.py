@@ -50,18 +50,24 @@ class InterruptedTimeSeriesAdapter(Model):
         self.storage = None
 
     def connect(self, config: Dict[str, Any]) -> bool:
-        """Initialize model with configuration parameters."""
-        # Validate order parameter
+        """Initialize model with configuration parameters.
+
+        Args:
+            config: Model configuration. When called through process_config(),
+                all keys are guaranteed. When called directly (e.g., unit tests),
+                defaults are applied here for backward compatibility.
+
+        Note: Primary defaults are in config_defaults.yaml. These fallbacks
+        ensure direct adapter usage (without process_config) still works.
+        """
         order = config.get("order", (1, 0, 0))
         if not isinstance(order, tuple) or len(order) != 3:
             raise ValueError("Order must be a tuple of 3 integers (p, d, q)")
 
-        # Validate seasonal_order parameter
         seasonal_order = config.get("seasonal_order", (0, 0, 0, 0))
         if not isinstance(seasonal_order, tuple) or len(seasonal_order) != 4:
             raise ValueError("Seasonal order must be a tuple of 4 integers (P, D, Q, s)")
 
-        # Validate dependent_variable
         dependent_variable = config.get("dependent_variable", "revenue")
         if not isinstance(dependent_variable, str):
             raise ValueError("Dependent variable must be a string")

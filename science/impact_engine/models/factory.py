@@ -58,7 +58,8 @@ def create_models_manager_from_config(
     Raises:
         ValueError: If the configured model type is not supported.
     """
-    model_type = measurement_config.get("MODEL", "interrupted_time_series")
+    # MODEL is guaranteed by process_config() - defaults already applied
+    model_type = measurement_config["MODEL"]
 
     model = get_model_adapter(model_type)
 

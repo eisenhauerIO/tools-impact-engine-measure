@@ -66,7 +66,11 @@ class MetricsManager:
             )
 
     def _build_connection_config(self) -> Dict[str, Any]:
-        """Build connection configuration from SOURCE.CONFIG."""
+        """Build connection configuration from SOURCE.CONFIG.
+
+        Note: Primary defaults are in config_defaults.yaml. These fallbacks
+        ensure direct manager usage (without process_config) still works.
+        """
         config = {
             "mode": self.source_config.get("MODE", "rule"),
             "seed": self.source_config.get("SEED", 42),

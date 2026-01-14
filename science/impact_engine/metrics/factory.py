@@ -95,9 +95,8 @@ def create_metrics_manager_from_config(
     Raises:
         ValueError: If the configured metrics type is not supported.
     """
-    # This function now expects just the SOURCE.CONFIG part
-    # Use default "simulator" type if TYPE not in config
-    metrics_type = data_config.get("TYPE", "simulator")
+    # TYPE is guaranteed by process_config() - defaults already applied
+    metrics_type = data_config["TYPE"]
 
     adapter = get_metrics_adapter(metrics_type)
 

@@ -32,13 +32,20 @@ class CatalogSimulatorAdapter(MetricsInterface):
         ]
 
     def connect(self, config: Dict[str, Any]) -> bool:
-        """Establish connection to the catalog simulator."""
-        # Validate mode
+        """Establish connection to the catalog simulator.
+
+        Args:
+            config: Connection configuration. When called through process_config(),
+                all keys are guaranteed. When called directly (e.g., unit tests),
+                defaults are applied here for backward compatibility.
+
+        Note: Primary defaults are in config_defaults.yaml. These fallbacks
+        ensure direct adapter usage (without process_config) still works.
+        """
         mode = config.get("mode", "rule")
         if mode not in ["rule", "ml"]:
             raise ValueError(f"Invalid simulator mode '{mode}'. Must be 'rule' or 'ml'")
 
-        # Validate seed
         seed = config.get("seed", 42)
         if not isinstance(seed, int) or seed < 0:
             raise ValueError("Simulator seed must be a non-negative integer")

@@ -48,22 +48,22 @@ class MetricsApproximationAdapter(Model):
         """Initialize model with configuration parameters.
 
         Args:
-            config: Dictionary containing model configuration:
-                - metric_before_column: Column name for pre-intervention metric
-                - metric_after_column: Column name for post-intervention metric
-                - baseline_column: Column name for baseline outcome
-                - response: Dict with FUNCTION name and optional PARAMS
+            config: Model configuration. When called through process_config(),
+                all keys are guaranteed. When called directly (e.g., unit tests),
+                defaults are applied here for backward compatibility.
 
         Returns:
             bool: True if initialization successful
+
+        Note: Primary defaults are in config_defaults.yaml. These fallbacks
+        ensure direct adapter usage (without process_config) still works.
         """
-        # Validate required columns
         metric_before = config.get("metric_before_column", "quality_before")
         metric_after = config.get("metric_after_column", "quality_after")
         baseline = config.get("baseline_column", "baseline_sales")
 
-        # Validate response function configuration
-        response_config = config.get("response", {"FUNCTION": "linear"})
+        # Support both uppercase RESPONSE (from process_config) and lowercase (direct usage)
+        response_config = config.get("RESPONSE") or config.get("response", {"FUNCTION": "linear"})
         if not isinstance(response_config, dict):
             raise ValueError("response must be a dict with FUNCTION key")
 
