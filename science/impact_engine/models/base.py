@@ -90,6 +90,24 @@ class Model(ABC):
         """
         return []
 
+    def validate_params(self, **kwargs) -> None:
+        """Validate model-specific parameters before fitting.
+
+        This method allows models to declare and validate their own parameter
+        requirements instead of having this logic in the manager. Each model
+        should override this to check for required parameters.
+
+        Default implementation does nothing (no required params).
+        Override to validate model-specific requirements.
+
+        Args:
+            **kwargs: Parameters that will be passed to fit().
+
+        Raises:
+            ValueError: If required parameters are missing or invalid.
+        """
+        pass
+
     def transform_outbound(self, data: pd.DataFrame, **kwargs) -> Dict[str, Any]:
         """Transform impact engine format to model library format.
 

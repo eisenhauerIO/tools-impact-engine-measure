@@ -71,6 +71,30 @@ class TestInterruptedTimeSeriesAdapter:
 
         assert model.validate_connection() is False
 
+    def test_validate_params_with_intervention_date(self):
+        """Test validate_params succeeds with intervention_date provided."""
+        model = InterruptedTimeSeriesAdapter()
+        model.connect({"order": (1, 0, 0)})
+
+        # Should not raise
+        model.validate_params(intervention_date="2024-01-15")
+
+    def test_validate_params_missing_intervention_date(self):
+        """Test validate_params raises when intervention_date is missing."""
+        model = InterruptedTimeSeriesAdapter()
+        model.connect({"order": (1, 0, 0)})
+
+        with pytest.raises(ValueError, match="intervention_date must be specified"):
+            model.validate_params(intervention_date=None)
+
+    def test_validate_params_empty_intervention_date(self):
+        """Test validate_params raises when intervention_date is empty string."""
+        model = InterruptedTimeSeriesAdapter()
+        model.connect({"order": (1, 0, 0)})
+
+        with pytest.raises(ValueError, match="intervention_date must be specified"):
+            model.validate_params(intervention_date="")
+
     def test_transform_outbound_success(self):
         """Test successful outbound transformation."""
         model = InterruptedTimeSeriesAdapter()

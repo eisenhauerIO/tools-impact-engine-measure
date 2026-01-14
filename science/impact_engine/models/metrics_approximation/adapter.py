@@ -91,6 +91,23 @@ class MetricsApproximationAdapter(Model):
         """Validate that the model is properly initialized and ready to use."""
         return self.is_connected and self.config is not None
 
+    def validate_params(self, **kwargs) -> None:
+        """Validate that required parameters are provided for metrics approximation.
+
+        Metrics approximation does not require intervention_date or other
+        time-series specific parameters. This method is provided for interface
+        compliance and extensibility.
+
+        Args:
+            **kwargs: Parameters that will be passed to fit().
+
+        Raises:
+            ValueError: Currently no required params, so this doesn't raise.
+        """
+        # Metrics approximation doesn't require intervention_date
+        # All required config is validated in connect()
+        pass
+
     def fit(self, data: pd.DataFrame, **kwargs) -> Dict[str, Any]:
         """
         Fit the metrics approximation model and return results.

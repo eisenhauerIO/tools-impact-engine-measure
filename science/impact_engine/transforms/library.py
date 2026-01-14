@@ -5,10 +5,11 @@ These functions transform raw business metrics into formats suitable
 for different model types (ITS, metrics approximation, etc.).
 """
 
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import pandas as pd
 
+from ..core.contracts import MetricsSchema, ProductSchema, Schema
 from .registry import register_transform
 
 
@@ -53,10 +54,13 @@ def aggregate_for_approximation(data: pd.DataFrame, params: Dict[str, Any]) -> p
     This transform creates cross-sectional data for approximation models.
     It computes baseline metrics per product, suitable for before/after analysis.
 
+    Uses schema-based column resolution to decouple from specific adapter column names.
+
     Args:
         data: Input DataFrame with 'product_id' column and metrics.
         params: Configuration parameters:
             - baseline_metric (str): The metric to aggregate as baseline (default: "revenue").
+            - schema (Schema): Optional schema for column resolution. Defaults to ProductSchema.
 
     Returns:
         pd.DataFrame: Cross-sectional data with columns:
@@ -67,17 +71,10 @@ def aggregate_for_approximation(data: pd.DataFrame, params: Dict[str, Any]) -> p
         ValueError: If required columns are missing.
     """
     baseline_metric = params.get("baseline_metric", "revenue")
+    schema = params.get("schema", ProductSchema)
 
-    # Handle both 'product_id' and 'asin' column names
-    id_column = None
-    if "product_id" in data.columns:
-        id_column = "product_id"
-    elif "asin" in data.columns:
-        id_column = "asin"
-    else:
-        raise ValueError(
-            "Data must contain 'product_id' or 'asin' column for aggregate_for_approximation"
-        )
+    # Use schema-based resolution to find the ID column
+    id_column = _detect_id_column(data, schema)
 
     if baseline_metric not in data.columns:
         raise ValueError(f"Data must contain baseline metric column '{baseline_metric}'")
@@ -116,13 +113,16 @@ def prepare_simulator_for_approximation(
     Takes time-series metrics from catalog simulator (with quality_score per row)
     and prepares cross-sectional data suitable for MetricsApproximationAdapter.
 
+    Uses schema-based column resolution to decouple from specific adapter column names,
+    enabling the transform to work with data from any source that conforms to the schema.
+
     The transform splits data by enrichment_start date to determine:
     - quality_before: quality_score before enrichment_start (per product)
     - quality_after: quality_score after enrichment_start (per product)
     - baseline_sales: aggregated revenue before enrichment_start (per product)
 
     Input DataFrame (time-series from adapter):
-        - product_id/product_identifier/asin: Product identifier
+        - product_id/product_identifier/asin: Product identifier (resolved via schema)
         - date: Date of metrics
         - quality_score: Quality score at that time point
         - revenue: Sales revenue
@@ -138,6 +138,8 @@ def prepare_simulator_for_approximation(
         params: Configuration parameters:
             - enrichment_start (str): Date when enrichment started (REQUIRED, format: YYYY-MM-DD)
             - baseline_metric (str): Column to aggregate as baseline. Default: "revenue"
+            - schema (Schema): Optional schema for column resolution. Defaults to MetricsSchema.
+            - source (str): Optional source type hint for schema resolution (e.g., "catalog_simulator")
 
     Returns:
         pd.DataFrame: Cross-sectional data ready for MetricsApproximationAdapter.
@@ -155,9 +157,11 @@ def prepare_simulator_for_approximation(
         raise ValueError("prepare_simulator_for_approximation requires 'enrichment_start' param")
 
     baseline_metric = params.get("baseline_metric", "revenue")
+    schema = params.get("schema", MetricsSchema)
+    source = params.get("source")
 
-    # Detect product ID column
-    id_column = _detect_id_column(data)
+    # Use schema-based resolution to detect product ID column
+    id_column = _detect_id_column(data, schema)
 
     # Validate required columns
     if "date" not in data.columns:
@@ -210,9 +214,32 @@ def prepare_simulator_for_approximation(
     return result[["product_id", "quality_before", "quality_after", "baseline_sales"]]
 
 
-def _detect_id_column(df: pd.DataFrame) -> str:
-    """Auto-detect product ID column in DataFrame."""
-    for col in ["product_identifier", "product_id", "asin"]:
-        if col in df.columns:
-            return col
-    raise ValueError("Data must contain 'product_identifier', 'product_id', or 'asin' column")
+def _detect_id_column(df: pd.DataFrame, schema: Optional[Schema] = None) -> str:
+    """Auto-detect product ID column in DataFrame using schema-based resolution.
+
+    This function decouples transforms from specific adapter column names by using
+    the Schema's resolve_column method to find the actual column name.
+
+    Args:
+        df: DataFrame to search for the ID column
+        schema: Optional Schema to use for resolution. Defaults to ProductSchema.
+
+    Returns:
+        str: The actual column name found in the DataFrame
+
+    Raises:
+        ValueError: If no matching column is found
+    """
+    if schema is None:
+        schema = ProductSchema
+
+    try:
+        return schema.resolve_column(df, "product_id")
+    except ValueError:
+        # Fallback to legacy detection for backward compatibility
+        for col in ["product_identifier", "product_id", "asin"]:
+            if col in df.columns:
+                return col
+        raise ValueError(
+            "Data must contain 'product_identifier', 'product_id', or 'asin' column"
+        )

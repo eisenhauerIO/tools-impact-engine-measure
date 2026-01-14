@@ -95,8 +95,32 @@ class TestMetricsApproximationAdapterValidateConnection:
     def test_validate_not_connected(self):
         """Returns False when not connected."""
         adapter = MetricsApproximationAdapter()
-        
+
         assert adapter.validate_connection() is False
+
+
+class TestMetricsApproximationAdapterValidateParams:
+    """Tests for validate_params() method."""
+
+    def test_validate_params_no_intervention_date_required(self):
+        """Metrics approximation does not require intervention_date."""
+        adapter = MetricsApproximationAdapter()
+        adapter.connect({"response": {"FUNCTION": "linear"}})
+
+        # Should not raise - metrics approximation doesn't need intervention_date
+        adapter.validate_params(intervention_date=None)
+
+    def test_validate_params_accepts_any_params(self):
+        """Validate params accepts any parameters without error."""
+        adapter = MetricsApproximationAdapter()
+        adapter.connect({"response": {"FUNCTION": "linear"}})
+
+        # Should not raise
+        adapter.validate_params(
+            intervention_date="2024-01-15",
+            output_path="/tmp",
+            dependent_variable="revenue",
+        )
 
 
 class TestMetricsApproximationAdapterFit:

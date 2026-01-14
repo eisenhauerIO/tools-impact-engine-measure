@@ -244,3 +244,84 @@ class TestPassthrough:
         result = get_transform("passthrough")(data, {"unused": "param"})
 
         pd.testing.assert_frame_equal(result, data)
+
+
+class TestSchemaBasedColumnResolution:
+    """Tests for schema-based column resolution in transforms."""
+
+    def test_aggregate_for_approximation_uses_schema_resolution(self):
+        """Test that aggregate_for_approximation resolves columns via schema."""
+        from impact_engine.core.contracts import ProductSchema
+
+        # Use 'asin' which is a catalog_simulator alias for 'product_id'
+        data = pd.DataFrame(
+            {"asin": ["p1", "p1", "p2"], "revenue": [100, 200, 150]}
+        )
+
+        result = aggregate_for_approximation(data, {"baseline_metric": "revenue"})
+
+        assert "product_id" in result.columns
+        assert len(result) == 2
+
+    def test_aggregate_for_approximation_with_custom_schema(self):
+        """Test that aggregate_for_approximation accepts custom schema."""
+        from impact_engine.core.contracts import Schema
+
+        custom_schema = Schema(
+            required=["product_id"],
+            mappings={"custom_source": {"custom_id": "product_id"}},
+        )
+
+        data = pd.DataFrame(
+            {"custom_id": ["p1", "p2"], "revenue": [100, 150]}
+        )
+
+        result = aggregate_for_approximation(
+            data, {"baseline_metric": "revenue", "schema": custom_schema}
+        )
+
+        assert "product_id" in result.columns
+        assert len(result) == 2
+
+    def test_schema_resolve_column_finds_standard_name(self):
+        """Test Schema.resolve_column finds standard column name."""
+        from impact_engine.core.contracts import ProductSchema
+
+        data = pd.DataFrame({"product_id": ["p1"], "value": [100]})
+
+        col = ProductSchema.resolve_column(data, "product_id")
+
+        assert col == "product_id"
+
+    def test_schema_resolve_column_finds_alias(self):
+        """Test Schema.resolve_column finds aliased column name."""
+        from impact_engine.core.contracts import ProductSchema
+
+        # 'asin' is mapped to 'product_id' in catalog_simulator source
+        data = pd.DataFrame({"asin": ["p1"], "value": [100]})
+
+        col = ProductSchema.resolve_column(data, "product_id")
+
+        assert col == "asin"
+
+    def test_schema_resolve_column_with_source_hint(self):
+        """Test Schema.resolve_column prioritizes source-specific mapping."""
+        from impact_engine.core.contracts import ProductSchema
+
+        # Both 'asin' and 'product_id' exist, source hint should prioritize 'asin'
+        data = pd.DataFrame(
+            {"asin": ["p1"], "product_id": ["different"], "value": [100]}
+        )
+
+        col = ProductSchema.resolve_column(data, "product_id", source="catalog_simulator")
+
+        assert col == "asin"
+
+    def test_schema_resolve_column_raises_on_missing(self):
+        """Test Schema.resolve_column raises ValueError when column not found."""
+        from impact_engine.core.contracts import ProductSchema
+
+        data = pd.DataFrame({"unknown_col": ["p1"], "value": [100]})
+
+        with pytest.raises(ValueError, match="Cannot resolve column"):
+            ProductSchema.resolve_column(data, "product_id")

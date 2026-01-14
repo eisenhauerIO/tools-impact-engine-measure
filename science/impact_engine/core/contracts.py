@@ -56,6 +56,60 @@ class Schema:
         """Return all columns (required + optional)."""
         return self.required + self.optional
 
+    def resolve_column(self, df: pd.DataFrame, standard_name: str, source: str = None) -> str:
+        """Resolve the actual column name in the DataFrame for a standard field.
+
+        This method enables transforms to work with data from any source by looking
+        up the column name dynamically instead of hard-coding specific names.
+
+        The resolution order is:
+        1. If source is specified and has a mapping, check for the external name
+        2. Check for the standard name directly
+        3. Check all known aliases from all source mappings
+
+        Args:
+            df: DataFrame to search for the column
+            standard_name: The standard/canonical field name (e.g., "product_id")
+            source: Optional source type hint (e.g., "catalog_simulator")
+
+        Returns:
+            str: The actual column name found in the DataFrame
+
+        Raises:
+            ValueError: If no matching column is found
+
+        Example:
+            >>> schema = ProductSchema
+            >>> # df has 'asin' column from catalog_simulator
+            >>> col = schema.resolve_column(df, "product_id", source="catalog_simulator")
+            >>> col  # Returns 'asin'
+        """
+        # Collect all possible names for this standard field
+        possible_names = [standard_name]
+
+        # Add source-specific external name if source is specified
+        if source and source in self.mappings:
+            # Invert mapping to find external name for standard name
+            for ext_name, std_name in self.mappings[source].items():
+                if std_name == standard_name:
+                    possible_names.insert(0, ext_name)  # Prioritize source-specific name
+
+        # Add all known aliases from all sources
+        for source_mappings in self.mappings.values():
+            for ext_name, std_name in source_mappings.items():
+                if std_name == standard_name and ext_name not in possible_names:
+                    possible_names.append(ext_name)
+
+        # Find the first matching column in the DataFrame
+        for name in possible_names:
+            if name in df.columns:
+                return name
+
+        raise ValueError(
+            f"Cannot resolve column '{standard_name}' in DataFrame. "
+            f"Tried: {possible_names}. Available columns: {list(df.columns)}"
+        )
+
 
 # Product schema: defines product identifiers
 ProductSchema = Schema(

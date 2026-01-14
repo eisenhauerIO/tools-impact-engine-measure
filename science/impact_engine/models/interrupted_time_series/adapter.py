@@ -87,6 +87,24 @@ class InterruptedTimeSeriesAdapter(Model):
         except ImportError:
             return False
 
+    def validate_params(self, **kwargs) -> None:
+        """Validate that required parameters are provided for ITS model.
+
+        ITS model requires intervention_date to determine the treatment point.
+
+        Args:
+            **kwargs: Parameters that will be passed to fit().
+
+        Raises:
+            ValueError: If intervention_date is missing.
+        """
+        intervention_date = kwargs.get("intervention_date")
+        if not intervention_date:
+            raise ValueError(
+                "intervention_date must be specified in MEASUREMENT.PARAMS configuration "
+                "for interrupted_time_series model"
+            )
+
     def fit(self, data: pd.DataFrame, **kwargs) -> str:
         """
         Fit the interrupted time series model and save results.

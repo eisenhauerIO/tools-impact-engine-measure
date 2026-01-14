@@ -172,12 +172,19 @@ class TestModelsManagerFitModel:
             assert call_kwargs["intervention_date"] == "2024-01-15"
 
     def test_fit_model_missing_intervention_date_for_its(self):
-        """Test fit_model raises error when intervention date is missing for ITS model."""
-        mock_model = MockModel()
-        # Set MODEL type to interrupted_time_series to trigger intervention_date requirement
+        """Test fit_model raises error when intervention date is missing for ITS model.
+
+        This test verifies that the InterruptedTimeSeriesAdapter's validate_params
+        correctly rejects missing intervention_date, demonstrating that model-specific
+        validation has been moved from the manager into the models themselves.
+        """
+        from impact_engine.models.interrupted_time_series import InterruptedTimeSeriesAdapter
+
+        # Use the actual ITS adapter which validates intervention_date in validate_params
+        its_model = InterruptedTimeSeriesAdapter()
         config = {"MODEL": "interrupted_time_series", "PARAMS": {}}
 
-        manager = ModelsManager(config, mock_model)
+        manager = ModelsManager(config, its_model)
 
         data = pd.DataFrame({"date": pd.date_range("2024-01-01", periods=10), "value": range(10)})
 

@@ -66,13 +66,13 @@ class ModelsManager:
                 or "revenue"
             )
 
-        # ITS model requires intervention_date, but metrics_approximation doesn't
-        model_type = self.measurement_config.get("MODEL", "")
-        if model_type == "interrupted_time_series" and not intervention_date:
-            raise ValueError(
-                "intervention_date must be specified in MEASUREMENT.PARAMS configuration "
-                "for interrupted_time_series model"
-            )
+        # Let the model validate its own required parameters
+        # This moves model-specific validation logic into the models themselves
+        self.model.validate_params(
+            intervention_date=intervention_date,
+            output_path=output_path,
+            dependent_variable=dependent_variable,
+        )
 
         # Storage backend is required
         if not storage:
