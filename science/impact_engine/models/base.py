@@ -16,11 +16,11 @@ class Model(ABC):
     Required methods (must override):
         - connect: Initialize model with configuration
         - fit: Fit model to data
+        - validate_params: Validate model-specific parameters before fitting
 
     Optional methods (have sensible defaults):
         - validate_connection: Check if model is ready
         - validate_data: Check if input data is valid
-        - validate_params: Validate model-specific parameters before fitting
         - get_required_columns: Return list of required columns
         - transform_outbound: Transform data to external format
         - transform_inbound: Transform results from external format
@@ -91,14 +91,16 @@ class Model(ABC):
         """
         return []
 
+    @abstractmethod
     def validate_params(self, params: Dict[str, Any]) -> None:
         """Validate model-specific parameters before fitting.
 
         This method is called by ModelsManager before fit() to perform
-        early validation of required parameters. Override to add
-        model-specific validation logic.
+        early validation of required parameters. All model implementations
+        MUST override this method to validate their specific parameters.
 
-        Default implementation does nothing (no validation).
+        Centralized config validation (process_config) handles known models,
+        but this method ensures custom/user-defined models also validate.
 
         Args:
             params: Dictionary containing parameters that will be passed to fit().

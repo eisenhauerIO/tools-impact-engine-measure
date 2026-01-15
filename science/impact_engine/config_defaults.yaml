@@ -1,0 +1,52 @@
+# Impact Engine Configuration Defaults
+#
+# This file serves two purposes:
+# 1. Provides sensible defaults for optional parameters
+# 2. Defines the implicit schema (null values = REQUIRED fields)
+#
+# Users can provide minimal configs that get merged with these defaults.
+
+DATA:
+  SOURCE:
+    TYPE: simulator
+    CONFIG:
+      MODE: rule
+      SEED: 42
+      PATH: null           # REQUIRED - path to products data
+      START_DATE: null     # REQUIRED - format: YYYY-MM-DD
+      END_DATE: null       # REQUIRED - format: YYYY-MM-DD
+      # ENRICHMENT is optional, no default
+  # ENRICHMENT at DATA level is optional, no default
+  TRANSFORM:
+    FUNCTION: passthrough
+    PARAMS: {}
+
+MEASUREMENT:
+  MODEL: interrupted_time_series
+  PARAMS:
+    # Common params
+    dependent_variable: revenue
+
+    # ITS model params
+    intervention_date: null    # REQUIRED for interrupted_time_series model
+    order:
+      - 1
+      - 0
+      - 0
+    seasonal_order:
+      - 0
+      - 0
+      - 0
+      - 0
+
+    # Metrics approximation model params
+    metric_before_column: quality_before
+    metric_after_column: quality_after
+    baseline_column: baseline_sales
+    response:
+      FUNCTION: linear
+      PARAMS:
+        coefficient: 0.5
+
+OUTPUT:
+  PATH: output

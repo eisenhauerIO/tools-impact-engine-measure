@@ -47,6 +47,8 @@ class MetricsApproximationAdapter(Model):
     def connect(self, config: Dict[str, Any]) -> bool:
         """Initialize model with configuration parameters.
 
+        Config is pre-validated with defaults merged via process_config().
+
         Args:
             config: Dictionary containing model configuration:
                 - metric_before_column: Column name for pre-intervention metric
@@ -57,19 +59,19 @@ class MetricsApproximationAdapter(Model):
         Returns:
             bool: True if initialization successful
         """
-        # Validate required columns
-        metric_before = config.get("metric_before_column", "quality_before")
-        metric_after = config.get("metric_after_column", "quality_after")
-        baseline = config.get("baseline_column", "baseline_sales")
+        # Config has defaults merged from process_config()
+        metric_before = config["metric_before_column"]
+        metric_after = config["metric_after_column"]
+        baseline = config["baseline_column"]
 
-        # Validate response function configuration
-        response_config = config.get("response", {"FUNCTION": "linear"})
+        # Response config has defaults from config_defaults.yaml
+        response_config = config["response"]
         if not isinstance(response_config, dict):
             raise ValueError("response must be a dict with FUNCTION key")
 
         function_name = response_config.get("FUNCTION")
         if not function_name:
-            raise ValueError("response.FUNCTION is required")
+            raise ValueError("response must have FUNCTION key - FUNCTION is required")
 
         # Validate that the response function exists
         try:
@@ -90,6 +92,19 @@ class MetricsApproximationAdapter(Model):
     def validate_connection(self) -> bool:
         """Validate that the model is properly initialized and ready to use."""
         return self.is_connected and self.config is not None
+
+    def validate_params(self, params: Dict[str, Any]) -> None:
+        """Validate metrics approximation parameters.
+
+        Metrics approximation has no required fit-time parameters beyond what's
+        configured in connect(). This implementation satisfies the abstract method
+        requirement while allowing all params.
+
+        Args:
+            params: Parameters dict (typically empty for this model).
+        """
+        # No required fit-time params for metrics approximation
+        pass
 
     def fit(self, data: pd.DataFrame, **kwargs) -> Dict[str, Any]:
         """
@@ -161,7 +176,9 @@ class MetricsApproximationAdapter(Model):
         # Build aggregate estimates
         impact_estimates = {
             "total_approximated_impact": round(total_impact, 2),
-            "mean_approximated_impact": round(total_impact / n_products, 2) if n_products > 0 else 0.0,
+            "mean_approximated_impact": round(total_impact / n_products, 2)
+            if n_products > 0
+            else 0.0,
             "mean_metric_change": round(total_delta / n_products, 4) if n_products > 0 else 0.0,
             "n_products": n_products,
         }

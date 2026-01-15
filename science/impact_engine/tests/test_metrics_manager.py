@@ -58,13 +58,28 @@ class MockMetricsAdapter(MetricsInterface):
         )
 
 
+def complete_source_config(**overrides):
+    """Create a complete SOURCE.CONFIG with defaults.
+
+    Tests that bypass process_config() must provide complete configs.
+    """
+    config = {
+        "START_DATE": "2024-01-01",
+        "END_DATE": "2024-01-31",
+        "MODE": "rule",
+        "SEED": 42,
+    }
+    config.update(overrides)
+    return config
+
+
 class TestMetricsManagerDependencyInjection:
     """Tests for dependency injection pattern."""
 
     def test_create_with_injected_adapter(self):
         """Test creating manager with injected adapter."""
         mock_adapter = MockMetricsAdapter()
-        config = {"START_DATE": "2024-01-01", "END_DATE": "2024-01-31"}
+        config = complete_source_config()
 
         manager = MetricsManager(config, mock_adapter)
 
@@ -76,7 +91,7 @@ class TestMetricsManagerDependencyInjection:
         mock_adapter = Mock(spec=MetricsInterface)
         mock_adapter.connect.return_value = True
 
-        config = {"START_DATE": "2024-01-01", "END_DATE": "2024-01-31"}
+        config = complete_source_config()
 
         manager = MetricsManager(config, mock_adapter)
 
@@ -86,12 +101,7 @@ class TestMetricsManagerDependencyInjection:
     def test_adapter_receives_connection_config(self):
         """Test that adapter receives proper connection config."""
         mock_adapter = MockMetricsAdapter()
-        config = {
-            "START_DATE": "2024-01-01",
-            "END_DATE": "2024-01-31",
-            "MODE": "ml",
-            "SEED": 123,
-        }
+        config = complete_source_config(MODE="ml", SEED=123)
 
         MetricsManager(config, mock_adapter)
 
@@ -102,11 +112,7 @@ class TestMetricsManagerDependencyInjection:
         """Test that enrichment config is passed to adapter."""
         mock_adapter = MockMetricsAdapter()
         enrichment = {"function": "quantity_boost", "params": {"effect_size": 0.3}}
-        config = {
-            "START_DATE": "2024-01-01",
-            "END_DATE": "2024-01-31",
-            "ENRICHMENT": enrichment,
-        }
+        config = complete_source_config(ENRICHMENT=enrichment)
 
         MetricsManager(config, mock_adapter)
 
@@ -114,36 +120,16 @@ class TestMetricsManagerDependencyInjection:
 
 
 class TestMetricsManagerConfiguration:
-    """Tests for configuration handling."""
+    """Tests for configuration handling.
 
-    def test_validate_config_missing_start_date(self):
-        """Test validation with missing START_DATE field."""
-        mock_adapter = MockMetricsAdapter()
-        with pytest.raises(ValueError, match="Missing required field 'START_DATE'"):
-            MetricsManager({"END_DATE": "2024-01-31"}, mock_adapter)
-
-    def test_validate_config_missing_end_date(self):
-        """Test validation with missing END_DATE field."""
-        mock_adapter = MockMetricsAdapter()
-        with pytest.raises(ValueError, match="Missing required field 'END_DATE'"):
-            MetricsManager({"START_DATE": "2024-01-01"}, mock_adapter)
-
-    def test_validate_config_invalid_date_format(self):
-        """Test validation with invalid date format."""
-        mock_adapter = MockMetricsAdapter()
-        with pytest.raises(ValueError, match="Invalid date format"):
-            MetricsManager({"START_DATE": "invalid-date", "END_DATE": "2024-01-31"}, mock_adapter)
-
-    def test_validate_config_invalid_date_order(self):
-        """Test validation with start date after end date."""
-        mock_adapter = MockMetricsAdapter()
-        with pytest.raises(ValueError, match="START_DATE must be before or equal to END_DATE"):
-            MetricsManager({"START_DATE": "2024-01-31", "END_DATE": "2024-01-01"}, mock_adapter)
+    Note: Validation is now centralized in process_config().
+    These tests verify the manager works with complete configs.
+    """
 
     def test_get_current_config(self):
         """Test getting current configuration."""
         mock_adapter = MockMetricsAdapter()
-        config = {"START_DATE": "2024-01-01", "END_DATE": "2024-01-31"}
+        config = complete_source_config()
 
         manager = MetricsManager(config, mock_adapter)
         assert manager.get_current_config() == config
@@ -155,7 +141,7 @@ class TestMetricsManagerRetrieveMetrics:
     def test_retrieve_metrics_success(self):
         """Test successful metrics retrieval."""
         mock_adapter = MockMetricsAdapter()
-        config = {"START_DATE": "2024-01-01", "END_DATE": "2024-01-31"}
+        config = complete_source_config()
 
         manager = MetricsManager(config, mock_adapter)
         products = pd.DataFrame({"product_id": ["test_product"], "name": ["Test Product"]})
@@ -174,7 +160,7 @@ class TestMetricsManagerRetrieveMetrics:
             {"product_id": ["p1"], "revenue": [100], "date": ["2024-01-01"]}
         )
 
-        config = {"START_DATE": "2024-01-01", "END_DATE": "2024-01-31"}
+        config = complete_source_config()
         manager = MetricsManager(config, mock_adapter)
 
         products = pd.DataFrame({"product_id": ["p1"]})
@@ -187,7 +173,7 @@ class TestMetricsManagerRetrieveMetrics:
     def test_retrieve_metrics_empty_products(self):
         """Test retrieving metrics with empty products."""
         mock_adapter = MockMetricsAdapter()
-        config = {"START_DATE": "2024-01-01", "END_DATE": "2024-01-31"}
+        config = complete_source_config()
 
         manager = MetricsManager(config, mock_adapter)
 
@@ -197,7 +183,7 @@ class TestMetricsManagerRetrieveMetrics:
     def test_retrieve_metrics_none_products(self):
         """Test retrieving metrics with None products."""
         mock_adapter = MockMetricsAdapter()
-        config = {"START_DATE": "2024-01-01", "END_DATE": "2024-01-31"}
+        config = complete_source_config()
 
         manager = MetricsManager(config, mock_adapter)
 
@@ -214,11 +200,7 @@ class TestMetricsFactory:
         register_metrics_adapter("mock", MockMetricsAdapter)
 
         try:
-            config = {
-                "TYPE": "mock",
-                "START_DATE": "2024-01-01",
-                "END_DATE": "2024-01-31",
-            }
+            config = complete_source_config(TYPE="mock")
 
             manager = create_metrics_manager_from_config(config)
 
@@ -271,11 +253,7 @@ class TestMetricsFactory:
 
     def test_create_metrics_manager_unknown_type(self):
         """Test creating manager with unknown adapter type."""
-        config = {
-            "TYPE": "unknown_type",
-            "START_DATE": "2024-01-01",
-            "END_DATE": "2024-01-31",
-        }
+        config = complete_source_config(TYPE="unknown_type")
 
         with pytest.raises(ValueError, match="Unknown metrics type"):
             create_metrics_manager_from_config(config)
@@ -298,7 +276,7 @@ class TestMetricsManagerConnectionFailure:
         mock_adapter = Mock(spec=MetricsInterface)
         mock_adapter.connect.return_value = False
 
-        config = {"START_DATE": "2024-01-01", "END_DATE": "2024-01-31"}
+        config = complete_source_config()
 
         with pytest.raises(ConnectionError, match="Failed to connect"):
             MetricsManager(config, mock_adapter)

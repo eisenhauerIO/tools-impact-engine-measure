@@ -33,7 +33,8 @@
       "Bash(for f in workflow*.py)",
       "Bash(do echo \"=== Running $f ===\")",
       "Bash(pytest:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(git -C /home/peisenha/office/business/eisenhauer-io/tools/impact-engine log --oneline -20)"
     ]
   }
 }

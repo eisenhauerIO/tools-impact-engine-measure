@@ -6,6 +6,7 @@ import pandas as pd
 import pytest
 from artifact_store import ArtifactStore
 
+from impact_engine.models.conftest import merge_model_params
 from impact_engine.models.interrupted_time_series import InterruptedTimeSeriesAdapter
 from impact_engine.models.interrupted_time_series.adapter import TransformedInput
 
@@ -54,14 +55,15 @@ class TestInterruptedTimeSeriesAdapter:
     def test_connect_invalid_seasonal_order(self):
         """Test connection with invalid seasonal_order parameter."""
         model = InterruptedTimeSeriesAdapter()
+        config = merge_model_params({"seasonal_order": (1, 2)})
 
         with pytest.raises(ValueError, match="Seasonal order must be a tuple of 4 integers"):
-            model.connect({"seasonal_order": (1, 2)})
+            model.connect(config)
 
     def test_validate_connection_success(self):
         """Test connection validation when connected."""
         model = InterruptedTimeSeriesAdapter()
-        model.connect({"order": (1, 0, 0)})
+        model.connect(merge_model_params({"order": (1, 0, 0)}))
 
         assert model.validate_connection() is True
 
@@ -96,7 +98,7 @@ class TestInterruptedTimeSeriesAdapter:
     def test_transform_outbound_missing_dependent_variable(self):
         """Test outbound transformation with missing dependent variable."""
         model = InterruptedTimeSeriesAdapter()
-        model.connect({"dependent_variable": "missing_column"})
+        model.connect(merge_model_params({"dependent_variable": "missing_column"}))
 
         data = pd.DataFrame({"date": pd.date_range("2024-01-01", periods=10), "revenue": range(10)})
 
@@ -106,7 +108,7 @@ class TestInterruptedTimeSeriesAdapter:
     def test_transform_inbound_raises_not_implemented(self):
         """Test that transform_inbound raises NotImplementedError (use _format_results instead)."""
         model = InterruptedTimeSeriesAdapter()
-        model.connect({"dependent_variable": "revenue"})
+        model.connect(merge_model_params({"dependent_variable": "revenue"}))
 
         # Mock SARIMAX results
         class MockResults:
@@ -123,7 +125,7 @@ class TestInterruptedTimeSeriesAdapter:
         import numpy as np
 
         model = InterruptedTimeSeriesAdapter()
-        model.connect({"dependent_variable": "revenue"})
+        model.connect(merge_model_params({"dependent_variable": "revenue"}))
 
         # Create TransformedInput with all required data
         data = pd.DataFrame(

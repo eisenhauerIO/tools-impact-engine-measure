@@ -50,19 +50,24 @@ class InterruptedTimeSeriesAdapter(Model):
         self.storage = None
 
     def connect(self, config: Dict[str, Any]) -> bool:
-        """Initialize model with configuration parameters."""
-        # Validate order parameter
-        order = config.get("order", (1, 0, 0))
+        """Initialize model with configuration parameters.
+
+        Config is pre-validated with defaults merged via process_config().
+        """
+        # Convert list to tuple if needed (YAML loads as list)
+        order = config["order"]
+        if isinstance(order, list):
+            order = tuple(order)
         if not isinstance(order, tuple) or len(order) != 3:
             raise ValueError("Order must be a tuple of 3 integers (p, d, q)")
 
-        # Validate seasonal_order parameter
-        seasonal_order = config.get("seasonal_order", (0, 0, 0, 0))
+        seasonal_order = config["seasonal_order"]
+        if isinstance(seasonal_order, list):
+            seasonal_order = tuple(seasonal_order)
         if not isinstance(seasonal_order, tuple) or len(seasonal_order) != 4:
             raise ValueError("Seasonal order must be a tuple of 4 integers (P, D, Q, s)")
 
-        # Validate dependent_variable
-        dependent_variable = config.get("dependent_variable", "revenue")
+        dependent_variable = config["dependent_variable"]
         if not isinstance(dependent_variable, str):
             raise ValueError("Dependent variable must be a string")
 
@@ -276,11 +281,9 @@ class InterruptedTimeSeriesAdapter(Model):
         y = df[dependent_variable].values
         exog = df[["intervention"]]
 
-        # Get model parameters from config or kwargs
-        order = kwargs.get("order", self.config.get("order", (1, 0, 0)))
-        seasonal_order = kwargs.get(
-            "seasonal_order", self.config.get("seasonal_order", (0, 0, 0, 0))
-        )
+        # Get model parameters from kwargs or config (config has defaults from process_config)
+        order = kwargs.get("order", self.config["order"])
+        seasonal_order = kwargs.get("seasonal_order", self.config["seasonal_order"])
 
         return TransformedInput(
             y=y,
@@ -378,9 +381,7 @@ class InterruptedTimeSeriesAdapter(Model):
         Note: This method is kept for interface compliance but internally
         uses _prepare_model_input for the actual transformation.
         """
-        dependent_variable = kwargs.get(
-            "dependent_variable", self.config.get("dependent_variable", "revenue")
-        )
+        dependent_variable = kwargs.get("dependent_variable", self.config["dependent_variable"])
         transformed = self._prepare_model_input(
             data, intervention_date, dependent_variable, **kwargs
         )
