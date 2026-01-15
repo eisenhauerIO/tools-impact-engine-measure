@@ -10,7 +10,7 @@ from typing import Any, Dict, List
 
 import pandas as pd
 
-from ..base import Model
+from ..base import Model, ModelResult
 from .response_registry import get_response_function
 
 
@@ -106,7 +106,7 @@ class MetricsApproximationAdapter(Model):
         # No required fit-time params for metrics approximation
         pass
 
-    def fit(self, data: pd.DataFrame, **kwargs) -> Dict[str, Any]:
+    def fit(self, data: pd.DataFrame, **kwargs) -> ModelResult:
         """
         Fit the metrics approximation model and return results.
 
@@ -120,11 +120,7 @@ class MetricsApproximationAdapter(Model):
             **kwargs: Additional parameters passed to response function.
 
         Returns:
-            Dict containing:
-                - model_type: "metrics_approximation"
-                - response_function: Name of response function used
-                - impact_estimates: Aggregate statistics
-                - per_product: List of per-product results
+            ModelResult: Standardized result container (storage handled by manager).
 
         Raises:
             ConnectionError: If model not connected
@@ -183,20 +179,20 @@ class MetricsApproximationAdapter(Model):
             "n_products": n_products,
         }
 
-        results = {
-            "model_type": "metrics_approximation",
-            "response_function": self.config["response_function"],
-            "response_params": self.config["response_params"],
-            "impact_estimates": impact_estimates,
-            "per_product": per_product,
-        }
-
         self.logger.info(
             f"Metrics approximation complete: {n_products} products, "
             f"total impact={impact_estimates['total_approximated_impact']}"
         )
 
-        return results
+        return ModelResult(
+            model_type="metrics_approximation",
+            data={
+                "response_function": self.config["response_function"],
+                "response_params": self.config["response_params"],
+                "impact_estimates": impact_estimates,
+                "per_product": per_product,
+            },
+        )
 
     def validate_data(self, data: pd.DataFrame) -> bool:
         """Validate that the input data meets model requirements.

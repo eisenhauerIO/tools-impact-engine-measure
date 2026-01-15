@@ -14,6 +14,7 @@ from impact_engine.models import (
     create_models_manager,
     create_models_manager_from_config,
 )
+from impact_engine.models.base import ModelResult
 from impact_engine.models.factory import MODEL_ADAPTERS, register_model_adapter
 
 
@@ -35,12 +36,14 @@ def complete_measurement_config(**overrides):
 
 
 class MockModel(Model):
-    """Mock model for testing."""
+    """Mock model for testing.
+
+    Updated to return ModelResult (storage-agnostic pattern from Phase 1).
+    """
 
     def __init__(self):
         self.is_connected = False
         self.config = None
-        self.storage = None
 
     def connect(self, config):
         """Mock connect method."""
@@ -65,25 +68,20 @@ class MockModel(Model):
         """Mock transform_inbound method."""
         return {"model_type": "mock", "results": model_results}
 
-    def fit(self, data: pd.DataFrame, intervention_date: str, output_path: str, **kwargs) -> str:
-        """Mock fit method."""
+    def fit(
+        self, data: pd.DataFrame, intervention_date: str, output_path: str, **kwargs
+    ) -> ModelResult:
+        """Mock fit method - returns ModelResult (storage handled by manager)."""
         if not self.is_connected:
             raise ConnectionError("Model not connected. Call connect() first.")
 
-        if not self.storage:
-            raise ValueError("Storage backend is required but not configured")
-
-        result_data = {
-            "model_type": "mock",
-            "intervention_date": intervention_date,
-            "rows_processed": len(data),
-        }
-
-        result_path = f"{output_path}/mock_results.json"
-        self.storage.write_json(result_path, result_data)
-        stored_path = self.storage.full_path(result_path)
-
-        return stored_path
+        return ModelResult(
+            model_type="mock",
+            data={
+                "intervention_date": intervention_date,
+                "rows_processed": len(data),
+            },
+        )
 
     def validate_data(self, data: pd.DataFrame) -> bool:
         """Mock validate_data method."""
@@ -176,7 +174,7 @@ class TestModelsManagerFitModel:
 
         mock_model = Mock(spec=Model)
         mock_model.connect.return_value = True
-        mock_model.fit.return_value = "/path/to/results.json"
+        mock_model.fit.return_value = ModelResult(model_type="mock", data={"test": True})
 
         config = complete_measurement_config()
         manager = ModelsManager(config, mock_model)
@@ -209,7 +207,7 @@ class TestModelsManagerFitModel:
 
         mock_model = Mock(spec=Model)
         mock_model.connect.return_value = True
-        mock_model.fit.return_value = "/path/to/results.json"
+        mock_model.fit.return_value = ModelResult(model_type="mock", data={"test": True})
 
         config = complete_measurement_config()
         manager = ModelsManager(config, mock_model)

@@ -111,10 +111,10 @@ class TestMetricsApproximationAdapterFit:
         data = create_test_data()
         results = adapter.fit(data)
 
-        assert results["model_type"] == "metrics_approximation"
-        assert results["response_function"] == "linear"
-        assert results["impact_estimates"]["n_products"] == 5
-        assert len(results["per_product"]) == 5
+        assert results.model_type == "metrics_approximation"
+        assert results.data["response_function"] == "linear"
+        assert results.data["impact_estimates"]["n_products"] == 5
+        assert len(results.data["per_product"]) == 5
 
     def test_fit_calculates_correct_impact(self):
         """Verify impact calculation is correct."""
@@ -136,10 +136,10 @@ class TestMetricsApproximationAdapterFit:
         results = adapter.fit(data)
 
         # Expected: 0.4 * 100 * 0.5 = 20.0
-        product_result = results["per_product"][0]
+        product_result = results.data["per_product"][0]
         assert product_result["delta_metric"] == 0.4
         assert product_result["approximated_impact"] == 20.0
-        assert results["impact_estimates"]["total_approximated_impact"] == 20.0
+        assert results.data["impact_estimates"]["total_approximated_impact"] == 20.0
 
     def test_fit_aggregate_statistics(self):
         """Verify aggregate statistics are correct."""
@@ -159,10 +159,10 @@ class TestMetricsApproximationAdapterFit:
 
         results = adapter.fit(data)
 
-        assert results["impact_estimates"]["total_approximated_impact"] == 100.0
-        assert results["impact_estimates"]["mean_approximated_impact"] == 50.0
-        assert results["impact_estimates"]["mean_metric_change"] == 0.35
-        assert results["impact_estimates"]["n_products"] == 2
+        assert results.data["impact_estimates"]["total_approximated_impact"] == 100.0
+        assert results.data["impact_estimates"]["mean_approximated_impact"] == 50.0
+        assert results.data["impact_estimates"]["mean_metric_change"] == 0.35
+        assert results.data["impact_estimates"]["n_products"] == 2
 
     def test_fit_not_connected_raises(self):
         """Fit without connect raises ConnectionError."""

@@ -1,9 +1,27 @@
 """Base interface for impact models."""
 
 from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
 from typing import Any, Dict, List
 
 import pandas as pd
+
+
+@dataclass
+class ModelResult:
+    """Standardized model result container.
+
+    All models return this structure, allowing the manager to handle
+    storage uniformly while models remain storage-agnostic.
+    """
+
+    model_type: str
+    data: Dict[str, Any]
+    metadata: Dict[str, Any] = field(default_factory=dict)
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary for storage/serialization."""
+        return {"model_type": self.model_type, **self.data, "metadata": self.metadata}
 
 
 class Model(ABC):

@@ -77,10 +77,17 @@ class TestRealCatalogSimulatorPipeline:
         - Transform extracts quality_before/quality_after
         - MetricsApproximationAdapter computes impact
         """
+        import json
+
         from impact_engine import evaluate_impact
 
         # Single call to evaluate_impact() - engine handles everything
-        results = evaluate_impact(str(impact_config), str(tmp_path / "output"))
+        # Returns path to results file
+        results_path = evaluate_impact(str(impact_config), str(tmp_path / "output"))
+
+        # Load results from the returned path
+        with open(results_path) as f:
+            results = json.load(f)
 
         # Verify results
         assert results["model_type"] == "metrics_approximation"

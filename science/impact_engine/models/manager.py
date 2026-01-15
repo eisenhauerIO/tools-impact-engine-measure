@@ -6,7 +6,7 @@ from typing import Any, Dict, Optional
 
 import pandas as pd
 
-from .base import Model
+from .base import Model, ModelResult
 
 
 class ModelsManager:
@@ -79,16 +79,18 @@ class ModelsManager:
         if not storage:
             raise ValueError("Storage backend is required but not provided")
 
-        # Set storage on model
-        self.model.storage = storage
-
-        # Fit model
-        return self.model.fit(
+        # Fit model - all models return ModelResult (storage-agnostic)
+        result: ModelResult = self.model.fit(
             data=data,
             intervention_date=intervention_date,
             output_path=output_path,
             dependent_variable=dependent_variable,
         )
+
+        # Persist to storage (centralized here, not in models)
+        result_path = f"{output_path}/impact_results.json"
+        storage.write_json(result_path, result.to_dict())
+        return storage.full_path(result_path)
 
     def get_current_config(self) -> Optional[Dict[str, Any]]:
         """Get the currently loaded configuration."""

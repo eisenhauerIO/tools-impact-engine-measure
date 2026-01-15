@@ -1,10 +1,7 @@
 """Tests for InterruptedTimeSeriesAdapter."""
 
-import tempfile
-
 import pandas as pd
 import pytest
-from artifact_store import ArtifactStore
 
 from impact_engine.models.conftest import merge_model_params
 from impact_engine.models.interrupted_time_series import InterruptedTimeSeriesAdapter
@@ -13,22 +10,6 @@ from impact_engine.models.interrupted_time_series.adapter import TransformedInpu
 
 class TestInterruptedTimeSeriesAdapter:
     """Tests for InterruptedTimeSeriesAdapter functionality."""
-
-    def _setup_model_with_storage(self, tmpdir):
-        """Helper method to set up model with storage backend."""
-        model = InterruptedTimeSeriesAdapter()
-        config = {
-            "order": (1, 0, 0),
-            "seasonal_order": (0, 0, 0, 0),
-            "dependent_variable": "revenue",
-        }
-        model.connect(config)
-
-        # Set up artifact store
-        storage = ArtifactStore(tmpdir)
-        model.storage = storage
-
-        return model
 
     def test_connect_success(self):
         """Test successful model connection."""
@@ -155,7 +136,7 @@ class TestInterruptedTimeSeriesAdapter:
 
         result = model._format_results(MockResults(), transformed)
 
-        assert result["model_type"] == "interrupted_time_series"
+        # _format_results returns raw dict; model_type is in ModelResult wrapper
         assert result["intervention_date"] == "2024-01-05"
         assert result["dependent_variable"] == "revenue"
         assert "impact_estimates" in result
@@ -170,11 +151,12 @@ class TestInterruptedTimeSeriesAdapter:
         with pytest.raises(ConnectionError, match="Model not connected"):
             model.fit(data, intervention_date="2024-01-05", output_path="/tmp")
 
-    def test_fit_no_storage(self):
-        """Test fitting without storage backend."""
+    def test_fit_returns_model_result(self):
+        """Test that fit returns ModelResult (adapter is storage-agnostic)."""
+        from impact_engine.models.base import ModelResult
+
         model = InterruptedTimeSeriesAdapter()
 
-        # Connect the model but don't set storage
         config = {
             "order": (1, 0, 0),
             "seasonal_order": (0, 0, 0, 0),
@@ -182,14 +164,6 @@ class TestInterruptedTimeSeriesAdapter:
         }
         model.connect(config)
 
-        data = pd.DataFrame({"date": pd.date_range("2024-01-01", periods=10), "revenue": range(10)})
-
-        with pytest.raises(RuntimeError, match="Storage backend is required"):
-            model.fit(data, intervention_date="2024-01-05", output_path="results")
-
-    def test_fit_result_file_creation(self):
-        """Test that ITS model creates result file at specified path."""
-        # Create sample time series data
         data = pd.DataFrame(
             {
                 "date": pd.date_range("2024-01-01", periods=30),
@@ -197,21 +171,17 @@ class TestInterruptedTimeSeriesAdapter:
             }
         )
 
-        with tempfile.TemporaryDirectory() as tmpdir:
-            model = self._setup_model_with_storage(tmpdir)
+        result = model.fit(data, intervention_date="2024-01-15")
 
-            result_path = model.fit(
-                data=data,
-                intervention_date="2024-01-15",
-                output_path="results",
-                dependent_variable="revenue",
-            )
+        assert isinstance(result, ModelResult)
+        assert result.model_type == "interrupted_time_series"
+        assert "impact_estimates" in result.data
+        assert "model_summary" in result.data
 
-            # Verify result path format
-            assert result_path.endswith(".json")
+    def test_fit_result_has_model_type(self):
+        """Test that fit returns ModelResult with correct model_type."""
+        from impact_engine.models.base import ModelResult
 
-    def test_fit_result_file_content(self):
-        """Test that ITS model saves valid JSON with required fields."""
         data = pd.DataFrame(
             {
                 "date": pd.date_range("2024-01-01", periods=30),
@@ -219,25 +189,47 @@ class TestInterruptedTimeSeriesAdapter:
             }
         )
 
-        with tempfile.TemporaryDirectory() as tmpdir:
-            model = self._setup_model_with_storage(tmpdir)
+        model = InterruptedTimeSeriesAdapter()
+        model.connect(
+            {
+                "order": (1, 0, 0),
+                "seasonal_order": (0, 0, 0, 0),
+                "dependent_variable": "revenue",
+            }
+        )
 
-            model.fit(
-                data=data,
-                intervention_date="2024-01-15",
-                output_path="results",
-                dependent_variable="revenue",
-            )
+        result = model.fit(data=data, intervention_date="2024-01-15")
 
-            # Load and verify JSON content from storage
-            result_data = model.storage.read_json("results/impact_results.json")
+        assert isinstance(result, ModelResult)
+        assert result.model_type == "interrupted_time_series"
 
-            # Verify required fields
-            assert result_data["model_type"] == "interrupted_time_series"
-            assert result_data["intervention_date"] == "2024-01-15"
-            assert result_data["dependent_variable"] == "revenue"
-            assert "impact_estimates" in result_data
-            assert "model_summary" in result_data
+    def test_fit_result_to_dict_content(self):
+        """Test that ModelResult.to_dict() has required fields."""
+        data = pd.DataFrame(
+            {
+                "date": pd.date_range("2024-01-01", periods=30),
+                "revenue": [1000 + i * 10 for i in range(30)],
+            }
+        )
+
+        model = InterruptedTimeSeriesAdapter()
+        model.connect(
+            {
+                "order": (1, 0, 0),
+                "seasonal_order": (0, 0, 0, 0),
+                "dependent_variable": "revenue",
+            }
+        )
+
+        result = model.fit(data=data, intervention_date="2024-01-15")
+        result_data = result.to_dict()
+
+        # Verify required fields in serialized output
+        assert result_data["model_type"] == "interrupted_time_series"
+        assert result_data["intervention_date"] == "2024-01-15"
+        assert result_data["dependent_variable"] == "revenue"
+        assert "impact_estimates" in result_data
+        assert "model_summary" in result_data
 
     def test_fit_impact_estimates_structure(self):
         """Test that impact estimates have correct structure."""
@@ -248,31 +240,29 @@ class TestInterruptedTimeSeriesAdapter:
             }
         )
 
-        with tempfile.TemporaryDirectory() as tmpdir:
-            model = self._setup_model_with_storage(tmpdir)
+        model = InterruptedTimeSeriesAdapter()
+        model.connect(
+            {
+                "order": (1, 0, 0),
+                "seasonal_order": (0, 0, 0, 0),
+                "dependent_variable": "revenue",
+            }
+        )
 
-            model.fit(
-                data=data,
-                intervention_date="2024-01-15",
-                output_path="results",
-                dependent_variable="revenue",
-            )
+        result = model.fit(data=data, intervention_date="2024-01-15")
+        impact_estimates = result.data["impact_estimates"]
 
-            result_data = model.storage.read_json("results/impact_results.json")
+        # Verify impact estimate fields
+        assert "intervention_effect" in impact_estimates
+        assert "pre_intervention_mean" in impact_estimates
+        assert "post_intervention_mean" in impact_estimates
+        assert "absolute_change" in impact_estimates
+        assert "percent_change" in impact_estimates
 
-            impact_estimates = result_data["impact_estimates"]
-
-            # Verify impact estimate fields
-            assert "intervention_effect" in impact_estimates
-            assert "pre_intervention_mean" in impact_estimates
-            assert "post_intervention_mean" in impact_estimates
-            assert "absolute_change" in impact_estimates
-            assert "percent_change" in impact_estimates
-
-            # Verify they are numeric
-            assert isinstance(impact_estimates["intervention_effect"], (int, float))
-            assert isinstance(impact_estimates["pre_intervention_mean"], (int, float))
-            assert isinstance(impact_estimates["post_intervention_mean"], (int, float))
+        # Verify they are numeric
+        assert isinstance(impact_estimates["intervention_effect"], (int, float))
+        assert isinstance(impact_estimates["pre_intervention_mean"], (int, float))
+        assert isinstance(impact_estimates["post_intervention_mean"], (int, float))
 
     def test_fit_model_summary_structure(self):
         """Test that model summary has correct structure."""
@@ -283,34 +273,34 @@ class TestInterruptedTimeSeriesAdapter:
             }
         )
 
-        with tempfile.TemporaryDirectory() as tmpdir:
-            model = self._setup_model_with_storage(tmpdir)
+        model = InterruptedTimeSeriesAdapter()
+        model.connect(
+            {
+                "order": (1, 0, 0),
+                "seasonal_order": (0, 0, 0, 0),
+                "dependent_variable": "revenue",
+            }
+        )
 
-            model.fit(
-                data=data,
-                intervention_date="2024-01-15",
-                output_path="results",
-                dependent_variable="revenue",
-            )
+        result = model.fit(data=data, intervention_date="2024-01-15")
+        model_summary = result.data["model_summary"]
 
-            result_data = model.storage.read_json("results/impact_results.json")
+        # Verify model summary fields
+        assert "n_observations" in model_summary
+        assert "pre_period_length" in model_summary
+        assert "post_period_length" in model_summary
+        assert "aic" in model_summary
+        assert "bic" in model_summary
 
-            model_summary = result_data["model_summary"]
+        # Verify counts are correct
+        assert model_summary["n_observations"] == 30
+        assert model_summary["pre_period_length"] == 14  # 2024-01-01 to 2024-01-14
+        assert model_summary["post_period_length"] == 16  # 2024-01-15 to 2024-01-30
 
-            # Verify model summary fields
-            assert "n_observations" in model_summary
-            assert "pre_period_length" in model_summary
-            assert "post_period_length" in model_summary
-            assert "aic" in model_summary
-            assert "bic" in model_summary
+    def test_fit_result_data_structure(self):
+        """Test that fit returns ModelResult with correct data structure."""
+        from impact_engine.models.base import ModelResult
 
-            # Verify counts are correct
-            assert model_summary["n_observations"] == 30
-            assert model_summary["pre_period_length"] == 14  # 2024-01-01 to 2024-01-14
-            assert model_summary["post_period_length"] == 16  # 2024-01-15 to 2024-01-30
-
-    def test_fit_returns_file_path(self):
-        """Test that fit method returns the correct storage URL."""
         data = pd.DataFrame(
             {
                 "date": pd.date_range("2024-01-01", periods=30),
@@ -318,21 +308,23 @@ class TestInterruptedTimeSeriesAdapter:
             }
         )
 
-        with tempfile.TemporaryDirectory() as tmpdir:
-            model = self._setup_model_with_storage(tmpdir)
+        model = InterruptedTimeSeriesAdapter()
+        model.connect(
+            {
+                "order": (1, 0, 0),
+                "seasonal_order": (0, 0, 0, 0),
+                "dependent_variable": "revenue",
+            }
+        )
 
-            result_path = model.fit(
-                data=data,
-                intervention_date="2024-01-15",
-                output_path="results",
-                dependent_variable="revenue",
-            )
+        result = model.fit(data=data, intervention_date="2024-01-15")
 
-            # Verify path is a string
-            assert isinstance(result_path, str)
-
-            # Verify it's a proper path
-            assert "results/impact_results.json" in result_path
+        # Verify result is ModelResult with expected structure
+        assert isinstance(result, ModelResult)
+        assert "intervention_date" in result.data
+        assert "dependent_variable" in result.data
+        assert "impact_estimates" in result.data
+        assert "model_summary" in result.data
 
     def test_validate_data_success(self):
         """Test successful data validation."""

@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 
-from ..base import Model
+from ..base import Model, ModelResult
 
 
 @dataclass
@@ -47,7 +47,6 @@ class InterruptedTimeSeriesAdapter(Model):
         self.logger = logging.getLogger(__name__)
         self.is_connected = False
         self.config = None
-        self.storage = None
 
     def connect(self, config: Dict[str, Any]) -> bool:
         """Initialize model with configuration parameters.
@@ -107,22 +106,22 @@ class InterruptedTimeSeriesAdapter(Model):
                 "Specify in MEASUREMENT.PARAMS configuration."
             )
 
-    def fit(self, data: pd.DataFrame, **kwargs) -> str:
+    def fit(self, data: pd.DataFrame, **kwargs) -> ModelResult:
         """
-        Fit the interrupted time series model and save results.
+        Fit the interrupted time series model and return results.
 
         Args:
             data: DataFrame containing time series data with 'date' column
                   and dependent variable column.
             **kwargs: Model parameters:
                 - intervention_date (str): Date (YYYY-MM-DD) when intervention occurred. Required.
-                - output_path (str): Directory path for saving results. Required.
+                - output_path (str): Directory path for saving results (used by manager).
                 - dependent_variable (str): Column to model (default: "revenue").
                 - order (tuple): SARIMAX order (p, d, q).
                 - seasonal_order (tuple): SARIMAX seasonal order (P, D, Q, s).
 
         Returns:
-            str: Path to the saved results file.
+            ModelResult: Standardized result container (storage handled by manager).
 
         Raises:
             ValueError: If data validation fails or required columns are missing.
@@ -130,13 +129,10 @@ class InterruptedTimeSeriesAdapter(Model):
         """
         # Extract required kwargs
         intervention_date = kwargs.get("intervention_date")
-        output_path = kwargs.get("output_path")
         dependent_variable = kwargs.get("dependent_variable", "revenue")
 
         if not intervention_date:
             raise ValueError("intervention_date is required for InterruptedTimeSeriesAdapter")
-        if not output_path:
-            raise ValueError("output_path is required for InterruptedTimeSeriesAdapter")
 
         if not self.is_connected:
             raise ConnectionError("Model not connected. Call connect() first.")
@@ -179,15 +175,11 @@ class InterruptedTimeSeriesAdapter(Model):
             # Format results (explicitly pass transformed data)
             standardized_results = self._format_results(results, transformed)
 
-            # Save results using storage backend
-            if not self.storage:
-                raise ValueError("Storage backend is required but not configured")
-
-            result_path = f"{output_path}/impact_results.json"
-            self.storage.write_json(result_path, standardized_results)
-            stored_path = self.storage.full_path(result_path)
-            self.logger.info(f"Model results saved to {stored_path}")
-            return stored_path
+            self.logger.info("Model fitting complete")
+            return ModelResult(
+                model_type="interrupted_time_series",
+                data=standardized_results,
+            )
 
         except Exception as e:
             self.logger.error(f"Error fitting InterruptedTimeSeriesAdapter: {e}")
@@ -316,10 +308,9 @@ class InterruptedTimeSeriesAdapter(Model):
             transformed.data, transformed.y, model_results
         )
 
-        # Prepare standardized output
+        # Prepare standardized output (model_type is in ModelResult wrapper)
         df = transformed.data
         return {
-            "model_type": "interrupted_time_series",
             "intervention_date": transformed.intervention_date,
             "dependent_variable": transformed.dependent_variable,
             "impact_estimates": impact_estimates,
