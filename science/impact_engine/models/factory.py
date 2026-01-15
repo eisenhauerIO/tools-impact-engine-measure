@@ -10,14 +10,10 @@ from typing import Any, Dict
 from ..config import parse_config_file
 from ..core import Registry
 from .base import Model
-from .interrupted_time_series import InterruptedTimeSeriesAdapter
 from .manager import ModelsManager
-from .metrics_approximation import MetricsApproximationAdapter
 
-# Registry of available models
+# Registry of available models - adapters self-register via decorator
 MODEL_REGISTRY: Registry[Model] = Registry(Model, "model")
-MODEL_REGISTRY.register("interrupted_time_series", InterruptedTimeSeriesAdapter)
-MODEL_REGISTRY.register("metrics_approximation", MetricsApproximationAdapter)
 
 
 def create_models_manager(config_path: str) -> ModelsManager:
@@ -81,3 +77,9 @@ def get_model_adapter(model_type: str) -> Model:
         ValueError: If the model type is not supported.
     """
     return MODEL_REGISTRY.get(model_type)
+
+
+# Import adapters to trigger self-registration via decorators
+# These imports must be at the end after MODEL_REGISTRY is defined
+from .interrupted_time_series import InterruptedTimeSeriesAdapter  # noqa: E402, F401
+from .metrics_approximation import MetricsApproximationAdapter  # noqa: E402, F401

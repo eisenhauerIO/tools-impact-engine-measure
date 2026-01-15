@@ -1,5 +1,10 @@
 """
 Metrics Manager for coordinating metrics operations.
+
+Design: Uses dependency injection to receive metrics adapter from factory.
+This decouples coordination logic from adapter selection, enabling:
+- Easy unit testing with mock adapters
+- Adapter selection controlled by configuration, not hardcoded
 """
 
 from typing import Any, Dict, Optional

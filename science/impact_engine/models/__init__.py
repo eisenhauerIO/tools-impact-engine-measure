@@ -1,17 +1,14 @@
 """Models layer for the impact_engine package."""
 
 from .base import Model, ModelResult
-from .factory import create_models_manager, create_models_manager_from_config
-from .interrupted_time_series import InterruptedTimeSeriesAdapter
+from .factory import MODEL_REGISTRY, create_models_manager, create_models_manager_from_config
 from .manager import ModelsManager
-from .metrics_approximation import MetricsApproximationAdapter
 
 __all__ = [
     "Model",
     "ModelResult",
     "ModelsManager",
-    "InterruptedTimeSeriesAdapter",
-    "MetricsApproximationAdapter",
+    "MODEL_REGISTRY",
     "create_models_manager",
     "create_models_manager_from_config",
 ]

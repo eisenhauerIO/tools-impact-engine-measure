@@ -7,11 +7,21 @@ ensuring libraries communicate only through well-defined config formats.
 
 from typing import Any, Dict
 
-# Default simulation parameters for catalog simulator
-DEFAULT_SALE_PROB = 0.7
-DEFAULT_IMPRESSION_TO_VISIT_RATE = 0.15
-DEFAULT_VISIT_TO_CART_RATE = 0.25
-DEFAULT_CART_TO_ORDER_RATE = 0.80
+from .validation import get_defaults
+
+
+def _get_catalog_simulator_defaults() -> Dict[str, Any]:
+    """Get catalog simulator defaults from config_defaults.yaml."""
+    defaults = get_defaults()
+    return defaults.get(
+        "CATALOG_SIMULATOR",
+        {
+            "sale_prob": 0.7,
+            "impression_to_visit_rate": 0.15,
+            "visit_to_cart_rate": 0.25,
+            "cart_to_order_rate": 0.80,
+        },
+    )
 
 
 class ConfigBridge:
@@ -65,6 +75,9 @@ class ConfigBridge:
         data = ie_config.get("DATA", {})
         seed = data.get("seed", 42)
 
+        # Get simulation defaults from config
+        sim_defaults = _get_catalog_simulator_defaults()
+
         # Build RULE config
         cs_config: Dict[str, Any] = {
             "RULE": {
@@ -78,11 +91,11 @@ class ConfigBridge:
                         "date_start": data.get("start_date"),
                         "date_end": data.get("end_date"),
                         "seed": seed,
-                        "sale_prob": DEFAULT_SALE_PROB,
+                        "sale_prob": sim_defaults["sale_prob"],
                         "granularity": "daily",
-                        "impression_to_visit_rate": DEFAULT_IMPRESSION_TO_VISIT_RATE,
-                        "visit_to_cart_rate": DEFAULT_VISIT_TO_CART_RATE,
-                        "cart_to_order_rate": DEFAULT_CART_TO_ORDER_RATE,
+                        "impression_to_visit_rate": sim_defaults["impression_to_visit_rate"],
+                        "visit_to_cart_rate": sim_defaults["visit_to_cart_rate"],
+                        "cart_to_order_rate": sim_defaults["cart_to_order_rate"],
                     },
                 },
             }

@@ -12,12 +12,10 @@ from artifact_store import JobInfo
 from ..config import get_source_config, get_source_type, parse_config_file
 from ..core import Registry
 from .base import MetricsInterface
-from .catalog_simulator import CatalogSimulatorAdapter
 from .manager import MetricsManager
 
-# Registry of available metrics adapters
+# Registry of available metrics adapters - adapters self-register via decorator
 METRICS_REGISTRY: Registry[MetricsInterface] = Registry(MetricsInterface, "metrics adapter")
-METRICS_REGISTRY.register("simulator", CatalogSimulatorAdapter)
 
 
 def create_metrics_manager(
@@ -121,3 +119,8 @@ def get_metrics_adapter(metrics_type: str) -> MetricsInterface:
         ValueError: If the metrics type is not supported.
     """
     return METRICS_REGISTRY.get(metrics_type)
+
+
+# Import adapters to trigger self-registration via decorators
+# These imports must be at the end after METRICS_REGISTRY is defined
+from .catalog_simulator import CatalogSimulatorAdapter  # noqa: E402, F401

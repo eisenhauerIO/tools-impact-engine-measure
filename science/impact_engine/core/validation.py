@@ -6,9 +6,14 @@ Provides a single entry point for config processing:
 
 Design principles:
 - Schema derived from config_defaults.yaml (null values = required fields)
+  Why: Single source of truth - no duplicate schema definitions
 - Deep merge of user config over defaults
-- Skip param validation for unknown/custom functions (they use validate_params in base class)
+  Why: Users specify only what differs from defaults
+- Skip param validation for unknown/custom functions
+  Why: Enables extensibility without modifying validation code;
+  custom adapters validate via their own validate_params() method
 - Fail early with descriptive error messages
+  Why: Catch config errors before expensive operations begin
 """
 
 import copy

@@ -6,7 +6,10 @@
       "Bash(hatch run pytest:*)",
       "Bash(python -m pytest:*)",
       "Bash(conda env create:*)",
-      "Bash(conda activate:*)"
+      "Bash(conda activate:*)",
+      "Bash(wc:*)",
+      "Bash(python:*)",
+      "Bash(conda run:*)"
     ]
   }
 }

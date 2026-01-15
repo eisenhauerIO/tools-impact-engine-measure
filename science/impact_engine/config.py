@@ -55,24 +55,17 @@ def parse_config_file(config_path: str) -> Dict[str, Any]:
 
 # Helper functions for extracting config parts
 def get_source_config(config: Dict[str, Any]) -> Dict[str, Any]:
-    """Extract SOURCE.CONFIG from parsed config."""
     return config["DATA"]["SOURCE"]["CONFIG"]
 
 
 def get_source_type(config: Dict[str, Any]) -> str:
-    """Extract SOURCE.type from parsed config."""
     return config["DATA"]["SOURCE"]["type"]
 
 
 def get_transform_config(config: Dict[str, Any]) -> Dict[str, Any]:
-    """Extract TRANSFORM config from parsed config.
-
-    Config is pre-validated and merged with defaults, so TRANSFORM always exists.
-    If ENRICHMENT is configured, automatically injects enrichment_start into PARAMS.
-    """
+    """Injects enrichment_start into PARAMS if ENRICHMENT is configured."""
     transform = config["DATA"]["TRANSFORM"]
 
-    # Inject enrichment_start from ENRICHMENT config if present (ENRICHMENT is optional)
     enrichment = config["DATA"].get("ENRICHMENT")
     if enrichment:
         params = enrichment.get("PARAMS", {})
@@ -83,10 +76,8 @@ def get_transform_config(config: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def get_measurement_config(config: Dict[str, Any]) -> Dict[str, Any]:
-    """Extract MEASUREMENT config from parsed config."""
     return config["MEASUREMENT"]
 
 
 def get_measurement_params(config: Dict[str, Any]) -> Dict[str, Any]:
-    """Extract MEASUREMENT.PARAMS from parsed config."""
     return config["MEASUREMENT"]["PARAMS"]

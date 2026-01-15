@@ -6,7 +6,7 @@ import pandas as pd
 import pytest
 from artifact_store import create_job
 
-from impact_engine.metrics import CatalogSimulatorAdapter
+from impact_engine.metrics.catalog_simulator import CatalogSimulatorAdapter
 
 
 class TestCatalogSimulatorAdapter:
@@ -30,20 +30,20 @@ class TestCatalogSimulatorAdapter:
         adapter = CatalogSimulatorAdapter()
 
         with pytest.raises(ValueError, match="Invalid simulator mode 'invalid'"):
-            adapter.connect({"mode": "invalid"})
+            adapter.connect({"mode": "invalid", "seed": 42})
 
     def test_connect_invalid_seed(self):
         """Test connection with invalid seed."""
         adapter = CatalogSimulatorAdapter()
 
         with pytest.raises(ValueError, match="Simulator seed must be a non-negative integer"):
-            adapter.connect({"seed": -1})
+            adapter.connect({"mode": "rule", "seed": -1})
 
-    def test_connect_default_values(self):
-        """Test connection with default values."""
+    def test_connect_stores_config(self):
+        """Test that connect stores provided config values."""
         adapter = CatalogSimulatorAdapter()
 
-        result = adapter.connect({})
+        result = adapter.connect({"mode": "rule", "seed": 42})
         assert result is True
         assert adapter.config["mode"] == "rule"
         assert adapter.config["seed"] == 42
@@ -51,7 +51,7 @@ class TestCatalogSimulatorAdapter:
     def test_validate_connection_success(self):
         """Test connection validation when connected and simulator available."""
         adapter = CatalogSimulatorAdapter()
-        adapter.connect({"mode": "rule"})
+        adapter.connect({"mode": "rule", "seed": 42})
 
         # Mock the core module with RuleBackend
         mock_core = MagicMock()
@@ -67,7 +67,7 @@ class TestCatalogSimulatorAdapter:
     def test_validate_connection_simulator_not_available(self):
         """Test connection validation when simulator not available."""
         adapter = CatalogSimulatorAdapter()
-        adapter.connect({"mode": "rule"})
+        adapter.connect({"mode": "rule", "seed": 42})
 
         with patch("builtins.__import__", side_effect=ImportError):
             assert adapter.validate_connection() is False
@@ -109,7 +109,7 @@ class TestCatalogSimulatorAdapter:
     def test_transform_outbound_missing_product_id(self):
         """Test outbound transformation with missing product_id column."""
         adapter = CatalogSimulatorAdapter()
-        adapter.connect({"mode": "rule"})
+        adapter.connect({"mode": "rule", "seed": 42})
 
         products = pd.DataFrame({"name": ["Product 1"], "category": ["Electronics"]})
 
@@ -123,7 +123,7 @@ class TestCatalogSimulatorAdapter:
     def test_transform_outbound_missing_optional_columns(self):
         """Test outbound transformation with missing optional columns."""
         adapter = CatalogSimulatorAdapter()
-        adapter.connect({"mode": "rule"})
+        adapter.connect({"mode": "rule", "seed": 42})
 
         products = pd.DataFrame({"product_id": ["prod1"]})
 
@@ -249,7 +249,7 @@ class TestCatalogSimulatorAdapter:
     def test_retrieve_business_metrics_empty_products(self):
         """Test retrieving metrics with empty products."""
         adapter = CatalogSimulatorAdapter()
-        adapter.connect({"mode": "rule"})
+        adapter.connect({"mode": "rule", "seed": 42})
 
         with pytest.raises(ValueError, match="Products DataFrame cannot be empty"):
             adapter.retrieve_business_metrics(pd.DataFrame(), "2024-01-01", "2024-01-31")
@@ -257,7 +257,7 @@ class TestCatalogSimulatorAdapter:
     def test_retrieve_business_metrics_none_products(self):
         """Test retrieving metrics with None products."""
         adapter = CatalogSimulatorAdapter()
-        adapter.connect({"mode": "rule"})
+        adapter.connect({"mode": "rule", "seed": 42})
 
         with pytest.raises(ValueError, match="Products DataFrame cannot be empty"):
             adapter.retrieve_business_metrics(None, "2024-01-01", "2024-01-31")
@@ -265,7 +265,7 @@ class TestCatalogSimulatorAdapter:
     def test_retrieve_business_metrics_simulator_not_available(self, tmp_path):
         """Test retrieving metrics when simulator package not available."""
         adapter = CatalogSimulatorAdapter()
-        adapter.connect({"mode": "rule", "storage_path": str(tmp_path)})
+        adapter.connect({"mode": "rule", "seed": 42, "storage_path": str(tmp_path)})
 
         products = pd.DataFrame({"product_id": ["prod1"]})
 
@@ -279,7 +279,7 @@ class TestCatalogSimulatorAdapter:
     def test_retrieve_business_metrics_simulation_error(self, tmp_path):
         """Test retrieving metrics when simulation fails."""
         adapter = CatalogSimulatorAdapter()
-        adapter.connect({"mode": "rule", "storage_path": str(tmp_path)})
+        adapter.connect({"mode": "rule", "seed": 42, "storage_path": str(tmp_path)})
 
         products = pd.DataFrame({"product_id": ["prod1"]})
 

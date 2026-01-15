@@ -15,8 +15,10 @@ from artifact_store import JobInfo, create_job
 
 from ...core import ConfigBridge, MetricsSchema, ProductSchema
 from ..base import MetricsInterface
+from ..factory import METRICS_REGISTRY
 
 
+@METRICS_REGISTRY.register_decorator("simulator")
 class CatalogSimulatorAdapter(MetricsInterface):
     """Adapter for catalog simulator that implements MetricsInterface."""
 
@@ -32,22 +34,21 @@ class CatalogSimulatorAdapter(MetricsInterface):
         ]
 
     def connect(self, config: Dict[str, Any]) -> bool:
-        """Establish connection to the catalog simulator."""
-        # Validate mode
-        mode = config.get("mode", "rule")
+        """Establish connection to the catalog simulator.
+
+        Config is pre-validated with defaults merged via process_config().
+        """
+        mode = config["mode"]
         if mode not in ["rule", "ml"]:
             raise ValueError(f"Invalid simulator mode '{mode}'. Must be 'rule' or 'ml'")
 
-        # Validate seed
-        seed = config.get("seed", 42)
+        seed = config["seed"]
         if not isinstance(seed, int) or seed < 0:
             raise ValueError("Simulator seed must be a non-negative integer")
 
-        # Store parent job for nested job creation
         self.parent_job = config.get("parent_job")
 
-        # Storage path for standalone jobs (when no parent_job)
-        # Allows tests to pass temp directories instead of hardcoded "output"
+        # storage_path is an internal parameter (not in user config), fallback is appropriate
         storage_path = config.get("storage_path", "output")
 
         self.config = {
@@ -77,36 +78,28 @@ class CatalogSimulatorAdapter(MetricsInterface):
         try:
             from online_retail_simulator.simulate import simulate_metrics
 
-            # 1. Create nested job for simulation artifacts
             self._create_simulation_job()
 
-            # 2. Transform input and save products to job (simulate_metrics expects them there)
             transformed_input = self.transform_outbound(products, start_date, end_date)
+            # simulate_metrics expects products in job directory
             self.simulation_job.save_df("products", transformed_input["product_characteristics"])
 
-            # 3. Build full simulator config
             simulator_config = {"RULE": transformed_input["rule_config"]}
 
-            # 4. Write config to temp file for simulate_metrics
             with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
                 yaml.dump(simulator_config, f)
                 config_path = f.name
 
             try:
-                # 5. Call catalog_simulator's simulate_metrics (handles backend + storage)
                 simulate_metrics(self.simulation_job, config_path)
             finally:
-                # Clean up temp file
                 os.unlink(config_path)
 
-            # 6. Load metrics from job (simulate_metrics saves as "metrics")
             sales_df = self.simulation_job.load_df("metrics")
 
-            # 7. Apply enrichment if configured
             if self.config.get("enrichment"):
                 sales_df = self._apply_enrichment(sales_df)
 
-            # 8. Transform to impact engine format
             return self.transform_inbound(sales_df)
 
         except ImportError as e:
@@ -128,14 +121,11 @@ class CatalogSimulatorAdapter(MetricsInterface):
             )
 
     def _apply_enrichment(self, metrics_df: pd.DataFrame) -> pd.DataFrame:
-        """Apply enrichment and add quality_score to metrics based on enrichment_start date.
+        """Add quality_score column to metrics based on enrichment configuration.
 
-        This method:
-        1. Calls simulate_product_details() to generate product_details (needed by enrich)
-        2. Calls enrich() which creates product_details_original and product_details_enriched
-        3. Joins quality_score to metrics based on date vs enrichment_start
-
-        Returns metrics DataFrame with quality_score column added.
+        Products before enrichment_start get original quality scores;
+        products after get enriched scores. This enables before/after comparison
+        for impact analysis.
         """
         from online_retail_simulator.enrich import enrich
         from online_retail_simulator.simulate import simulate_product_details

@@ -9,6 +9,7 @@ import pandas as pd
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 
 from ..base import Model, ModelResult
+from ..factory import MODEL_REGISTRY
 
 
 @dataclass
@@ -28,18 +29,14 @@ class TransformedInput:
     seasonal_order: Tuple[int, int, int, int]
 
 
+@MODEL_REGISTRY.register_decorator("interrupted_time_series")
 class InterruptedTimeSeriesAdapter(Model):
-    """
-    Adapter for Interrupted Time Series (ITS) model that implements Model interface.
+    """Estimates causal impact of an intervention using time series analysis.
 
-    This adapter uses SARIMAX from statsmodels to fit a time series model
-    with an intervention dummy variable to estimate the causal impact
-    of an intervention on a business metric.
-
-    The model assumes:
-    - Data is ordered chronologically
-    - Intervention occurs at a specific point in time
-    - Pre and post-intervention periods have sufficient observations
+    Constraints:
+    - Data must be ordered chronologically with a 'date' column
+    - intervention_date parameter required in MEASUREMENT.PARAMS
+    - Requires sufficient pre and post-intervention observations (minimum 3 total)
     """
 
     def __init__(self):

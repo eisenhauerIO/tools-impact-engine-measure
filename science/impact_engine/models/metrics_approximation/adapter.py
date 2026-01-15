@@ -11,9 +11,11 @@ from typing import Any, Dict, List
 import pandas as pd
 
 from ..base import Model, ModelResult
+from ..factory import MODEL_REGISTRY
 from .response_registry import get_response_function
 
 
+@MODEL_REGISTRY.register_decorator("metrics_approximation")
 class MetricsApproximationAdapter(Model):
     """
     Adapter for metrics-based impact approximation that implements Model interface.

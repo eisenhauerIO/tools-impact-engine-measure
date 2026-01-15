@@ -5,7 +5,7 @@ This module provides a reusable Registry class that handles registration,
 lookup, and validation for adapters like models and metrics sources.
 """
 
-from typing import Dict, Generic, List, Type, TypeVar
+from typing import Callable, Dict, Generic, List, Type, TypeVar
 
 T = TypeVar("T")
 
@@ -67,3 +67,21 @@ class Registry(Generic[T]):
     def keys(self) -> List[str]:
         """Return all registered keys."""
         return list(self._registry.keys())
+
+    def register_decorator(self, key: str) -> Callable[[Type[T]], Type[T]]:
+        """Return a decorator that registers the class under the given key.
+
+        Enables self-registration pattern where adapters register themselves
+        at import time, avoiding explicit registration in factory files.
+
+        Example:
+            @MODEL_REGISTRY.register_decorator("my_model")
+            class MyModelAdapter(Model):
+                ...
+        """
+
+        def decorator(cls: Type[T]) -> Type[T]:
+            self.register(key, cls)
+            return cls
+
+        return decorator
