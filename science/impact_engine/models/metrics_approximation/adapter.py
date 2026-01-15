@@ -65,13 +65,13 @@ class MetricsApproximationAdapter(Model):
         baseline = config["baseline_column"]
 
         # Response config has defaults from config_defaults.yaml
-        response_config = config["response"]
+        response_config = config["RESPONSE"]
         if not isinstance(response_config, dict):
-            raise ValueError("response must be a dict with FUNCTION key")
+            raise ValueError("RESPONSE must be a dict with FUNCTION key")
 
         function_name = response_config.get("FUNCTION")
         if not function_name:
-            raise ValueError("response must have FUNCTION key - FUNCTION is required")
+            raise ValueError("RESPONSE must have FUNCTION key - FUNCTION is required")
 
         # Validate that the response function exists
         try:

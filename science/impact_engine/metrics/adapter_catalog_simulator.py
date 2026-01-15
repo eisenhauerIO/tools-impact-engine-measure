@@ -174,7 +174,7 @@ class CatalogSimulatorAdapter(MetricsInterface):
         products_enriched = self.simulation_job.load_df("product_details_enriched")
 
         # Get enrichment_start from config
-        enrichment_params = self.config["enrichment"].get("params", {})
+        enrichment_params = self.config["enrichment"].get("PARAMS", {})
         enrichment_start = enrichment_params.get("enrichment_start", "2024-11-15")
         enrichment_date = pd.to_datetime(enrichment_start)
 
@@ -239,9 +239,9 @@ class CatalogSimulatorAdapter(MetricsInterface):
         # Use config bridge to build simulator config
         ie_config = {
             "DATA": {
-                "START_DATE": start_date,
-                "END_DATE": end_date,
-                "SEED": self.config["seed"],
+                "start_date": start_date,
+                "end_date": end_date,
+                "seed": self.config["seed"],
             }
         }
         cs_config = ConfigBridge.to_catalog_simulator(

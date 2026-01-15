@@ -2,16 +2,16 @@
 # Used by TestRealCatalogSimulatorPipeline integration tests
 DATA:
   SOURCE:
-    TYPE: simulator
+    type: simulator
     CONFIG:
-      MODE: rule
-      SEED: 42
-      START_DATE: '2024-01-01'
-      END_DATE: '2024-01-14'
-      PATH: products.csv  # Updated by test fixture
+      mode: rule
+      seed: 42
+      start_date: '2024-01-01'
+      end_date: '2024-01-14'
+      path: products.csv  # Updated by test fixture
   ENRICHMENT:
-    function: product_detail_boost
-    params:
+    FUNCTION: product_detail_boost
+    PARAMS:
       enrichment_fraction: 1.0
       enrichment_start: '2024-01-08'
       quality_boost: 0.15

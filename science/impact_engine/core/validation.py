@@ -176,14 +176,14 @@ def validate_structure(config: Dict[str, Any]) -> List[str]:
         errors.append("Missing required field: DATA.SOURCE")
     else:
         source = data["SOURCE"]
-        if "TYPE" not in source:
-            errors.append("Missing required field: DATA.SOURCE.TYPE")
+        if "type" not in source:
+            errors.append("Missing required field: DATA.SOURCE.type")
         if "CONFIG" not in source:
             errors.append("Missing required field: DATA.SOURCE.CONFIG")
         else:
             source_config = source["CONFIG"]
             # Required fields in SOURCE.CONFIG
-            for field in ["PATH", "START_DATE", "END_DATE"]:
+            for field in ["path", "start_date", "end_date"]:
                 if field not in source_config or source_config[field] is None:
                     errors.append(f"Missing required field: DATA.SOURCE.CONFIG.{field}")
 
@@ -216,8 +216,8 @@ def validate_parameters(config: Dict[str, Any]) -> List[str]:
     # Date validation for SOURCE.CONFIG
     source_config = config.get("DATA", {}).get("SOURCE", {}).get("CONFIG", {})
 
-    start_date_str = source_config.get("START_DATE")
-    end_date_str = source_config.get("END_DATE")
+    start_date_str = source_config.get("start_date")
+    end_date_str = source_config.get("end_date")
 
     start_date = None
     end_date = None
@@ -227,7 +227,7 @@ def validate_parameters(config: Dict[str, Any]) -> List[str]:
             start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
         except ValueError:
             errors.append(
-                f"Invalid date format for DATA.SOURCE.CONFIG.START_DATE: '{start_date_str}'. "
+                f"Invalid date format for DATA.SOURCE.CONFIG.start_date: '{start_date_str}'. "
                 f"Expected YYYY-MM-DD"
             )
 
@@ -236,14 +236,14 @@ def validate_parameters(config: Dict[str, Any]) -> List[str]:
             end_date = datetime.strptime(end_date_str, "%Y-%m-%d")
         except ValueError:
             errors.append(
-                f"Invalid date format for DATA.SOURCE.CONFIG.END_DATE: '{end_date_str}'. "
+                f"Invalid date format for DATA.SOURCE.CONFIG.end_date: '{end_date_str}'. "
                 f"Expected YYYY-MM-DD"
             )
 
     if start_date and end_date and start_date > end_date:
         errors.append(
-            f"DATA.SOURCE.CONFIG.START_DATE ({start_date_str}) must be before or equal to "
-            f"END_DATE ({end_date_str})"
+            f"DATA.SOURCE.CONFIG.start_date ({start_date_str}) must be before or equal to "
+            f"end_date ({end_date_str})"
         )
 
     # Model-specific validation (only for known models)

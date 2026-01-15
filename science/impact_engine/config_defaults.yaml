@@ -8,13 +8,13 @@
 
 DATA:
   SOURCE:
-    TYPE: simulator
+    type: simulator
     CONFIG:
-      MODE: rule
-      SEED: 42
-      PATH: null           # REQUIRED - path to products data
-      START_DATE: null     # REQUIRED - format: YYYY-MM-DD
-      END_DATE: null       # REQUIRED - format: YYYY-MM-DD
+      mode: rule
+      seed: 42
+      path: null           # REQUIRED - path to products data
+      start_date: null     # REQUIRED - format: YYYY-MM-DD
+      end_date: null       # REQUIRED - format: YYYY-MM-DD
       # ENRICHMENT is optional, no default
   # ENRICHMENT at DATA level is optional, no default
   TRANSFORM:
@@ -43,7 +43,7 @@ MEASUREMENT:
     metric_before_column: quality_before
     metric_after_column: quality_after
     baseline_column: baseline_sales
-    response:
+    RESPONSE:
       FUNCTION: linear
       PARAMS:
         coefficient: 0.5

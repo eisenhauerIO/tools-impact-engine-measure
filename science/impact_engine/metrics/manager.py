@@ -47,8 +47,8 @@ class MetricsManager:
         Config is pre-validated with defaults merged, so direct access is safe.
         """
         config = {
-            "mode": self.source_config["MODE"],
-            "seed": self.source_config["SEED"],
+            "mode": self.source_config["mode"],
+            "seed": self.source_config["seed"],
             "parent_job": self.parent_job,
         }
 
@@ -64,8 +64,8 @@ class MetricsManager:
             raise ValueError("Products DataFrame cannot be empty")
 
         # Get date range from SOURCE.CONFIG
-        start_date = self.source_config["START_DATE"]
-        end_date = self.source_config["END_DATE"]
+        start_date = self.source_config["start_date"]
+        end_date = self.source_config["end_date"]
 
         return self.metrics_source.retrieve_business_metrics(
             products=products, start_date=start_date, end_date=end_date

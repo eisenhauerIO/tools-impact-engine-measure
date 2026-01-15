@@ -32,7 +32,7 @@ def evaluate_impact(config_path: str, storage_url: str = "./data") -> str:
     config = parse_config_file(config_path)
     source_config = get_source_config(config)
     transform_config = get_transform_config(config)
-    data_path = source_config["PATH"]
+    data_path = source_config["path"]
 
     # Create parent job for this impact analysis run
     # Uses storage_url parameter to allow tests to pass temp directories

@@ -138,11 +138,11 @@ if __name__ == "__main__":
     # Load config
     with open("config_enrichment.yaml", "r") as f:
         config = yaml.safe_load(f)
-    config["DATA"]["SOURCE"]["CONFIG"]["PATH"] = products_path
+    config["DATA"]["SOURCE"]["CONFIG"]["path"] = products_path
 
     enrichment_config = config["DATA"]["ENRICHMENT"]
-    intervention_date = enrichment_config["params"]["enrichment_start"]
-    quality_boost = enrichment_config["params"]["quality_boost"]
+    intervention_date = enrichment_config["PARAMS"]["enrichment_start"]
+    quality_boost = enrichment_config["PARAMS"]["quality_boost"]
     metric = config["MEASUREMENT"]["PARAMS"]["dependent_variable"]
 
     print(f"  Products: {products_path}")

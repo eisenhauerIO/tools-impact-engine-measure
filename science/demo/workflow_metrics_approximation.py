@@ -13,9 +13,7 @@ import tempfile
 from pathlib import Path
 
 import yaml
-
 from impact_engine import evaluate_impact
-
 
 # Config file for this demo
 CONFIG_PATH = Path(__file__).parent / "config_metrics_approximation_workflow.yaml"
@@ -66,13 +64,13 @@ def run_demo():
 
     # 1. Create products.csv
     print("\n1. Creating products.csv:")
-    products_path = create_products_csv(str(output_path))
+    create_products_csv(str(output_path))
 
     # 2. Load and display config
     print(f"\n2. Using config: {CONFIG_PATH}")
     with open(CONFIG_PATH) as f:
         config = yaml.safe_load(f)
-    print(f"   ENRICHMENT: {config['DATA']['ENRICHMENT']['function']}")
+    print(f"   ENRICHMENT: {config['DATA']['ENRICHMENT']['FUNCTION']}")
     print(f"   TRANSFORM: {config['DATA']['TRANSFORM']['FUNCTION']}")
     print(f"   MODEL: {config['MEASUREMENT']['MODEL']}")
 

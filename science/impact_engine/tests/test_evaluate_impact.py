@@ -34,13 +34,13 @@ class TestEvaluateImpactIntegration:
             config = {
                 "DATA": {
                     "SOURCE": {
-                        "TYPE": "simulator",
+                        "type": "simulator",
                         "CONFIG": {
-                            "PATH": products_path,
-                            "MODE": "rule",
-                            "SEED": 42,
-                            "START_DATE": "2024-01-01",
-                            "END_DATE": "2024-01-31",
+                            "path": products_path,
+                            "mode": "rule",
+                            "seed": 42,
+                            "start_date": "2024-01-01",
+                            "end_date": "2024-01-31",
                         },
                     },
                     "TRANSFORM": {
@@ -103,13 +103,13 @@ class TestEvaluateImpactIntegration:
             config = {
                 "DATA": {
                     "SOURCE": {
-                        "TYPE": "simulator",
+                        "type": "simulator",
                         "CONFIG": {
-                            "PATH": products_path,
-                            "MODE": "rule",
-                            "SEED": 42,
-                            "START_DATE": "2024-01-01",
-                            "END_DATE": "2024-01-31",
+                            "path": products_path,
+                            "mode": "rule",
+                            "seed": 42,
+                            "start_date": "2024-01-01",
+                            "end_date": "2024-01-31",
                         },
                     },
                     "TRANSFORM": {
@@ -152,13 +152,13 @@ class TestEvaluateImpactIntegration:
             config = {
                 "DATA": {
                     "SOURCE": {
-                        "TYPE": "simulator",
+                        "type": "simulator",
                         "CONFIG": {
-                            "PATH": products_path,
-                            "MODE": "rule",
-                            "SEED": 42,
-                            "START_DATE": "2024-01-01",
-                            "END_DATE": "2024-01-31",
+                            "path": products_path,
+                            "mode": "rule",
+                            "seed": 42,
+                            "start_date": "2024-01-01",
+                            "end_date": "2024-01-31",
                         },
                     },
                     "TRANSFORM": {
@@ -206,13 +206,13 @@ class TestEvaluateImpactIntegration:
             config = {
                 "DATA": {
                     "SOURCE": {
-                        "TYPE": "simulator",
+                        "type": "simulator",
                         "CONFIG": {
-                            "PATH": products_path,
-                            "MODE": "rule",
-                            "SEED": 42,
-                            "START_DATE": "2024-01-01",
-                            "END_DATE": "2024-01-31",
+                            "path": products_path,
+                            "mode": "rule",
+                            "seed": 42,
+                            "start_date": "2024-01-01",
+                            "end_date": "2024-01-31",
                         },
                     },
                     "TRANSFORM": {

@@ -30,9 +30,7 @@ def get_transform(function_name: str) -> TransformFunction:
     """
     if function_name not in TRANSFORM_REGISTRY:
         available = list(TRANSFORM_REGISTRY.keys())
-        raise ValueError(
-            f"Unknown transform function '{function_name}'. Available: {available}"
-        )
+        raise ValueError(f"Unknown transform function '{function_name}'. Available: {available}")
     return TRANSFORM_REGISTRY[function_name]
 
 

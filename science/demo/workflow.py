@@ -22,8 +22,8 @@ if __name__ == "__main__":
     # Step 3: Update impact engine config with products path
     with open("config_impact_engine.yaml", "r") as f:
         impact_config = yaml.safe_load(f)
-    impact_config["DATA"]["PATH"] = products_path
-    impact_config["DATA"]["SOURCE"]["CONFIG"]["PATH"] = products_path
+    impact_config["DATA"]["path"] = products_path
+    impact_config["DATA"]["SOURCE"]["CONFIG"]["path"] = products_path
     with open("config_impact_engine.yaml", "w") as f:
         yaml.dump(impact_config, f, default_flow_style=False)
 

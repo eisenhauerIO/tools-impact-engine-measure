@@ -64,10 +64,10 @@ def complete_source_config(**overrides):
     Tests that bypass process_config() must provide complete configs.
     """
     config = {
-        "START_DATE": "2024-01-01",
-        "END_DATE": "2024-01-31",
-        "MODE": "rule",
-        "SEED": 42,
+        "start_date": "2024-01-01",
+        "end_date": "2024-01-31",
+        "mode": "rule",
+        "seed": 42,
     }
     config.update(overrides)
     return config
@@ -101,7 +101,7 @@ class TestMetricsManagerDependencyInjection:
     def test_adapter_receives_connection_config(self):
         """Test that adapter receives proper connection config."""
         mock_adapter = MockMetricsAdapter()
-        config = complete_source_config(MODE="ml", SEED=123)
+        config = complete_source_config(mode="ml", seed=123)
 
         MetricsManager(config, mock_adapter)
 
@@ -111,7 +111,7 @@ class TestMetricsManagerDependencyInjection:
     def test_adapter_receives_enrichment_config(self):
         """Test that enrichment config is passed to adapter."""
         mock_adapter = MockMetricsAdapter()
-        enrichment = {"function": "quantity_boost", "params": {"effect_size": 0.3}}
+        enrichment = {"FUNCTION": "quantity_boost", "PARAMS": {"effect_size": 0.3}}
         config = complete_source_config(ENRICHMENT=enrichment)
 
         MetricsManager(config, mock_adapter)
@@ -220,13 +220,13 @@ class TestMetricsFactory:
             config = {
                 "DATA": {
                     "SOURCE": {
-                        "TYPE": "simulator",
+                        "type": "simulator",
                         "CONFIG": {
-                            "PATH": products_path,
-                            "MODE": "rule",
-                            "SEED": 42,
-                            "START_DATE": "2024-01-01",
-                            "END_DATE": "2024-01-31",
+                            "path": products_path,
+                            "mode": "rule",
+                            "seed": 42,
+                            "start_date": "2024-01-01",
+                            "end_date": "2024-01-31",
                         },
                     },
                     "TRANSFORM": {

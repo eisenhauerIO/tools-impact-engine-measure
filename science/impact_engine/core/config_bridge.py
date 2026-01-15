@@ -40,8 +40,8 @@ class ConfigBridge:
               START_DATE: "2024-01-01"
               END_DATE: "2024-01-31"
               ENRICHMENT:
-                function: quantity_boost
-                params:
+                FUNCTION: quantity_boost
+                PARAMS:
                   effect_size: 0.3
                   enrichment_start: "2024-01-15"
 
@@ -63,7 +63,7 @@ class ConfigBridge:
                 enrichment_start: "2024-01-15"
         """
         data = ie_config.get("DATA", {})
-        seed = data.get("SEED", 42)
+        seed = data.get("seed", 42)
 
         # Build RULE config
         cs_config: Dict[str, Any] = {
@@ -75,8 +75,8 @@ class ConfigBridge:
                 "METRICS": {
                     "FUNCTION": "simulate_metrics_rule_based",
                     "PARAMS": {
-                        "date_start": data.get("START_DATE"),
-                        "date_end": data.get("END_DATE"),
+                        "date_start": data.get("start_date"),
+                        "date_end": data.get("end_date"),
                         "seed": seed,
                         "sale_prob": DEFAULT_SALE_PROB,
                         "granularity": "daily",
@@ -92,8 +92,8 @@ class ConfigBridge:
         if "ENRICHMENT" in data:
             enrichment = data["ENRICHMENT"]
             cs_config["IMPACT"] = {
-                "FUNCTION": enrichment.get("function"),
-                "PARAMS": enrichment.get("params", {}),
+                "FUNCTION": enrichment.get("FUNCTION"),
+                "PARAMS": enrichment.get("PARAMS", {}),
             }
 
         return cs_config
@@ -114,11 +114,11 @@ class ConfigBridge:
 
         ie_config: Dict[str, Any] = {
             "DATA": {
-                "TYPE": "simulator",
-                "MODE": "rule" if "RULE" in cs_config else "ml",
-                "START_DATE": metrics_params.get("date_start"),
-                "END_DATE": metrics_params.get("date_end"),
-                "SEED": metrics_params.get("seed", 42),
+                "type": "simulator",
+                "mode": "rule" if "RULE" in cs_config else "ml",
+                "start_date": metrics_params.get("date_start"),
+                "end_date": metrics_params.get("date_end"),
+                "seed": metrics_params.get("seed", 42),
             }
         }
 
@@ -126,8 +126,8 @@ class ConfigBridge:
         if "IMPACT" in cs_config:
             impact = cs_config["IMPACT"]
             ie_config["DATA"]["ENRICHMENT"] = {
-                "function": impact.get("FUNCTION"),
-                "params": impact.get("PARAMS", {}),
+                "FUNCTION": impact.get("FUNCTION"),
+                "PARAMS": impact.get("PARAMS", {}),
             }
 
         return ie_config
@@ -145,7 +145,7 @@ class ConfigBridge:
         """
         return {
             "IMPACT": {
-                "FUNCTION": enrichment.get("function"),
-                "PARAMS": enrichment.get("params", {}),
+                "FUNCTION": enrichment.get("FUNCTION"),
+                "PARAMS": enrichment.get("PARAMS", {}),
             }
         }

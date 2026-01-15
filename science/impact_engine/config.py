@@ -60,8 +60,8 @@ def get_source_config(config: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def get_source_type(config: Dict[str, Any]) -> str:
-    """Extract SOURCE.TYPE from parsed config."""
-    return config["DATA"]["SOURCE"]["TYPE"]
+    """Extract SOURCE.type from parsed config."""
+    return config["DATA"]["SOURCE"]["type"]
 
 
 def get_transform_config(config: Dict[str, Any]) -> Dict[str, Any]:
@@ -75,7 +75,7 @@ def get_transform_config(config: Dict[str, Any]) -> Dict[str, Any]:
     # Inject enrichment_start from ENRICHMENT config if present (ENRICHMENT is optional)
     enrichment = config["DATA"].get("ENRICHMENT")
     if enrichment:
-        params = enrichment.get("params", {})
+        params = enrichment.get("PARAMS", {})
         if "enrichment_start" in params:
             transform["PARAMS"]["enrichment_start"] = params["enrichment_start"]
 

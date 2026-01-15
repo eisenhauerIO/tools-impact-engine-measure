@@ -12,7 +12,6 @@ from pathlib import Path
 import pytest
 import yaml
 
-
 CONFIG_PATH = Path(__file__).parent / "fixtures" / "config_metrics_approximation_pipeline.yaml"
 
 
@@ -55,7 +54,7 @@ def impact_config(tmp_path, products_csv):
         config = yaml.safe_load(f)
 
     # Update PATH to point to the generated products.csv
-    config["DATA"]["SOURCE"]["CONFIG"]["PATH"] = str(products_csv)
+    config["DATA"]["SOURCE"]["CONFIG"]["path"] = str(products_csv)
 
     # Write updated config to tmp_path
     config_path = tmp_path / "config.yaml"

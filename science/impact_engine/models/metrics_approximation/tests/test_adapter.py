@@ -25,7 +25,7 @@ class TestMetricsApproximationAdapterConnect:
     def test_connect_with_defaults(self):
         """Connect with default configuration."""
         adapter = MetricsApproximationAdapter()
-        config = merge_model_params({"response": {"FUNCTION": "linear"}})
+        config = merge_model_params({"RESPONSE": {"FUNCTION": "linear"}})
         result = adapter.connect(config)
 
         assert result is True
@@ -42,7 +42,7 @@ class TestMetricsApproximationAdapterConnect:
             "metric_before_column": "score_pre",
             "metric_after_column": "score_post",
             "baseline_column": "revenue",
-            "response": {"FUNCTION": "linear", "PARAMS": {"coefficient": 0.5}},
+            "RESPONSE": {"FUNCTION": "linear", "PARAMS": {"coefficient": 0.5}},
         }
         result = adapter.connect(config)
 
@@ -55,7 +55,7 @@ class TestMetricsApproximationAdapterConnect:
     def test_connect_invalid_response_function(self):
         """Invalid response function raises ValueError."""
         adapter = MetricsApproximationAdapter()
-        config = merge_model_params({"response": {"FUNCTION": "nonexistent"}})
+        config = merge_model_params({"RESPONSE": {"FUNCTION": "nonexistent"}})
 
         with pytest.raises(ValueError, match="Invalid response function"):
             adapter.connect(config)
@@ -64,8 +64,8 @@ class TestMetricsApproximationAdapterConnect:
         """Missing FUNCTION key raises ValueError."""
         adapter = MetricsApproximationAdapter()
         config = merge_model_params({})
-        # Replace response entirely to remove FUNCTION key
-        config["response"] = {"PARAMS": {"coefficient": 0.5}}
+        # Replace RESPONSE entirely to remove FUNCTION key
+        config["RESPONSE"] = {"PARAMS": {"coefficient": 0.5}}
 
         with pytest.raises(ValueError, match="FUNCTION is required"):
             adapter.connect(config)
@@ -74,8 +74,8 @@ class TestMetricsApproximationAdapterConnect:
         """Non-dict response raises ValueError."""
         adapter = MetricsApproximationAdapter()
         config = merge_model_params({})
-        # Replace response with non-dict to test validation
-        config["response"] = "linear"
+        # Replace RESPONSE with non-dict to test validation
+        config["RESPONSE"] = "linear"
 
         with pytest.raises(ValueError, match="must be a dict"):
             adapter.connect(config)
@@ -87,7 +87,7 @@ class TestMetricsApproximationAdapterValidateConnection:
     def test_validate_connected(self):
         """Returns True when connected."""
         adapter = MetricsApproximationAdapter()
-        adapter.connect(merge_model_params({"response": {"FUNCTION": "linear"}}))
+        adapter.connect(merge_model_params({"RESPONSE": {"FUNCTION": "linear"}}))
 
         assert adapter.validate_connection() is True
 
@@ -105,7 +105,7 @@ class TestMetricsApproximationAdapterFit:
         """Basic fit with default configuration."""
         adapter = MetricsApproximationAdapter()
         adapter.connect(
-            merge_model_params({"response": {"FUNCTION": "linear", "PARAMS": {"coefficient": 0.5}}})
+            merge_model_params({"RESPONSE": {"FUNCTION": "linear", "PARAMS": {"coefficient": 0.5}}})
         )
 
         data = create_test_data()
@@ -120,7 +120,7 @@ class TestMetricsApproximationAdapterFit:
         """Verify impact calculation is correct."""
         adapter = MetricsApproximationAdapter()
         adapter.connect(
-            merge_model_params({"response": {"FUNCTION": "linear", "PARAMS": {"coefficient": 0.5}}})
+            merge_model_params({"RESPONSE": {"FUNCTION": "linear", "PARAMS": {"coefficient": 0.5}}})
         )
 
         # Single product for easy verification
@@ -145,7 +145,7 @@ class TestMetricsApproximationAdapterFit:
         """Verify aggregate statistics are correct."""
         adapter = MetricsApproximationAdapter()
         adapter.connect(
-            merge_model_params({"response": {"FUNCTION": "linear", "PARAMS": {"coefficient": 1.0}}})
+            merge_model_params({"RESPONSE": {"FUNCTION": "linear", "PARAMS": {"coefficient": 1.0}}})
         )
 
         data = pd.DataFrame(
@@ -175,7 +175,7 @@ class TestMetricsApproximationAdapterFit:
     def test_fit_missing_columns_raises(self):
         """Missing required columns raises ValueError."""
         adapter = MetricsApproximationAdapter()
-        adapter.connect(merge_model_params({"response": {"FUNCTION": "linear"}}))
+        adapter.connect(merge_model_params({"RESPONSE": {"FUNCTION": "linear"}}))
 
         data = pd.DataFrame(
             {
@@ -191,7 +191,7 @@ class TestMetricsApproximationAdapterFit:
     def test_fit_empty_data_raises(self):
         """Empty DataFrame raises ValueError."""
         adapter = MetricsApproximationAdapter()
-        adapter.connect(merge_model_params({"response": {"FUNCTION": "linear"}}))
+        adapter.connect(merge_model_params({"RESPONSE": {"FUNCTION": "linear"}}))
 
         data = pd.DataFrame()
 
@@ -205,7 +205,7 @@ class TestMetricsApproximationAdapterValidateData:
     def test_valid_data(self):
         """Valid data returns True."""
         adapter = MetricsApproximationAdapter()
-        adapter.connect(merge_model_params({"response": {"FUNCTION": "linear"}}))
+        adapter.connect(merge_model_params({"RESPONSE": {"FUNCTION": "linear"}}))
 
         data = create_test_data()
         assert adapter.validate_data(data) is True
@@ -213,7 +213,7 @@ class TestMetricsApproximationAdapterValidateData:
     def test_empty_dataframe(self):
         """Empty DataFrame returns False."""
         adapter = MetricsApproximationAdapter()
-        adapter.connect(merge_model_params({"response": {"FUNCTION": "linear"}}))
+        adapter.connect(merge_model_params({"RESPONSE": {"FUNCTION": "linear"}}))
 
         data = pd.DataFrame()
         assert adapter.validate_data(data) is False
@@ -221,14 +221,14 @@ class TestMetricsApproximationAdapterValidateData:
     def test_none_data(self):
         """None data returns False."""
         adapter = MetricsApproximationAdapter()
-        adapter.connect(merge_model_params({"response": {"FUNCTION": "linear"}}))
+        adapter.connect(merge_model_params({"RESPONSE": {"FUNCTION": "linear"}}))
 
         assert adapter.validate_data(None) is False
 
     def test_missing_columns(self):
         """Missing columns returns False."""
         adapter = MetricsApproximationAdapter()
-        adapter.connect(merge_model_params({"response": {"FUNCTION": "linear"}}))
+        adapter.connect(merge_model_params({"RESPONSE": {"FUNCTION": "linear"}}))
 
         data = pd.DataFrame(
             {
@@ -259,7 +259,7 @@ class TestMetricsApproximationAdapterGetRequiredColumns:
                 "metric_before_column": "score_pre",
                 "metric_after_column": "score_post",
                 "baseline_column": "revenue",
-                "response": {"FUNCTION": "linear"},
+                "RESPONSE": {"FUNCTION": "linear"},
             }
         )
 

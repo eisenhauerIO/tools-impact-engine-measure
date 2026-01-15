@@ -1,13 +1,13 @@
 DATA:
-  PATH: output/products.csv
+  path: output/products.csv
   SOURCE:
     CONFIG:
-      END_DATE: '2024-11-30'
-      MODE: rule
-      PATH: output/products.csv
-      SEED: 42
-      START_DATE: '2024-11-01'
-    TYPE: simulator
+      end_date: '2024-11-30'
+      mode: rule
+      path: output/products.csv
+      seed: 42
+      start_date: '2024-11-01'
+    type: simulator
   TRANSFORM:
     FUNCTION: aggregate_by_date
     PARAMS:
