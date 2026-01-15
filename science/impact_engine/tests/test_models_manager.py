@@ -15,7 +15,7 @@ from impact_engine.models import (
     create_models_manager_from_config,
 )
 from impact_engine.models.base import ModelResult
-from impact_engine.models.factory import MODEL_ADAPTERS, register_model_adapter
+from impact_engine.models.factory import MODEL_REGISTRY
 
 
 def complete_measurement_config(**overrides):
@@ -234,7 +234,7 @@ class TestModelsFactory:
 
     def test_create_models_manager_from_config_dict(self):
         """Test creating manager from config dict."""
-        register_model_adapter("mock", MockModel)
+        MODEL_REGISTRY.register("mock", MockModel)
 
         try:
             config = complete_measurement_config()
@@ -244,7 +244,7 @@ class TestModelsFactory:
             assert isinstance(manager, ModelsManager)
             assert isinstance(manager.model, MockModel)
         finally:
-            del MODEL_ADAPTERS["mock"]
+            del MODEL_REGISTRY._registry["mock"]
 
     def test_create_models_manager_from_file(self):
         """Test creating manager from config file."""
@@ -287,7 +287,7 @@ class TestModelsFactory:
         config = complete_measurement_config()
         config["MODEL"] = "unknown_model"
 
-        with pytest.raises(ValueError, match="Unknown model type"):
+        with pytest.raises(ValueError, match="Unknown model"):
             create_models_manager_from_config(config)
 
     def test_register_invalid_model(self):
@@ -297,7 +297,7 @@ class TestModelsFactory:
             pass
 
         with pytest.raises(ValueError, match="must implement Model"):
-            register_model_adapter("invalid", InvalidModel)
+            MODEL_REGISTRY.register("invalid", InvalidModel)
 
 
 class TestModelsManagerConnectionFailure:

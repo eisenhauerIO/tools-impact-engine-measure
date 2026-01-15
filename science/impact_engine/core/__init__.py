@@ -2,6 +2,7 @@
 
 from .config_bridge import ConfigBridge
 from .contracts import MetricsSchema, ProductSchema, Schema, TransformSchema
+from .registry import Registry
 from .transforms import (
     TRANSFORM_REGISTRY,
     apply_transform,
@@ -15,6 +16,7 @@ __all__ = [
     "ConfigValidationError",
     "MetricsSchema",
     "ProductSchema",
+    "Registry",
     "Schema",
     "TRANSFORM_REGISTRY",
     "TransformSchema",

@@ -14,7 +14,7 @@ from impact_engine.metrics import (
     create_metrics_manager,
     create_metrics_manager_from_config,
 )
-from impact_engine.metrics.factory import METRICS_ADAPTERS, register_metrics_adapter
+from impact_engine.metrics.factory import METRICS_REGISTRY
 
 
 class MockMetricsAdapter(MetricsInterface):
@@ -197,7 +197,7 @@ class TestMetricsFactory:
     def test_create_metrics_manager_from_config_dict(self):
         """Test creating manager from config dict."""
         # Register mock adapter
-        register_metrics_adapter("mock", MockMetricsAdapter)
+        METRICS_REGISTRY.register("mock", MockMetricsAdapter)
 
         try:
             config = complete_source_config(TYPE="mock")
@@ -208,7 +208,7 @@ class TestMetricsFactory:
             assert isinstance(manager.metrics_source, MockMetricsAdapter)
         finally:
             # Clean up
-            del METRICS_ADAPTERS["mock"]
+            del METRICS_REGISTRY._registry["mock"]
 
     def test_create_metrics_manager_from_file(self):
         """Test creating manager from config file."""
@@ -255,7 +255,7 @@ class TestMetricsFactory:
         """Test creating manager with unknown adapter type."""
         config = complete_source_config(TYPE="unknown_type")
 
-        with pytest.raises(ValueError, match="Unknown metrics type"):
+        with pytest.raises(ValueError, match="Unknown metrics adapter"):
             create_metrics_manager_from_config(config)
 
     def test_register_invalid_adapter(self):
@@ -265,7 +265,7 @@ class TestMetricsFactory:
             pass
 
         with pytest.raises(ValueError, match="must implement MetricsInterface"):
-            register_metrics_adapter("invalid", InvalidAdapter)
+            METRICS_REGISTRY.register("invalid", InvalidAdapter)
 
 
 class TestMetricsManagerConnectionFailure:

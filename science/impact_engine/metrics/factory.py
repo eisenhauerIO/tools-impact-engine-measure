@@ -10,14 +10,14 @@ from typing import Any, Dict, Optional
 from artifact_store import JobInfo
 
 from ..config import get_source_config, get_source_type, parse_config_file
+from ..core import Registry
 from .base import MetricsInterface
 from .catalog_simulator import CatalogSimulatorAdapter
 from .manager import MetricsManager
 
 # Registry of available metrics adapters
-METRICS_ADAPTERS: Dict[str, type] = {
-    "simulator": CatalogSimulatorAdapter,
-}
+METRICS_REGISTRY: Registry[MetricsInterface] = Registry(MetricsInterface, "metrics adapter")
+METRICS_REGISTRY.register("simulator", CatalogSimulatorAdapter)
 
 
 def create_metrics_manager(
@@ -120,23 +120,4 @@ def get_metrics_adapter(metrics_type: str) -> MetricsInterface:
     Raises:
         ValueError: If the metrics type is not supported.
     """
-    if metrics_type not in METRICS_ADAPTERS:
-        available = list(METRICS_ADAPTERS.keys())
-        raise ValueError(f"Unknown metrics type '{metrics_type}'. Available types: {available}")
-
-    return METRICS_ADAPTERS[metrics_type]()
-
-
-def register_metrics_adapter(metrics_type: str, adapter_class: type) -> None:
-    """Register a custom metrics adapter.
-
-    Args:
-        metrics_type: The type identifier for this adapter.
-        adapter_class: The adapter class (must implement MetricsInterface).
-
-    Raises:
-        ValueError: If the adapter class doesn't implement MetricsInterface.
-    """
-    if not issubclass(adapter_class, MetricsInterface):
-        raise ValueError(f"Adapter class {adapter_class.__name__} must implement MetricsInterface")
-    METRICS_ADAPTERS[metrics_type] = adapter_class
+    return METRICS_REGISTRY.get(metrics_type)
