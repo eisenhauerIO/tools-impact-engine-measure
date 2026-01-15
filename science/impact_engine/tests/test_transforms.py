@@ -3,13 +3,17 @@
 import pandas as pd
 import pytest
 
-from impact_engine.transforms import (
-    aggregate_by_date,
-    aggregate_for_approximation,
+# Import registry from core
+from impact_engine.core import (
+    TRANSFORM_REGISTRY,
+    apply_transform,
     get_transform,
     register_transform,
 )
-from impact_engine.transforms.registry import TRANSFORM_REGISTRY, apply_transform
+
+# Import transforms from their colocated locations (triggers registration)
+from impact_engine.models.interrupted_time_series import aggregate_by_date
+from impact_engine.models.metrics_approximation import aggregate_for_approximation
 
 
 class TestTransformRegistry:

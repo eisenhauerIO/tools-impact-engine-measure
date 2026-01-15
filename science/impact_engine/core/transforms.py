@@ -1,8 +1,9 @@
 """
 Transform registry for managing data transformation functions.
 
-This module provides a registry pattern similar to the metrics and models
-registries, allowing transforms to be registered and retrieved by name.
+This module provides a registry pattern allowing transforms to be registered
+and retrieved by name. Transforms are colocated with their adapters but
+register themselves here for config-driven lookup.
 """
 
 from typing import Any, Callable, Dict
@@ -83,3 +84,19 @@ def apply_transform(
 
     transform_fn = get_transform(function_name)
     return transform_fn(data, params)
+
+
+@register_transform("passthrough")
+def passthrough(data: pd.DataFrame, params: Dict[str, Any]) -> pd.DataFrame:
+    """Pass data through unchanged.
+
+    Useful when no transformation is needed but a transform must be specified.
+
+    Args:
+        data: Input DataFrame.
+        params: Unused parameters.
+
+    Returns:
+        pd.DataFrame: The input data unchanged.
+    """
+    return data

@@ -10,9 +10,9 @@ from .config import (
     get_transform_config,
     parse_config_file,
 )
+from .core import apply_transform
 from .metrics import create_metrics_manager_from_source_config
 from .models import create_models_manager
-from .transforms.registry import apply_transform
 
 
 def evaluate_impact(config_path: str, storage_url: str = "./data") -> str:

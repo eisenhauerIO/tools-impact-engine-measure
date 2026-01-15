@@ -1,7 +1,7 @@
 """Metrics layer for the impact_engine package."""
 
-from .adapter_catalog_simulator import CatalogSimulatorAdapter
 from .base import MetricsInterface
+from .catalog_simulator import CatalogSimulatorAdapter
 from .factory import (
     create_metrics_manager,
     create_metrics_manager_from_config,

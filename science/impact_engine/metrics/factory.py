@@ -10,8 +10,8 @@ from typing import Any, Dict, Optional
 from artifact_store import JobInfo
 
 from ..config import get_source_config, get_source_type, parse_config_file
-from .adapter_catalog_simulator import CatalogSimulatorAdapter
 from .base import MetricsInterface
+from .catalog_simulator import CatalogSimulatorAdapter
 from .manager import MetricsManager
 
 # Registry of available metrics adapters

@@ -3,7 +3,8 @@
     "allow": [
       "Bash(pytest:*)",
       "Bash(find:*)",
-      "Bash(hatch run pytest:*)"
+      "Bash(hatch run pytest:*)",
+      "Bash(python -m pytest:*)"
     ]
   }
 }

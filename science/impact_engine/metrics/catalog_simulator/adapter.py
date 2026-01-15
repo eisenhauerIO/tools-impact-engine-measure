@@ -13,8 +13,8 @@ import pandas as pd
 import yaml
 from artifact_store import JobInfo, create_job
 
-from ..core import ConfigBridge, MetricsSchema, ProductSchema
-from .base import MetricsInterface
+from ...core import ConfigBridge, MetricsSchema, ProductSchema
+from ..base import MetricsInterface
 
 
 class CatalogSimulatorAdapter(MetricsInterface):

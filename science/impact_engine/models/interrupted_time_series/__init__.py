@@ -6,7 +6,9 @@ interventions on time series data.
 """
 
 from .adapter import InterruptedTimeSeriesAdapter
+from .transforms import aggregate_by_date
 
 __all__ = [
     "InterruptedTimeSeriesAdapter",
+    "aggregate_by_date",
 ]
