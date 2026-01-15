@@ -44,6 +44,7 @@ def evaluate_impact(config_path: str, storage_url: str = "./data") -> str:
 
     # Load products from CSV
     products = pd.read_csv(data_path)
+    job_store.write_csv("products.csv", products)
 
     # Initialize components using factory functions
     # Factories handle adapter/model selection based on configuration
@@ -52,9 +53,11 @@ def evaluate_impact(config_path: str, storage_url: str = "./data") -> str:
 
     # Retrieve business metrics using metrics layer
     business_metrics = metrics_manager.retrieve_metrics(products)
+    job_store.write_csv("business_metrics.csv", business_metrics)
 
     # Apply configured transform to business metrics
     transformed_metrics = apply_transform(business_metrics, transform_config)
+    job_store.write_csv("transformed_metrics.csv", transformed_metrics)
 
     # Fit model using models manager with job store
     # fit_model returns the full path to the results file
