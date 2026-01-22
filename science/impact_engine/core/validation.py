@@ -187,8 +187,17 @@ def validate_structure(config: Dict[str, Any]) -> List[str]:
             errors.append("Missing required field: DATA.SOURCE.CONFIG")
         else:
             source_config = source["CONFIG"]
-            # Required fields in SOURCE.CONFIG
-            for field in ["path", "start_date", "end_date"]:
+            source_type = source.get("type", "simulator").lower()
+            
+            # Required fields depend on source type
+            if source_type == "file":
+                # File source only needs path
+                required_fields = ["path"]
+            else:
+                # Simulator source needs path, start_date, end_date
+                required_fields = ["path", "start_date", "end_date"]
+            
+            for field in required_fields:
                 if field not in source_config or source_config[field] is None:
                     errors.append(f"Missing required field: DATA.SOURCE.CONFIG.{field}")
 

@@ -124,3 +124,4 @@ def get_metrics_adapter(metrics_type: str) -> MetricsInterface:
 # Import adapters to trigger self-registration via decorators
 # These imports must be at the end after METRICS_REGISTRY is defined
 from .catalog_simulator import CatalogSimulatorAdapter  # noqa: E402, F401
+from .file import FileAdapter  # noqa: E402, F401

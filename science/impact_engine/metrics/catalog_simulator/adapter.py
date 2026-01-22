@@ -58,9 +58,9 @@ class CatalogSimulatorAdapter(MetricsInterface):
         }
 
         # Store enrichment config if provided
-        enrichment = config.get("enrichment")
+        enrichment = config.get("ENRICHMENT")
         if enrichment:
-            self.config["enrichment"] = enrichment
+            self.config["ENRICHMENT"] = enrichment
 
         self.is_connected = True
         return True
@@ -97,7 +97,7 @@ class CatalogSimulatorAdapter(MetricsInterface):
 
             sales_df = self.simulation_job.load_df("metrics")
 
-            if self.config.get("enrichment"):
+            if self.config.get("ENRICHMENT"):
                 sales_df = self._apply_enrichment(sales_df)
 
             return self.transform_inbound(sales_df)
@@ -146,7 +146,7 @@ class CatalogSimulatorAdapter(MetricsInterface):
             os.unlink(pd_config_path)
 
         # Use config bridge to build IMPACT config
-        impact_config = ConfigBridge.build_enrichment_config(self.config["enrichment"])
+        impact_config = ConfigBridge.build_enrichment_config(self.config["ENRICHMENT"])
 
         # Write config to temp file
         with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
@@ -164,7 +164,7 @@ class CatalogSimulatorAdapter(MetricsInterface):
         products_enriched = self.simulation_job.load_df("product_details_enriched")
 
         # Get enrichment_start from config
-        enrichment_params = self.config["enrichment"].get("PARAMS", {})
+        enrichment_params = self.config["ENRICHMENT"].get("PARAMS", {})
         enrichment_start = enrichment_params.get("enrichment_start", "2024-11-15")
         enrichment_date = pd.to_datetime(enrichment_start)
 

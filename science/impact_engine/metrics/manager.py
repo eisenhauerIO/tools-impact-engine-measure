@@ -50,16 +50,13 @@ class MetricsManager:
         """Build connection configuration from SOURCE.CONFIG.
 
         Config is pre-validated with defaults merged, so direct access is safe.
+        Passes through all source config to support different adapter types.
         """
-        config = {
-            "mode": self.source_config["mode"],
-            "seed": self.source_config["seed"],
-            "parent_job": self.parent_job,
-        }
+        # Start with full source config to support all adapter types (file, simulator, etc.)
+        config = dict(self.source_config)
 
-        # Pass enrichment config if present (ENRICHMENT is optional)
-        if "ENRICHMENT" in self.source_config:
-            config["enrichment"] = self.source_config["ENRICHMENT"]
+        # Add parent_job for artifact management
+        config["parent_job"] = self.parent_job
 
         return config
 

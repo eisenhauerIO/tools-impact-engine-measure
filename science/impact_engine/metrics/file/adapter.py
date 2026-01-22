@@ -1,0 +1,205 @@
+"""
+File Adapter - reads metrics data from CSV or Parquet files.
+
+This adapter enables file-based workflows where upstream processes
+produce data files that impact-engine consumes.
+"""
+
+import logging
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, Optional
+
+import pandas as pd
+
+from ..base import MetricsInterface
+from ..factory import METRICS_REGISTRY
+
+
+@METRICS_REGISTRY.register_decorator("file")
+class FileAdapter(MetricsInterface):
+    """Adapter for file-based data sources that implements MetricsInterface.
+
+    Supports CSV and Parquet file formats. The file is expected to contain
+    pre-processed data ready for impact analysis.
+
+    Configuration:
+        DATA:
+            SOURCE:
+                TYPE: file
+                CONFIG:
+                    PATH: path/to/data.csv
+                    # Optional parameters:
+                    DATE_COLUMN: date        # Column name for date filtering
+                    PRODUCT_ID_COLUMN: product_id  # Column name for product IDs
+    """
+
+    def __init__(self):
+        """Initialize the FileAdapter."""
+        self.logger = logging.getLogger(__name__)
+        self.is_connected = False
+        self.config: Optional[Dict[str, Any]] = None
+        self.data: Optional[pd.DataFrame] = None
+
+    def connect(self, config: Dict[str, Any]) -> bool:
+        """Initialize adapter with configuration parameters.
+
+        Args:
+            config: Dictionary containing:
+                - path: Path to the data file (required)
+                - date_column: Column name for dates (optional)
+                - product_id_column: Column name for product IDs (optional, default: product_id)
+
+        Returns:
+            bool: True if initialization successful
+
+        Raises:
+            ValueError: If required configuration is missing
+            FileNotFoundError: If the specified file doesn't exist
+        """
+        # Support both lowercase (preferred) and uppercase for backwards compatibility
+        path = config.get("path") or config.get("PATH")
+        if not path:
+            raise ValueError("'path' is required in file adapter configuration")
+
+        file_path = Path(path)
+        if not file_path.exists():
+            raise FileNotFoundError(f"Data file not found: {path}")
+
+        self.config = {
+            "path": str(file_path),
+            "date_column": config.get("date_column") or config.get("DATE_COLUMN"),
+            "product_id_column": config.get("product_id_column") or config.get("PRODUCT_ID_COLUMN", "product_id"),
+        }
+
+        # Pre-load data for validation
+        self._load_data()
+
+        self.is_connected = True
+        self.logger.info(f"Connected to file source: {path}")
+        return True
+
+    def _load_data(self) -> pd.DataFrame:
+        """Load data from file (CSV or Parquet).
+
+        Returns:
+            DataFrame with loaded data
+
+        Raises:
+            ValueError: If file format is not supported
+        """
+        path = Path(self.config["path"])
+
+        if path.suffix.lower() == ".csv":
+            self.data = pd.read_csv(path)
+        elif path.suffix.lower() in [".parquet", ".pq"]:
+            self.data = pd.read_parquet(path)
+        else:
+            raise ValueError(f"Unsupported file format: {path.suffix}. Use .csv or .parquet")
+
+        self.logger.info(f"Loaded {len(self.data)} rows from {path}")
+        return self.data
+
+    def retrieve_business_metrics(
+        self, products: pd.DataFrame, start_date: str, end_date: str
+    ) -> pd.DataFrame:
+        """Retrieve business metrics from the loaded file.
+
+        For file-based sources, the data is already loaded. This method
+        optionally filters by date range and product IDs if configured.
+
+        Args:
+            products: DataFrame with product identifiers (can be empty for file sources)
+            start_date: Start date in YYYY-MM-DD format (used if DATE_COLUMN configured)
+            end_date: End date in YYYY-MM-DD format (used if DATE_COLUMN configured)
+
+        Returns:
+            DataFrame with business metrics
+
+        Raises:
+            ConnectionError: If adapter not connected
+        """
+        if not self.is_connected:
+            raise ConnectionError("Not connected to file source. Call connect() first.")
+
+        result = self.data.copy()
+
+        # Filter by date if date column is configured
+        date_col = self.config.get("date_column")
+        if date_col and date_col in result.columns:
+            result[date_col] = pd.to_datetime(result[date_col])
+            start = pd.to_datetime(start_date)
+            end = pd.to_datetime(end_date)
+            result = result[(result[date_col] >= start) & (result[date_col] <= end)]
+            self.logger.info(f"Filtered to {len(result)} rows for date range {start_date} to {end_date}")
+
+        # Filter by products if provided and product_id column exists
+        if products is not None and len(products) > 0:
+            id_col = self.config.get("product_id_column", "product_id")
+            if id_col in result.columns and "product_id" in products.columns:
+                product_ids = set(products["product_id"].tolist())
+                result = result[result[id_col].isin(product_ids)]
+                self.logger.info(f"Filtered to {len(result)} rows for {len(product_ids)} products")
+
+        return self.transform_inbound(result)
+
+    def validate_connection(self) -> bool:
+        """Validate that the file source is accessible.
+
+        Returns:
+            bool: True if file exists and data is loaded
+        """
+        if not self.is_connected or self.config is None:
+            return False
+
+        return Path(self.config["path"]).exists() and self.data is not None
+
+    def transform_outbound(
+        self, products: pd.DataFrame, start_date: str, end_date: str
+    ) -> Dict[str, Any]:
+        """Transform impact engine format to file adapter format.
+
+        For file-based sources, this is a pass-through since the file
+        already contains the data in the expected format.
+
+        Args:
+            products: DataFrame with product identifiers
+            start_date: Start date
+            end_date: End date
+
+        Returns:
+            Dictionary with query parameters
+        """
+        return {
+            "products": products,
+            "start_date": start_date,
+            "end_date": end_date,
+        }
+
+    def transform_inbound(self, external_data: Any) -> pd.DataFrame:
+        """Transform file data to impact engine format.
+
+        For file-based sources, this adds metadata fields and ensures
+        proper column naming.
+
+        Args:
+            external_data: DataFrame read from file
+
+        Returns:
+            DataFrame with standardized format
+        """
+        if not isinstance(external_data, pd.DataFrame):
+            raise ValueError("Expected pandas DataFrame from file source")
+
+        result = external_data.copy()
+
+        # Standardize product ID column if needed
+        id_col = self.config.get("product_id_column", "product_id")
+        if id_col in result.columns and id_col != "product_id":
+            result["product_id"] = result[id_col]
+
+        # Add metadata
+        result["metrics_source"] = "file"
+        result["retrieval_timestamp"] = datetime.now()
+
+        return result
