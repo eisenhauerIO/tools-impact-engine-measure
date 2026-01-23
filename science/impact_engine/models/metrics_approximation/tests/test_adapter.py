@@ -268,3 +268,89 @@ class TestMetricsApproximationAdapterGetRequiredColumns:
         assert "score_pre" in columns
         assert "score_post" in columns
         assert "revenue" in columns
+
+
+class TestMetricsApproximationAdapterRowAttributes:
+    """Tests for row_attributes passing to response functions."""
+
+    def test_row_attributes_passed_to_response_function(self):
+        """Verify row_attributes dict is passed to response function."""
+        from impact_engine.models.metrics_approximation.response_registry import (
+            register_response_function,
+        )
+
+        # Track what was passed to the response function
+        captured_attributes = []
+
+        def capture_response(delta_metric, baseline_outcome, **kwargs):
+            row_attrs = kwargs.get("row_attributes", {})
+            captured_attributes.append(row_attrs)
+            return delta_metric * baseline_outcome * 0.5
+
+        register_response_function("capture_test", capture_response)
+
+        adapter = MetricsApproximationAdapter()
+        adapter.connect(merge_model_params({"RESPONSE": {"FUNCTION": "capture_test"}}))
+
+        data = pd.DataFrame(
+            {
+                "product_id": ["P001", "P002"],
+                "quality_before": [0.4, 0.3],
+                "quality_after": [0.8, 0.6],
+                "baseline_sales": [100.0, 200.0],
+                "category": ["Electronics", "Clothing"],
+                "brand": ["Sony", "Nike"],
+            }
+        )
+
+        adapter.fit(data)
+
+        # Verify attributes were captured
+        assert len(captured_attributes) == 2
+        assert captured_attributes[0]["category"] == "Electronics"
+        assert captured_attributes[0]["brand"] == "Sony"
+        assert captured_attributes[1]["category"] == "Clothing"
+        assert captured_attributes[1]["brand"] == "Nike"
+
+    def test_attribute_based_conditioning(self):
+        """Verify response function can use attributes for conditional logic."""
+        from impact_engine.models.metrics_approximation.response_registry import (
+            register_response_function,
+        )
+
+        def category_response(delta_metric, baseline_outcome, **kwargs):
+            """Apply different coefficients based on category."""
+            row_attrs = kwargs.get("row_attributes", {})
+            category = row_attrs.get("category")
+
+            if category == "Electronics":
+                coefficient = 0.8
+            elif category == "Clothing":
+                coefficient = 0.5
+            else:
+                coefficient = 0.3
+
+            return coefficient * delta_metric * baseline_outcome
+
+        register_response_function("category_conditional", category_response)
+
+        adapter = MetricsApproximationAdapter()
+        adapter.connect(merge_model_params({"RESPONSE": {"FUNCTION": "category_conditional"}}))
+
+        data = pd.DataFrame(
+            {
+                "product_id": ["P001", "P002"],
+                "quality_before": [0.4, 0.4],
+                "quality_after": [0.8, 0.8],  # delta = 0.4 for both
+                "baseline_sales": [100.0, 100.0],  # same baseline
+                "category": ["Electronics", "Clothing"],
+            }
+        )
+
+        results = adapter.fit(data)
+
+        # Electronics: 0.4 * 100 * 0.8 = 32.0
+        # Clothing: 0.4 * 100 * 0.5 = 20.0
+        per_product = results.data["per_product"]
+        assert per_product[0]["approximated_impact"] == 32.0
+        assert per_product[1]["approximated_impact"] == 20.0

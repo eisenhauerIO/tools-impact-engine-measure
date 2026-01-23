@@ -35,6 +35,7 @@ def prepare_simulator_for_approximation(data: pd.DataFrame, params: Dict[str, An
         - quality_before: Quality score before enrichment_start
         - quality_after: Quality score after enrichment_start
         - baseline_sales: Aggregated revenue before enrichment_start
+        - All other columns: Preserved (first value per product) for attribute-based conditioning
 
     Args:
         data: Time-series DataFrame with quality_score per row.
@@ -82,38 +83,43 @@ def prepare_simulator_for_approximation(data: pd.DataFrame, params: Dict[str, An
     before_df = df[df["date"] < enrichment_date]
     after_df = df[df["date"] >= enrichment_date]
 
-    # Extract quality_before (quality_score from before period, per product)
-    if len(before_df) > 0:
-        quality_before = before_df.groupby(id_column)["quality_score"].first().reset_index()
-    else:
-        # If no before data, use first available quality_score
-        quality_before = df.groupby(id_column)["quality_score"].first().reset_index()
-    quality_before.columns = ["product_id", "quality_before"]
+    # Identify attribute columns (static per product, not aggregated)
+    aggregated_cols = {"date", "quality_score", baseline_metric, id_column}
+    attribute_cols = [col for col in df.columns if col not in aggregated_cols]
 
-    # Extract quality_after (quality_score from after period, per product)
-    if len(after_df) > 0:
-        quality_after = after_df.groupby(id_column)["quality_score"].first().reset_index()
-    else:
-        # If no after data, use quality_before
-        quality_after = quality_before.copy()
-        quality_after.columns = ["product_id", "quality_after"]
-    if "quality_after" not in quality_after.columns:
-        quality_after.columns = ["product_id", "quality_after"]
+    # Build result with single groupby per period
+    def aggregate_period(period_df, fallback_df):
+        """Aggregate a period, falling back if empty."""
+        source = period_df if len(period_df) > 0 else fallback_df
+        agg_dict = {
+            "quality_score": "first",
+            baseline_metric: "sum",
+        }
+        # Add attribute columns (take first value)
+        for col in attribute_cols:
+            if col in source.columns:
+                agg_dict[col] = "first"
+        return source.groupby(id_column).agg(agg_dict).reset_index()
 
-    # Aggregate baseline_sales from before period
-    if len(before_df) > 0:
-        baseline_agg = before_df.groupby(id_column)[baseline_metric].sum().reset_index()
-    else:
-        # If no before data, use all data
-        baseline_agg = df.groupby(id_column)[baseline_metric].sum().reset_index()
-    baseline_agg.columns = ["product_id", "baseline_sales"]
+    before_agg = aggregate_period(before_df, df)
+    after_agg = aggregate_period(after_df, before_df)
 
-    # Merge all components
-    result = quality_before.merge(quality_after, on="product_id", how="inner")
-    result = result.merge(baseline_agg, on="product_id", how="inner")
+    # Build result
+    result = pd.DataFrame(
+        {
+            "product_id": before_agg[id_column],
+            "quality_before": before_agg["quality_score"],
+            "quality_after": after_agg["quality_score"],
+            "baseline_sales": before_agg[baseline_metric],
+        }
+    )
 
-    # Reorder columns
-    return result[["product_id", "quality_before", "quality_after", "baseline_sales"]]
+    # Add attribute columns
+    for col in attribute_cols:
+        if col in before_agg.columns:
+            result[col] = before_agg[col]
+
+    return result
 
 
 def _detect_id_column(df: pd.DataFrame, source: str = "catalog_simulator") -> str:

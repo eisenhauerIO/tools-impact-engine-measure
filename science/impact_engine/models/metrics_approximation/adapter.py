@@ -114,11 +114,12 @@ class MetricsApproximationAdapter(Model):
 
         For each product, computes:
             delta_metric = metric_after - metric_before
-            approximated_impact = response_function(delta_metric, baseline)
+            approximated_impact = response_function(delta_metric, baseline, row_attributes)
 
         Args:
             data: DataFrame with enriched products (only treated products).
                   Must contain metric_before, metric_after, and baseline columns.
+                  Additional columns are passed as row_attributes to response function.
             **kwargs: Additional parameters passed to response function.
 
         Returns:
@@ -145,31 +146,39 @@ class MetricsApproximationAdapter(Model):
         response_fn = get_response_function(self.config["response_function"])
         response_params = {**self.config["response_params"], **kwargs}
 
-        # Compute per-product impacts
-        per_product = []
-        total_impact = 0.0
-        total_delta = 0.0
+        # Work on a copy to avoid modifying input data
+        df = data.copy()
 
-        for idx, row in data.iterrows():
-            delta_metric = row[metric_after_col] - row[metric_before_col]
-            baseline = row[baseline_col]
+        # Vectorize delta computation
+        df["_delta_metric"] = df[metric_after_col] - df[metric_before_col]
 
-            # Apply response function
-            impact = response_fn(delta_metric, baseline, **response_params)
+        # Use apply() instead of iterrows() for better performance
+        # Pass row_attributes to enable attribute-based conditioning in response functions
+        def compute_impact(row):
+            return response_fn(
+                row["_delta_metric"],
+                row[baseline_col],
+                row_attributes=row.to_dict(),
+                **response_params,
+            )
 
-            # Build per-product result
-            product_result = {
-                "product_id": row.get("product_id", str(idx)),
-                "delta_metric": round(delta_metric, 4),
-                "baseline_outcome": round(baseline, 2),
-                "approximated_impact": round(impact, 2),
+        df["_impact"] = df.apply(compute_impact, axis=1)
+
+        # Build per-product results
+        def build_product_result(row):
+            return {
+                "product_id": row.get("product_id", str(row.name)),
+                "delta_metric": round(row["_delta_metric"], 4),
+                "baseline_outcome": round(row[baseline_col], 2),
+                "approximated_impact": round(row["_impact"], 2),
             }
-            per_product.append(product_result)
 
-            total_impact += impact
-            total_delta += delta_metric
+        per_product = df.apply(build_product_result, axis=1).tolist()
 
-        n_products = len(data)
+        # Compute aggregates from vectorized columns
+        total_impact = df["_impact"].sum()
+        total_delta = df["_delta_metric"].sum()
+        n_products = len(df)
 
         # Build aggregate estimates
         impact_estimates = {
