@@ -116,7 +116,7 @@ class TestMetricsManagerDependencyInjection:
 
         MetricsManager(config, mock_adapter)
 
-        assert mock_adapter.config["enrichment"] == enrichment
+        assert mock_adapter.config["ENRICHMENT"] == enrichment
 
 
 class TestMetricsManagerConfiguration:
