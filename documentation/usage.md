@@ -6,18 +6,20 @@
 
 ```yaml
 DATA:
-  TYPE: simulator
-  PATH: data/products.csv
-  MODE: rule
-  SEED: 42
-  START_DATE: "2024-01-01"
-  END_DATE: "2024-01-31"
+  SOURCE:
+    type: simulator
+    CONFIG:
+      mode: rule
+      seed: 42
+      path: data/products.csv
+      start_date: "2024-01-01"
+      end_date: "2024-01-31"
 
 MEASUREMENT:
   MODEL: interrupted_time_series
   PARAMS:
-    INTERVENTION_DATE: "2024-01-15"
-    DEPENDENT_VARIABLE: revenue
+    intervention_date: "2024-01-15"
+    dependent_variable: revenue
 ```
 
 **2. Run analysis**:
