@@ -1,5 +1,10 @@
 """
 Metrics Manager for coordinating metrics operations.
+
+Design: Uses dependency injection to receive metrics adapter from factory.
+This decouples coordination logic from adapter selection, enabling:
+- Easy unit testing with mock adapters
+- Adapter selection controlled by configuration, not hardcoded
 """
 
 from datetime import datetime
@@ -16,78 +21,68 @@ class MetricsManager:
 
     Uses dependency injection - the metrics source is passed in via constructor,
     making the manager easy to test with mock implementations.
+
+    Note: source_config is expected to be pre-validated via process_config().
     """
 
     def __init__(
         self,
-        data_config: Dict[str, Any],
+        source_config: Dict[str, Any],
         metrics_source: MetricsInterface,
+        source_type: str,
         parent_job: Optional[JobInfo] = None,
     ):
         """Initialize the MetricsManager with injected metrics source.
 
         Args:
-            data_config: DATA configuration block containing date range and settings.
+            source_config: SOURCE.CONFIG configuration block (pre-validated, with defaults merged).
             metrics_source: The metrics implementation to use for data retrieval.
+            source_type: The type of metrics source (e.g., "simulator", "file").
             parent_job: Optional parent job for artifact management.
         """
-        self.data_config = data_config
+        self.source_config = source_config
         self.metrics_source = metrics_source
+        self.source_type = source_type
         self.parent_job = parent_job
-
-        # Validate the data config
-        self._validate_data_config(data_config)
 
         # Connect the injected metrics source
         connection_config = self._build_connection_config()
         if not self.metrics_source.connect(connection_config):
             raise ConnectionError("Failed to connect to metrics source")
 
-    def _validate_data_config(self, data_config: Dict[str, Any]) -> None:
-        """Validate DATA configuration block."""
-        required_fields = ["START_DATE", "END_DATE"]
-        for field in required_fields:
-            if field not in data_config:
-                raise ValueError(f"Missing required field '{field}' in DATA configuration")
-
-        # Validate date format
-        try:
-            start_date = datetime.strptime(data_config["START_DATE"], "%Y-%m-%d")
-            end_date = datetime.strptime(data_config["END_DATE"], "%Y-%m-%d")
-        except ValueError as e:
-            raise ValueError(f"Invalid date format in DATA configuration. Expected YYYY-MM-DD: {e}")
-
-        # Validate date consistency
-        if start_date > end_date:
-            raise ValueError("START_DATE must be before or equal to END_DATE in DATA configuration")
-
     def _build_connection_config(self) -> Dict[str, Any]:
-        """Build connection configuration from DATA config."""
-        config = {
-            "mode": self.data_config.get("MODE", "rule"),
-            "seed": self.data_config.get("SEED", 42),
-            "parent_job": self.parent_job,
-        }
+        """Build connection configuration from SOURCE.CONFIG.
 
-        # Pass enrichment config if present
-        if "ENRICHMENT" in self.data_config:
-            config["enrichment"] = self.data_config["ENRICHMENT"]
+        Config is pre-validated with defaults merged, so direct access is safe.
+        Passes through all source config to support different adapter types.
+        """
+        # Start with full source config to support all adapter types (file, simulator, etc.)
+        config = dict(self.source_config)
+
+        # Add parent_job for artifact management
+        config["parent_job"] = self.parent_job
 
         return config
 
     def retrieve_metrics(self, products: pd.DataFrame) -> pd.DataFrame:
-        """Retrieve business metrics for specified products using DATA configuration date range."""
+        """Retrieve business metrics for specified products using SOURCE.CONFIG date range."""
         if products is None or len(products) == 0:
             raise ValueError("Products DataFrame cannot be empty")
 
-        # Get date range from DATA configuration
-        start_date = self.data_config["START_DATE"]
-        end_date = self.data_config["END_DATE"]
+        # Get date range from SOURCE.CONFIG
+        start_date = self.source_config["start_date"]
+        end_date = self.source_config["end_date"]
 
-        return self.metrics_source.retrieve_business_metrics(
+        result = self.metrics_source.retrieve_business_metrics(
             products=products, start_date=start_date, end_date=end_date
         )
 
+        # Add metadata fields (centralized here instead of in each adapter)
+        result["metrics_source"] = self.source_type
+        result["retrieval_timestamp"] = datetime.now()
+
+        return result
+
     def get_current_config(self) -> Optional[Dict[str, Any]]:
         """Get the currently loaded configuration."""
-        return self.data_config
+        return self.source_config

@@ -9,53 +9,22 @@ from typing import Any, Dict, Optional
 
 from artifact_store import JobInfo
 
-from ..config import parse_config_file
-from .adapter_catalog_simulator import CatalogSimulatorAdapter
+from ..core import Registry
 from .base import MetricsInterface
 from .manager import MetricsManager
 
-# Registry of available metrics adapters
-METRICS_ADAPTERS: Dict[str, type] = {
-    "simulator": CatalogSimulatorAdapter,
-}
+# Registry of available metrics adapters - adapters self-register via decorator
+METRICS_REGISTRY: Registry[MetricsInterface] = Registry(MetricsInterface, "metrics adapter")
 
 
 def create_metrics_manager(
-    config_path: str,
+    config: Dict[str, Any],
     parent_job: Optional[JobInfo] = None,
 ) -> MetricsManager:
-    """Create a MetricsManager from a configuration file.
-
-    This factory function:
-    1. Parses the configuration file
-    2. Selects the appropriate metrics adapter based on DATA.TYPE
-    3. Creates and returns a configured MetricsManager
+    """Create a MetricsManager from a parsed config with DATA.SOURCE structure.
 
     Args:
-        config_path: Path to the configuration file (YAML or JSON).
-        parent_job: Optional parent job for artifact management.
-
-    Returns:
-        MetricsManager: Configured manager with the appropriate adapter.
-
-    Raises:
-        ValueError: If the configured metrics type is not supported.
-        FileNotFoundError: If the configuration file doesn't exist.
-    """
-    config = parse_config_file(config_path)
-    data_config = config["DATA"]
-
-    return create_metrics_manager_from_config(data_config, parent_job)
-
-
-def create_metrics_manager_from_config(
-    data_config: Dict[str, Any],
-    parent_job: Optional[JobInfo] = None,
-) -> MetricsManager:
-    """Create a MetricsManager from a DATA configuration dict.
-
-    Args:
-        data_config: The DATA configuration block.
+        config: The full parsed configuration dict (from parse_config_file()).
         parent_job: Optional parent job for artifact management.
 
     Returns:
@@ -64,13 +33,20 @@ def create_metrics_manager_from_config(
     Raises:
         ValueError: If the configured metrics type is not supported.
     """
-    metrics_type = data_config.get("TYPE", "simulator")
+    source_type = config["DATA"]["SOURCE"]["type"]
+    source_config = config["DATA"]["SOURCE"]["CONFIG"]
 
-    adapter = get_metrics_adapter(metrics_type)
+    # Include ENRICHMENT config if present (it's at DATA.ENRICHMENT, not SOURCE.CONFIG)
+    enrichment = config["DATA"].get("ENRICHMENT")
+    if enrichment:
+        source_config = {**source_config, "ENRICHMENT": enrichment}
+
+    adapter = get_metrics_adapter(source_type)
 
     return MetricsManager(
-        data_config=data_config,
+        source_config=source_config,
         metrics_source=adapter,
+        source_type=source_type,
         parent_job=parent_job,
     )
 
@@ -87,23 +63,10 @@ def get_metrics_adapter(metrics_type: str) -> MetricsInterface:
     Raises:
         ValueError: If the metrics type is not supported.
     """
-    if metrics_type not in METRICS_ADAPTERS:
-        available = list(METRICS_ADAPTERS.keys())
-        raise ValueError(f"Unknown metrics type '{metrics_type}'. Available types: {available}")
-
-    return METRICS_ADAPTERS[metrics_type]()
+    return METRICS_REGISTRY.get(metrics_type)
 
 
-def register_metrics_adapter(metrics_type: str, adapter_class: type) -> None:
-    """Register a custom metrics adapter.
-
-    Args:
-        metrics_type: The type identifier for this adapter.
-        adapter_class: The adapter class (must implement MetricsInterface).
-
-    Raises:
-        ValueError: If the adapter class doesn't implement MetricsInterface.
-    """
-    if not issubclass(adapter_class, MetricsInterface):
-        raise ValueError(f"Adapter class {adapter_class.__name__} must implement MetricsInterface")
-    METRICS_ADAPTERS[metrics_type] = adapter_class
+# Import adapters to trigger self-registration via decorators
+# These imports must be at the end after METRICS_REGISTRY is defined
+from .catalog_simulator import CatalogSimulatorAdapter  # noqa: E402, F401
+from .file import FileAdapter  # noqa: E402, F401

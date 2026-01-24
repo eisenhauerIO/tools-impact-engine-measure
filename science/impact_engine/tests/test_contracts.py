@@ -97,18 +97,18 @@ class TestProductSchema:
         assert "price" in ProductSchema.optional
 
     def test_catalog_simulator_mapping(self):
-        """ProductSchema maps asin to product_id for catalog_simulator."""
-        df = pd.DataFrame({"asin": ["A001", "A002"]})
+        """ProductSchema maps product_identifier to product_id for catalog_simulator."""
+        df = pd.DataFrame({"product_identifier": ["A001", "A002"]})
         result = ProductSchema.from_external(df, "catalog_simulator")
         assert "product_id" in result.columns
         assert result["product_id"].tolist() == ["A001", "A002"]
 
     def test_to_catalog_simulator(self):
-        """ProductSchema maps product_id to asin for catalog_simulator."""
+        """ProductSchema maps product_id to product_identifier for catalog_simulator."""
         df = pd.DataFrame({"product_id": ["P001", "P002"]})
         result = ProductSchema.to_external(df, "catalog_simulator")
-        assert "asin" in result.columns
-        assert result["asin"].tolist() == ["P001", "P002"]
+        assert "product_identifier" in result.columns
+        assert result["product_identifier"].tolist() == ["P001", "P002"]
 
 
 class TestMetricsSchema:
@@ -127,10 +127,10 @@ class TestMetricsSchema:
         assert "customer_engagement" in MetricsSchema.optional
 
     def test_catalog_simulator_mapping(self):
-        """MetricsSchema maps asin and ordered_units for catalog_simulator."""
+        """MetricsSchema maps product_identifier and ordered_units for catalog_simulator."""
         df = pd.DataFrame(
             {
-                "asin": ["A001"],
+                "product_identifier": ["A001"],
                 "ordered_units": [100],
                 "date": ["2024-01-01"],
                 "revenue": [1000.0],

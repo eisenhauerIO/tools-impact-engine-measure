@@ -8,7 +8,6 @@ import pandas as pd
 import pytest
 
 from impact_engine import evaluate_impact
-from impact_engine.config import ConfigurationError
 
 
 class TestEvaluateImpactIntegration:
@@ -29,24 +28,30 @@ class TestEvaluateImpactIntegration:
             products_path = os.path.join(tmpdir, "products.csv")
             products_df.to_csv(products_path, index=False)
 
-            # Create a configuration file with PATH
+            # Create a configuration file with new SOURCE/TRANSFORM structure
             config_path = os.path.join(tmpdir, "config.json")
             config = {
                 "DATA": {
-                    "TYPE": "simulator",
-                    "PATH": products_path,
-                    "MODE": "rule",
-                    "SEED": 42,
-                    "START_DATE": "2024-01-01",
-                    "END_DATE": "2024-01-31",
+                    "SOURCE": {
+                        "type": "simulator",
+                        "CONFIG": {
+                            "path": products_path,
+                            "mode": "rule",
+                            "seed": 42,
+                            "start_date": "2024-01-01",
+                            "end_date": "2024-01-31",
+                        },
+                    },
+                    "TRANSFORM": {
+                        "FUNCTION": "aggregate_by_date",
+                        "PARAMS": {"metric": "revenue"},
+                    },
                 },
                 "MEASUREMENT": {
                     "MODEL": "interrupted_time_series",
                     "PARAMS": {
-                        "DEPENDENT_VARIABLE": "revenue",
-                        "INTERVENTION_DATE": "2024-01-15",
-                        "START_DATE": "2024-01-01",
-                        "END_DATE": "2024-01-31",
+                        "dependent_variable": "revenue",
+                        "intervention_date": "2024-01-15",
                     },
                 },
             }
@@ -96,27 +101,34 @@ class TestEvaluateImpactIntegration:
             config_path = os.path.join(tmpdir, "config.json")
             config = {
                 "DATA": {
-                    "TYPE": "simulator",
-                    "PATH": products_path,
-                    "MODE": "rule",
-                    "SEED": 42,
-                    "START_DATE": "2024-01-01",
-                    "END_DATE": "2024-01-31",
+                    "SOURCE": {
+                        "type": "simulator",
+                        "CONFIG": {
+                            "path": products_path,
+                            "mode": "rule",
+                            "seed": 42,
+                            "start_date": "2024-01-01",
+                            "end_date": "2024-01-31",
+                        },
+                    },
+                    "TRANSFORM": {
+                        "FUNCTION": "aggregate_by_date",
+                        "PARAMS": {"metric": "revenue"},
+                    },
                 },
                 "MEASUREMENT": {
                     "MODEL": "interrupted_time_series",
                     "PARAMS": {
-                        "DEPENDENT_VARIABLE": "revenue",
-                        "START_DATE": "2024-01-01",
-                        "END_DATE": "2024-01-31",
+                        "dependent_variable": "revenue",
+                        # No intervention_date - should fail
                     },
                 },
             }
             with open(config_path, "w") as f:
                 json.dump(config, f)
 
-            # Should raise ConfigurationError for missing intervention_date
-            with pytest.raises(ConfigurationError, match="INTERVENTION_DATE"):
+            # Should raise ValueError for missing intervention_date (validated by model)
+            with pytest.raises(ValueError, match="intervention_date"):
                 evaluate_impact(config_path=config_path, storage_url=tmpdir)
 
     def test_evaluate_impact_returns_model_results_path(self):
@@ -134,24 +146,30 @@ class TestEvaluateImpactIntegration:
             products_path = os.path.join(tmpdir, "products.csv")
             products_df.to_csv(products_path, index=False)
 
-            # Create configuration file
+            # Create configuration file with new structure
             config_path = os.path.join(tmpdir, "config.json")
             config = {
                 "DATA": {
-                    "TYPE": "simulator",
-                    "PATH": products_path,
-                    "MODE": "rule",
-                    "SEED": 42,
-                    "START_DATE": "2024-01-01",
-                    "END_DATE": "2024-01-31",
+                    "SOURCE": {
+                        "type": "simulator",
+                        "CONFIG": {
+                            "path": products_path,
+                            "mode": "rule",
+                            "seed": 42,
+                            "start_date": "2024-01-01",
+                            "end_date": "2024-01-31",
+                        },
+                    },
+                    "TRANSFORM": {
+                        "FUNCTION": "aggregate_by_date",
+                        "PARAMS": {"metric": "revenue"},
+                    },
                 },
                 "MEASUREMENT": {
                     "MODEL": "interrupted_time_series",
                     "PARAMS": {
-                        "DEPENDENT_VARIABLE": "revenue",
-                        "INTERVENTION_DATE": "2024-01-15",
-                        "START_DATE": "2024-01-01",
-                        "END_DATE": "2024-01-31",
+                        "dependent_variable": "revenue",
+                        "intervention_date": "2024-01-15",
                     },
                 },
             }
@@ -182,24 +200,30 @@ class TestEvaluateImpactIntegration:
             products_path = os.path.join(tmpdir, "products.csv")
             products_df.to_csv(products_path, index=False)
 
-            # Create configuration file
+            # Create configuration file with new structure
             config_path = os.path.join(tmpdir, "config.json")
             config = {
                 "DATA": {
-                    "TYPE": "simulator",
-                    "PATH": products_path,
-                    "MODE": "rule",
-                    "SEED": 42,
-                    "START_DATE": "2024-01-01",
-                    "END_DATE": "2024-01-31",
+                    "SOURCE": {
+                        "type": "simulator",
+                        "CONFIG": {
+                            "path": products_path,
+                            "mode": "rule",
+                            "seed": 42,
+                            "start_date": "2024-01-01",
+                            "end_date": "2024-01-31",
+                        },
+                    },
+                    "TRANSFORM": {
+                        "FUNCTION": "aggregate_by_date",
+                        "PARAMS": {"metric": "revenue"},
+                    },
                 },
                 "MEASUREMENT": {
                     "MODEL": "interrupted_time_series",
                     "PARAMS": {
-                        "DEPENDENT_VARIABLE": "revenue",
-                        "INTERVENTION_DATE": "2024-01-15",
-                        "START_DATE": "2024-01-01",
-                        "END_DATE": "2024-01-31",
+                        "dependent_variable": "revenue",
+                        "intervention_date": "2024-01-15",
                     },
                 },
             }

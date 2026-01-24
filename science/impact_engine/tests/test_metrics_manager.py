@@ -8,13 +8,13 @@ from unittest.mock import Mock
 import pandas as pd
 import pytest
 
+from impact_engine import parse_config_file
 from impact_engine.metrics import (
     MetricsInterface,
     MetricsManager,
     create_metrics_manager,
-    create_metrics_manager_from_config,
 )
-from impact_engine.metrics.factory import METRICS_ADAPTERS, register_metrics_adapter
+from impact_engine.metrics.factory import METRICS_REGISTRY
 
 
 class MockMetricsAdapter(MetricsInterface):
@@ -58,15 +58,30 @@ class MockMetricsAdapter(MetricsInterface):
         )
 
 
+def complete_source_config(**overrides):
+    """Create a complete SOURCE.CONFIG with defaults.
+
+    Tests that bypass process_config() must provide complete configs.
+    """
+    config = {
+        "start_date": "2024-01-01",
+        "end_date": "2024-01-31",
+        "mode": "rule",
+        "seed": 42,
+    }
+    config.update(overrides)
+    return config
+
+
 class TestMetricsManagerDependencyInjection:
     """Tests for dependency injection pattern."""
 
     def test_create_with_injected_adapter(self):
         """Test creating manager with injected adapter."""
         mock_adapter = MockMetricsAdapter()
-        config = {"START_DATE": "2024-01-01", "END_DATE": "2024-01-31"}
+        config = complete_source_config()
 
-        manager = MetricsManager(config, mock_adapter)
+        manager = MetricsManager(config, mock_adapter, source_type="mock")
 
         assert manager.metrics_source is mock_adapter
         assert mock_adapter.is_connected is True
@@ -76,9 +91,9 @@ class TestMetricsManagerDependencyInjection:
         mock_adapter = Mock(spec=MetricsInterface)
         mock_adapter.connect.return_value = True
 
-        config = {"START_DATE": "2024-01-01", "END_DATE": "2024-01-31"}
+        config = complete_source_config()
 
-        manager = MetricsManager(config, mock_adapter)
+        manager = MetricsManager(config, mock_adapter, source_type="mock")
 
         mock_adapter.connect.assert_called_once()
         assert manager.metrics_source is mock_adapter
@@ -86,14 +101,9 @@ class TestMetricsManagerDependencyInjection:
     def test_adapter_receives_connection_config(self):
         """Test that adapter receives proper connection config."""
         mock_adapter = MockMetricsAdapter()
-        config = {
-            "START_DATE": "2024-01-01",
-            "END_DATE": "2024-01-31",
-            "MODE": "ml",
-            "SEED": 123,
-        }
+        config = complete_source_config(mode="ml", seed=123)
 
-        MetricsManager(config, mock_adapter)
+        MetricsManager(config, mock_adapter, source_type="mock")
 
         assert mock_adapter.config["mode"] == "ml"
         assert mock_adapter.config["seed"] == 123
@@ -101,51 +111,27 @@ class TestMetricsManagerDependencyInjection:
     def test_adapter_receives_enrichment_config(self):
         """Test that enrichment config is passed to adapter."""
         mock_adapter = MockMetricsAdapter()
-        enrichment = {"function": "quantity_boost", "params": {"effect_size": 0.3}}
-        config = {
-            "START_DATE": "2024-01-01",
-            "END_DATE": "2024-01-31",
-            "ENRICHMENT": enrichment,
-        }
+        enrichment = {"FUNCTION": "quantity_boost", "PARAMS": {"effect_size": 0.3}}
+        config = complete_source_config(ENRICHMENT=enrichment)
 
-        MetricsManager(config, mock_adapter)
+        MetricsManager(config, mock_adapter, source_type="mock")
 
-        assert mock_adapter.config["enrichment"] == enrichment
+        assert mock_adapter.config["ENRICHMENT"] == enrichment
 
 
 class TestMetricsManagerConfiguration:
-    """Tests for configuration handling."""
+    """Tests for configuration handling.
 
-    def test_validate_config_missing_start_date(self):
-        """Test validation with missing START_DATE field."""
-        mock_adapter = MockMetricsAdapter()
-        with pytest.raises(ValueError, match="Missing required field 'START_DATE'"):
-            MetricsManager({"END_DATE": "2024-01-31"}, mock_adapter)
-
-    def test_validate_config_missing_end_date(self):
-        """Test validation with missing END_DATE field."""
-        mock_adapter = MockMetricsAdapter()
-        with pytest.raises(ValueError, match="Missing required field 'END_DATE'"):
-            MetricsManager({"START_DATE": "2024-01-01"}, mock_adapter)
-
-    def test_validate_config_invalid_date_format(self):
-        """Test validation with invalid date format."""
-        mock_adapter = MockMetricsAdapter()
-        with pytest.raises(ValueError, match="Invalid date format"):
-            MetricsManager({"START_DATE": "invalid-date", "END_DATE": "2024-01-31"}, mock_adapter)
-
-    def test_validate_config_invalid_date_order(self):
-        """Test validation with start date after end date."""
-        mock_adapter = MockMetricsAdapter()
-        with pytest.raises(ValueError, match="START_DATE must be before or equal to END_DATE"):
-            MetricsManager({"START_DATE": "2024-01-31", "END_DATE": "2024-01-01"}, mock_adapter)
+    Note: Validation is now centralized in process_config().
+    These tests verify the manager works with complete configs.
+    """
 
     def test_get_current_config(self):
         """Test getting current configuration."""
         mock_adapter = MockMetricsAdapter()
-        config = {"START_DATE": "2024-01-01", "END_DATE": "2024-01-31"}
+        config = complete_source_config()
 
-        manager = MetricsManager(config, mock_adapter)
+        manager = MetricsManager(config, mock_adapter, source_type="mock")
         assert manager.get_current_config() == config
 
 
@@ -155,9 +141,9 @@ class TestMetricsManagerRetrieveMetrics:
     def test_retrieve_metrics_success(self):
         """Test successful metrics retrieval."""
         mock_adapter = MockMetricsAdapter()
-        config = {"START_DATE": "2024-01-01", "END_DATE": "2024-01-31"}
+        config = complete_source_config()
 
-        manager = MetricsManager(config, mock_adapter)
+        manager = MetricsManager(config, mock_adapter, source_type="mock")
         products = pd.DataFrame({"product_id": ["test_product"], "name": ["Test Product"]})
 
         result = manager.retrieve_metrics(products)
@@ -174,8 +160,8 @@ class TestMetricsManagerRetrieveMetrics:
             {"product_id": ["p1"], "revenue": [100], "date": ["2024-01-01"]}
         )
 
-        config = {"START_DATE": "2024-01-01", "END_DATE": "2024-01-31"}
-        manager = MetricsManager(config, mock_adapter)
+        config = complete_source_config()
+        manager = MetricsManager(config, mock_adapter, source_type="mock")
 
         products = pd.DataFrame({"product_id": ["p1"]})
         manager.retrieve_metrics(products)
@@ -187,9 +173,9 @@ class TestMetricsManagerRetrieveMetrics:
     def test_retrieve_metrics_empty_products(self):
         """Test retrieving metrics with empty products."""
         mock_adapter = MockMetricsAdapter()
-        config = {"START_DATE": "2024-01-01", "END_DATE": "2024-01-31"}
+        config = complete_source_config()
 
-        manager = MetricsManager(config, mock_adapter)
+        manager = MetricsManager(config, mock_adapter, source_type="mock")
 
         with pytest.raises(ValueError, match="Products DataFrame cannot be empty"):
             manager.retrieve_metrics(pd.DataFrame())
@@ -197,9 +183,9 @@ class TestMetricsManagerRetrieveMetrics:
     def test_retrieve_metrics_none_products(self):
         """Test retrieving metrics with None products."""
         mock_adapter = MockMetricsAdapter()
-        config = {"START_DATE": "2024-01-01", "END_DATE": "2024-01-31"}
+        config = complete_source_config()
 
-        manager = MetricsManager(config, mock_adapter)
+        manager = MetricsManager(config, mock_adapter, source_type="mock")
 
         with pytest.raises(ValueError, match="Products DataFrame cannot be empty"):
             manager.retrieve_metrics(None)
@@ -208,45 +194,34 @@ class TestMetricsManagerRetrieveMetrics:
 class TestMetricsFactory:
     """Tests for factory functions."""
 
-    def test_create_metrics_manager_from_config_dict(self):
-        """Test creating manager from config dict."""
-        # Register mock adapter
-        register_metrics_adapter("mock", MockMetricsAdapter)
-
-        try:
-            config = {
-                "TYPE": "mock",
-                "START_DATE": "2024-01-01",
-                "END_DATE": "2024-01-31",
-            }
-
-            manager = create_metrics_manager_from_config(config)
-
-            assert isinstance(manager, MetricsManager)
-            assert isinstance(manager.metrics_source, MockMetricsAdapter)
-        finally:
-            # Clean up
-            del METRICS_ADAPTERS["mock"]
-
-    def test_create_metrics_manager_from_file(self):
-        """Test creating manager from config file."""
+    def test_create_metrics_manager_from_config(self):
+        """Test creating manager from parsed config."""
         with tempfile.TemporaryDirectory() as tmpdir:
             products_path = str(Path(tmpdir) / "products.csv")
             pd.DataFrame({"product_id": ["p1"]}).to_csv(products_path, index=False)
 
+            # Use new SOURCE/TRANSFORM config structure
             config = {
                 "DATA": {
-                    "TYPE": "simulator",
-                    "PATH": products_path,
-                    "MODE": "rule",
-                    "SEED": 42,
-                    "START_DATE": "2024-01-01",
-                    "END_DATE": "2024-01-31",
+                    "SOURCE": {
+                        "type": "simulator",
+                        "CONFIG": {
+                            "path": products_path,
+                            "mode": "rule",
+                            "seed": 42,
+                            "start_date": "2024-01-01",
+                            "end_date": "2024-01-31",
+                        },
+                    },
+                    "TRANSFORM": {
+                        "FUNCTION": "aggregate_by_date",
+                        "PARAMS": {"metric": "revenue"},
+                    },
                 },
                 "MEASUREMENT": {
                     "MODEL": "interrupted_time_series",
                     "PARAMS": {
-                        "INTERVENTION_DATE": "2024-01-15",
+                        "intervention_date": "2024-01-15",
                     },
                 },
             }
@@ -254,21 +229,14 @@ class TestMetricsFactory:
             with open(config_path, "w") as f:
                 json.dump(config, f)
 
-            manager = create_metrics_manager(config_path)
+            parsed_config = parse_config_file(config_path)
+            manager = create_metrics_manager(parsed_config)
 
             assert isinstance(manager, MetricsManager)
-            assert manager.data_config == config["DATA"]
-
-    def test_create_metrics_manager_unknown_type(self):
-        """Test creating manager with unknown adapter type."""
-        config = {
-            "TYPE": "unknown_type",
-            "START_DATE": "2024-01-01",
-            "END_DATE": "2024-01-31",
-        }
-
-        with pytest.raises(ValueError, match="Unknown metrics type"):
-            create_metrics_manager_from_config(config)
+            # source_config contains SOURCE.CONFIG values (merged with defaults)
+            expected_config = config["DATA"]["SOURCE"]["CONFIG"]
+            for key, value in expected_config.items():
+                assert manager.source_config[key] == value
 
     def test_register_invalid_adapter(self):
         """Test registering invalid adapter class."""
@@ -277,7 +245,7 @@ class TestMetricsFactory:
             pass
 
         with pytest.raises(ValueError, match="must implement MetricsInterface"):
-            register_metrics_adapter("invalid", InvalidAdapter)
+            METRICS_REGISTRY.register("invalid", InvalidAdapter)
 
 
 class TestMetricsManagerConnectionFailure:
@@ -288,7 +256,7 @@ class TestMetricsManagerConnectionFailure:
         mock_adapter = Mock(spec=MetricsInterface)
         mock_adapter.connect.return_value = False
 
-        config = {"START_DATE": "2024-01-01", "END_DATE": "2024-01-31"}
+        config = complete_source_config()
 
         with pytest.raises(ConnectionError, match="Failed to connect"):
-            MetricsManager(config, mock_adapter)
+            MetricsManager(config, mock_adapter, source_type="mock")

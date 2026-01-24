@@ -9,14 +9,22 @@ preventing tight coupling and enabling independent evolution.
 """
 
 from dataclasses import dataclass, field
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import pandas as pd
 
 
 @dataclass
 class Schema:
-    """Base schema with validation and bidirectional field mapping."""
+    """Base schema with validation and bidirectional field mapping.
+
+    Supports two modes:
+    1. Simple mode: Define required/optional columns and mappings directly
+    2. Contract mode: Use ColumnContract for advanced column detection
+
+    The get_column() and normalize() methods work with both modes,
+    using mappings to build implicit ColumnContracts when needed.
+    """
 
     required: List[str]
     optional: List[str] = field(default_factory=list)
@@ -56,14 +64,92 @@ class Schema:
         """Return all columns (required + optional)."""
         return self.required + self.optional
 
+    def get_column(self, df: pd.DataFrame, standard_name: str) -> Optional[str]:
+        """Find actual column name in DataFrame for a standard field.
+
+        Searches for the standard name first, then checks all known aliases
+        from the mappings.
+
+        Args:
+            df: DataFrame to search
+            standard_name: The standard column name to find
+
+        Returns:
+            Actual column name if found, None otherwise
+
+        Example:
+            col = MetricsSchema.get_column(df, "product_id")
+            # Returns "product_id" or "product_identifier" depending on what exists
+        """
+        # Check standard name first
+        if standard_name in df.columns:
+            return standard_name
+
+        # Build aliases from all source mappings
+        aliases = []
+        for source_mapping in self.mappings.values():
+            for external_name, mapped_standard in source_mapping.items():
+                if mapped_standard == standard_name and external_name not in aliases:
+                    aliases.append(external_name)
+
+        # Check aliases
+        for alias in aliases:
+            if alias in df.columns:
+                return alias
+
+        return None
+
+    def normalize(self, df: pd.DataFrame, source: Optional[str] = None) -> pd.DataFrame:
+        """Auto-detect and rename columns to standard names.
+
+        If source is provided, uses that source's mapping. Otherwise,
+        attempts to detect columns from all known aliases.
+
+        Args:
+            df: DataFrame to normalize
+            source: Optional source type for targeted normalization
+
+        Returns:
+            DataFrame with columns renamed to standard names
+
+        Example:
+            # Normalize from known source
+            df = MetricsSchema.normalize(df, source="catalog_simulator")
+
+            # Auto-detect and normalize
+            df = MetricsSchema.normalize(df)
+        """
+        if source:
+            return self.from_external(df, source)
+
+        # Auto-detect mode: rename any alias columns to standard names
+        result = df.copy()
+        renames = {}
+
+        for standard_name in self.required + self.optional:
+            if standard_name in result.columns:
+                continue  # Already has standard name
+
+            # Find alias in any source mapping
+            for source_mapping in self.mappings.values():
+                for external_name, mapped_standard in source_mapping.items():
+                    if mapped_standard == standard_name and external_name in result.columns:
+                        renames[external_name] = standard_name
+                        break
+
+        if renames:
+            result = result.rename(columns=renames)
+
+        return result
+
 
 # Product schema: defines product identifiers
 ProductSchema = Schema(
     required=["product_id"],
     optional=["name", "category", "price"],
     mappings={
-        "catalog_simulator": {"asin": "product_id"},
-        "database": {"sku": "product_id", "product_name": "name"},
+        "catalog_simulator": {"product_identifier": "product_id"},
+        "database": {"product_name": "name"},
     },
 )
 
@@ -76,18 +162,30 @@ MetricsSchema = Schema(
         "price",
         "inventory_level",
         "customer_engagement",
+        "quality_score",
         "metrics_source",
         "retrieval_timestamp",
     ],
     mappings={
         "catalog_simulator": {
-            "asin": "product_id",
+            "product_identifier": "product_id",
             "ordered_units": "sales_volume",
         },
         "database": {
-            "sku": "product_id",
             "units_sold": "sales_volume",
             "total_revenue": "revenue",
+        },
+    },
+)
+
+# Transform schema: defines columns for approximation transforms
+TransformSchema = Schema(
+    required=["product_id", "date"],
+    optional=["quality_score", "revenue", "sales_volume"],
+    mappings={
+        "catalog_simulator": {
+            "product_identifier": "product_id",
+            "ordered_units": "sales_volume",
         },
     },
 )

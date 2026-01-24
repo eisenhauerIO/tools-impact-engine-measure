@@ -1,0 +1,29 @@
+# Unified config for metrics approximation pipeline with enrichment
+# Used by TestRealCatalogSimulatorPipeline integration tests
+DATA:
+  SOURCE:
+    type: simulator
+    CONFIG:
+      mode: rule
+      seed: 42
+      start_date: '2024-01-01'
+      end_date: '2024-01-14'
+      path: products.csv  # Updated by test fixture
+  ENRICHMENT:
+    FUNCTION: product_detail_boost
+    PARAMS:
+      enrichment_fraction: 1.0
+      enrichment_start: '2024-01-08'
+      quality_boost: 0.15
+      seed: 42
+  TRANSFORM:
+    FUNCTION: prepare_simulator_for_approximation
+    PARAMS: {}  # enrichment_start auto-injected from ENRICHMENT.params
+
+MEASUREMENT:
+  MODEL: metrics_approximation
+  PARAMS:
+    RESPONSE:
+      FUNCTION: linear
+      PARAMS:
+        coefficient: 0.5

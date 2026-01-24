@@ -7,11 +7,13 @@ ensuring libraries communicate only through well-defined config formats.
 
 from typing import Any, Dict
 
-# Default simulation parameters for catalog simulator
-DEFAULT_SALE_PROB = 0.7
-DEFAULT_IMPRESSION_TO_VISIT_RATE = 0.15
-DEFAULT_VISIT_TO_CART_RATE = 0.25
-DEFAULT_CART_TO_ORDER_RATE = 0.80
+from .validation import get_defaults
+
+
+def _get_catalog_simulator_defaults() -> Dict[str, Any]:
+    """Get catalog simulator defaults from config_defaults.yaml."""
+    defaults = get_defaults()
+    return defaults["CATALOG_SIMULATOR"]
 
 
 class ConfigBridge:
@@ -40,8 +42,8 @@ class ConfigBridge:
               START_DATE: "2024-01-01"
               END_DATE: "2024-01-31"
               ENRICHMENT:
-                function: quantity_boost
-                params:
+                FUNCTION: quantity_boost
+                PARAMS:
                   effect_size: 0.3
                   enrichment_start: "2024-01-15"
 
@@ -63,7 +65,10 @@ class ConfigBridge:
                 enrichment_start: "2024-01-15"
         """
         data = ie_config.get("DATA", {})
-        seed = data.get("SEED", 42)
+        seed = data.get("seed", 42)
+
+        # Get simulation defaults from config
+        sim_defaults = _get_catalog_simulator_defaults()
 
         # Build RULE config
         cs_config: Dict[str, Any] = {
@@ -75,14 +80,14 @@ class ConfigBridge:
                 "METRICS": {
                     "FUNCTION": "simulate_metrics_rule_based",
                     "PARAMS": {
-                        "date_start": data.get("START_DATE"),
-                        "date_end": data.get("END_DATE"),
+                        "date_start": data.get("start_date"),
+                        "date_end": data.get("end_date"),
                         "seed": seed,
-                        "sale_prob": DEFAULT_SALE_PROB,
+                        "sale_prob": sim_defaults["sale_prob"],
                         "granularity": "daily",
-                        "impression_to_visit_rate": DEFAULT_IMPRESSION_TO_VISIT_RATE,
-                        "visit_to_cart_rate": DEFAULT_VISIT_TO_CART_RATE,
-                        "cart_to_order_rate": DEFAULT_CART_TO_ORDER_RATE,
+                        "impression_to_visit_rate": sim_defaults["impression_to_visit_rate"],
+                        "visit_to_cart_rate": sim_defaults["visit_to_cart_rate"],
+                        "cart_to_order_rate": sim_defaults["cart_to_order_rate"],
                     },
                 },
             }
@@ -92,8 +97,8 @@ class ConfigBridge:
         if "ENRICHMENT" in data:
             enrichment = data["ENRICHMENT"]
             cs_config["IMPACT"] = {
-                "FUNCTION": enrichment.get("function"),
-                "PARAMS": enrichment.get("params", {}),
+                "FUNCTION": enrichment.get("FUNCTION"),
+                "PARAMS": enrichment.get("PARAMS", {}),
             }
 
         return cs_config
@@ -114,11 +119,11 @@ class ConfigBridge:
 
         ie_config: Dict[str, Any] = {
             "DATA": {
-                "TYPE": "simulator",
-                "MODE": "rule" if "RULE" in cs_config else "ml",
-                "START_DATE": metrics_params.get("date_start"),
-                "END_DATE": metrics_params.get("date_end"),
-                "SEED": metrics_params.get("seed", 42),
+                "type": "simulator",
+                "mode": "rule" if "RULE" in cs_config else "ml",
+                "start_date": metrics_params.get("date_start"),
+                "end_date": metrics_params.get("date_end"),
+                "seed": metrics_params.get("seed", 42),
             }
         }
 
@@ -126,8 +131,8 @@ class ConfigBridge:
         if "IMPACT" in cs_config:
             impact = cs_config["IMPACT"]
             ie_config["DATA"]["ENRICHMENT"] = {
-                "function": impact.get("FUNCTION"),
-                "params": impact.get("PARAMS", {}),
+                "FUNCTION": impact.get("FUNCTION"),
+                "PARAMS": impact.get("PARAMS", {}),
             }
 
         return ie_config
@@ -145,7 +150,7 @@ class ConfigBridge:
         """
         return {
             "IMPACT": {
-                "FUNCTION": enrichment.get("function"),
-                "PARAMS": enrichment.get("params", {}),
+                "FUNCTION": enrichment.get("FUNCTION"),
+                "PARAMS": enrichment.get("PARAMS", {}),
             }
         }

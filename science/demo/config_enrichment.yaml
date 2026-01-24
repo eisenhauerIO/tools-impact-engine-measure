@@ -1,23 +1,29 @@
 DATA:
-  END_DATE: '2024-11-30'
   ENRICHMENT:
-    function: quantity_boost
-    params:
-      effect_size: 0.3
+    FUNCTION: product_detail_boost
+    PARAMS:
       enrichment_fraction: 1.0
       enrichment_start: '2024-11-23'
+      quality_boost: 0.3
       seed: 42
-  MODE: rule
-  PATH: output/fixed_products.csv
-  SEED: 42
-  START_DATE: '2024-11-16'
-  TYPE: simulator
+  SOURCE:
+    CONFIG:
+      end_date: '2024-11-30'
+      mode: rule
+      path: output/fixed_products.csv
+      seed: 42
+      start_date: '2024-11-16'
+    type: simulator
+  TRANSFORM:
+    FUNCTION: aggregate_by_date
+    PARAMS:
+      metric: revenue
 MEASUREMENT:
   MODEL: interrupted_time_series
   PARAMS:
-    DEPENDENT_VARIABLE: revenue
-    END_DATE: '2024-11-30'
-    INTERVENTION_DATE: '2024-11-23'
-    START_DATE: '2024-11-16'
+    dependent_variable: revenue
+    end_date: '2024-11-30'
+    intervention_date: '2024-11-23'
+    start_date: '2024-11-16'
 OUTPUT:
   PATH: output

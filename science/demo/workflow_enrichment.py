@@ -9,12 +9,13 @@ This demo:
 5. Compares ITS estimate to true effect to validate the model
 """
 
+import copy
 import json
 import os
 
 import pandas as pd
 import yaml
-from impact_engine import evaluate_impact
+from impact_engine import evaluate_impact, parse_config_file
 from impact_engine.metrics import create_metrics_manager
 from online_retail_simulator import simulate_characteristics
 
@@ -126,42 +127,41 @@ if __name__ == "__main__":
         products_path = FIXED_PRODUCTS_PATH
     else:
         print("\nStep 1: Generating product characteristics (first run)...")
-        import shutil
 
         job_info = simulate_characteristics("config_enrichment_simulator.yaml")
-        src_path = f"{job_info.full_path}/products.csv"
+        products = job_info.load_df("products")
         os.makedirs(os.path.dirname(FIXED_PRODUCTS_PATH), exist_ok=True)
-        shutil.copy(src_path, FIXED_PRODUCTS_PATH)
+        products.to_csv(FIXED_PRODUCTS_PATH, index=False)
         products_path = FIXED_PRODUCTS_PATH
         print(f"  Saved to: {products_path}")
 
     # Load config
     with open("config_enrichment.yaml", "r") as f:
         config = yaml.safe_load(f)
-    config["DATA"]["PATH"] = products_path
+    config["DATA"]["SOURCE"]["CONFIG"]["path"] = products_path
 
     enrichment_config = config["DATA"]["ENRICHMENT"]
-    intervention_date = enrichment_config["params"]["enrichment_start"]
-    effect_size = enrichment_config["params"]["effect_size"]
-    metric = config["MEASUREMENT"]["PARAMS"]["DEPENDENT_VARIABLE"]
+    intervention_date = enrichment_config["PARAMS"]["enrichment_start"]
+    quality_boost = enrichment_config["PARAMS"]["quality_boost"]
+    metric = config["MEASUREMENT"]["PARAMS"]["dependent_variable"]
 
     print(f"  Products: {products_path}")
-    print(f"  Enrichment: {effect_size*100:.0f}% boost starting {intervention_date}")
+    print(f"  Enrichment: {quality_boost*100:.0f}% quality boost starting {intervention_date}")
     print(f"  Metric: {metric}")
 
     # Step 2: Get BASELINE metrics (counterfactual - no enrichment)
     print("\nStep 2: Generating counterfactual (no enrichment)...")
     products = pd.read_csv(products_path)
 
-    # Create config without enrichment
-    baseline_config = config.copy()
-    baseline_config["DATA"] = {k: v for k, v in config["DATA"].items() if k != "ENRICHMENT"}
-    baseline_config["DATA"]["PATH"] = products_path
+    # Create config without enrichment (deep copy needed to avoid modifying original)
+    baseline_config = copy.deepcopy(config)
+    del baseline_config["DATA"]["ENRICHMENT"]
 
     with open("_temp_baseline.yaml", "w") as f:
         yaml.dump(baseline_config, f)
 
-    baseline_manager = create_metrics_manager("_temp_baseline.yaml")
+    parsed_baseline_config = parse_config_file("_temp_baseline.yaml")
+    baseline_manager = create_metrics_manager(parsed_baseline_config)
     baseline_metrics = baseline_manager.retrieve_metrics(products)
     os.remove("_temp_baseline.yaml")
     print(f"  Generated {len(baseline_metrics)} baseline records")
@@ -171,7 +171,8 @@ if __name__ == "__main__":
     with open("config_enrichment.yaml", "w") as f:
         yaml.dump(config, f)
 
-    enriched_manager = create_metrics_manager("config_enrichment.yaml")
+    parsed_enriched_config = parse_config_file("config_enrichment.yaml")
+    enriched_manager = create_metrics_manager(parsed_enriched_config)
     enriched_metrics = enriched_manager.retrieve_metrics(products)
     print(f"  Generated {len(enriched_metrics)} enriched records")
 

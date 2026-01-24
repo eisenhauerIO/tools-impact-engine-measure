@@ -1,0 +1,63 @@
+# Impact Engine Configuration Defaults
+#
+# This file serves two purposes:
+# 1. Provides sensible defaults for optional parameters
+# 2. Defines the implicit schema (null values = REQUIRED fields)
+#
+# Users can provide minimal configs that get merged with these defaults.
+
+DATA:
+  SOURCE:
+    type: simulator
+    CONFIG:
+      mode: rule
+      seed: 42
+      path: null           # REQUIRED - path to products data
+      start_date: null     # REQUIRED - format: YYYY-MM-DD
+      end_date: null       # REQUIRED - format: YYYY-MM-DD
+      # File adapter defaults
+      product_id_column: product_id
+      date_column: date
+      # ENRICHMENT is optional, no default
+  # ENRICHMENT at DATA level is optional, no default
+  TRANSFORM:
+    FUNCTION: passthrough
+    PARAMS: {}
+
+MEASUREMENT:
+  MODEL: interrupted_time_series
+  PARAMS:
+    # Common params
+    dependent_variable: revenue
+
+    # ITS model params
+    intervention_date: null    # REQUIRED for interrupted_time_series model
+    order:
+      - 1
+      - 0
+      - 0
+    seasonal_order:
+      - 0
+      - 0
+      - 0
+      - 0
+
+    # Metrics approximation model params
+    metric_before_column: quality_before
+    metric_after_column: quality_after
+    baseline_column: baseline_sales
+    RESPONSE:
+      FUNCTION: linear
+      PARAMS:
+        coefficient: 0.5
+
+OUTPUT:
+  PATH: output
+
+# Catalog Simulator defaults (used by config_bridge for simulation parameters)
+CATALOG_SIMULATOR:
+  sale_prob: 0.7
+  impression_to_visit_rate: 0.15
+  visit_to_cart_rate: 0.25
+  cart_to_order_rate: 0.80
+  default_quality_score: 0.5  # Used when quality score is missing for a product

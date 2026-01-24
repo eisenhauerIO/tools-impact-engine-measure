@@ -8,14 +8,12 @@ keeping the ModelsManager class simple and focused on coordination.
 from typing import Any, Dict
 
 from ..config import parse_config_file
-from .adapter_interrupted_time_series import InterruptedTimeSeriesAdapter
+from ..core import Registry
 from .base import Model
 from .manager import ModelsManager
 
-# Registry of available models
-MODEL_ADAPTERS: Dict[str, type] = {
-    "interrupted_time_series": InterruptedTimeSeriesAdapter,
-}
+# Registry of available models - adapters self-register via decorator
+MODEL_REGISTRY: Registry[Model] = Registry(Model, "model")
 
 
 def create_models_manager(config_path: str) -> ModelsManager:
@@ -78,23 +76,10 @@ def get_model_adapter(model_type: str) -> Model:
     Raises:
         ValueError: If the model type is not supported.
     """
-    if model_type not in MODEL_ADAPTERS:
-        available = list(MODEL_ADAPTERS.keys())
-        raise ValueError(f"Unknown model type '{model_type}'. Available types: {available}")
-
-    return MODEL_ADAPTERS[model_type]()
+    return MODEL_REGISTRY.get(model_type)
 
 
-def register_model_adapter(model_type: str, model_class: type) -> None:
-    """Register a custom model adapter.
-
-    Args:
-        model_type: The type identifier for this model.
-        model_class: The model class (must implement Model).
-
-    Raises:
-        ValueError: If the model class doesn't implement Model.
-    """
-    if not issubclass(model_class, Model):
-        raise ValueError(f"Model class {model_class.__name__} must implement Model")
-    MODEL_ADAPTERS[model_type] = model_class
+# Import adapters to trigger self-registration via decorators
+# These imports must be at the end after MODEL_REGISTRY is defined
+from .interrupted_time_series import InterruptedTimeSeriesAdapter  # noqa: E402, F401
+from .metrics_approximation import MetricsApproximationAdapter  # noqa: E402, F401

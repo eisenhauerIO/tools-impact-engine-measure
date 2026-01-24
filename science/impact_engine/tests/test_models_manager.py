@@ -14,16 +14,36 @@ from impact_engine.models import (
     create_models_manager,
     create_models_manager_from_config,
 )
-from impact_engine.models.factory import MODEL_ADAPTERS, register_model_adapter
+from impact_engine.models.base import ModelResult
+from impact_engine.models.factory import MODEL_REGISTRY
+
+
+def complete_measurement_config(**overrides):
+    """Create a complete MEASUREMENT config with defaults.
+
+    Tests that bypass process_config() must provide complete configs.
+    """
+    config = {
+        "MODEL": "mock",
+        "PARAMS": {
+            "intervention_date": "2024-01-15",
+            "dependent_variable": "revenue",
+        },
+    }
+    if overrides:
+        config["PARAMS"].update(overrides)
+    return config
 
 
 class MockModel(Model):
-    """Mock model for testing."""
+    """Mock model for testing.
+
+    Updated to return ModelResult (storage-agnostic pattern from Phase 1).
+    """
 
     def __init__(self):
         self.is_connected = False
         self.config = None
-        self.storage = None
 
     def connect(self, config):
         """Mock connect method."""
@@ -35,6 +55,11 @@ class MockModel(Model):
         """Mock validate_connection method."""
         return self.is_connected
 
+    def validate_params(self, params):
+        """Mock validate_params method (required by abstract base)."""
+        # No validation for mock model
+        pass
+
     def transform_outbound(self, data, intervention_date, **kwargs):
         """Mock transform_outbound method."""
         return {"data": data, "intervention_date": intervention_date, "kwargs": kwargs}
@@ -43,25 +68,20 @@ class MockModel(Model):
         """Mock transform_inbound method."""
         return {"model_type": "mock", "results": model_results}
 
-    def fit(self, data: pd.DataFrame, intervention_date: str, output_path: str, **kwargs) -> str:
-        """Mock fit method."""
+    def fit(
+        self, data: pd.DataFrame, intervention_date: str, output_path: str, **kwargs
+    ) -> ModelResult:
+        """Mock fit method - returns ModelResult (storage handled by manager)."""
         if not self.is_connected:
             raise ConnectionError("Model not connected. Call connect() first.")
 
-        if not self.storage:
-            raise ValueError("Storage backend is required but not configured")
-
-        result_data = {
-            "model_type": "mock",
-            "intervention_date": intervention_date,
-            "rows_processed": len(data),
-        }
-
-        result_path = f"{output_path}/mock_results.json"
-        self.storage.write_json(result_path, result_data)
-        stored_path = self.storage.full_path(result_path)
-
-        return stored_path
+        return ModelResult(
+            model_type="mock",
+            data={
+                "intervention_date": intervention_date,
+                "rows_processed": len(data),
+            },
+        )
 
     def validate_data(self, data: pd.DataFrame) -> bool:
         """Mock validate_data method."""
@@ -78,7 +98,7 @@ class TestModelsManagerDependencyInjection:
     def test_create_with_injected_model(self):
         """Test creating manager with injected model."""
         mock_model = MockModel()
-        config = {"PARAMS": {"INTERVENTION_DATE": "2024-01-15"}}
+        config = complete_measurement_config()
 
         manager = ModelsManager(config, mock_model)
 
@@ -90,7 +110,7 @@ class TestModelsManagerDependencyInjection:
         mock_model = Mock(spec=Model)
         mock_model.connect.return_value = True
 
-        config = {"PARAMS": {"INTERVENTION_DATE": "2024-01-15"}}
+        config = complete_measurement_config()
 
         manager = ModelsManager(config, mock_model)
 
@@ -100,27 +120,25 @@ class TestModelsManagerDependencyInjection:
     def test_model_receives_params_config(self):
         """Test that model receives PARAMS config on connect."""
         mock_model = MockModel()
-        params = {"INTERVENTION_DATE": "2024-01-15", "order": (1, 0, 0)}
-        config = {"PARAMS": params}
+        config = complete_measurement_config(order=(1, 0, 0))
 
         ModelsManager(config, mock_model)
 
-        assert mock_model.config == params
+        assert mock_model.config["intervention_date"] == "2024-01-15"
+        assert mock_model.config["order"] == (1, 0, 0)
 
 
 class TestModelsManagerConfiguration:
-    """Tests for configuration handling."""
+    """Tests for configuration handling.
 
-    def test_validate_config_missing_params(self):
-        """Test validation with missing PARAMS field."""
-        mock_model = MockModel()
-        with pytest.raises(ValueError, match="Missing required field 'PARAMS'"):
-            ModelsManager({}, mock_model)
+    Note: Validation is now centralized in process_config().
+    These tests verify the manager works with complete configs.
+    """
 
     def test_get_current_config(self):
         """Test getting current configuration."""
         mock_model = MockModel()
-        config = {"PARAMS": {"INTERVENTION_DATE": "2024-01-15"}}
+        config = complete_measurement_config()
 
         manager = ModelsManager(config, mock_model)
         assert manager.get_current_config() == config
@@ -134,7 +152,7 @@ class TestModelsManagerFitModel:
         from artifact_store import ArtifactStore
 
         mock_model = MockModel()
-        config = {"PARAMS": {"INTERVENTION_DATE": "2024-01-15"}}
+        config = complete_measurement_config()
 
         manager = ModelsManager(config, mock_model)
 
@@ -156,9 +174,9 @@ class TestModelsManagerFitModel:
 
         mock_model = Mock(spec=Model)
         mock_model.connect.return_value = True
-        mock_model.fit.return_value = "/path/to/results.json"
+        mock_model.fit.return_value = ModelResult(model_type="mock", data={"test": True})
 
-        config = {"PARAMS": {"INTERVENTION_DATE": "2024-01-15"}}
+        config = complete_measurement_config()
         manager = ModelsManager(config, mock_model)
 
         data = pd.DataFrame({"date": pd.date_range("2024-01-01", periods=10), "value": range(10)})
@@ -171,27 +189,10 @@ class TestModelsManagerFitModel:
             call_kwargs = mock_model.fit.call_args[1]
             assert call_kwargs["intervention_date"] == "2024-01-15"
 
-    def test_fit_model_missing_intervention_date(self):
-        """Test fit_model raises error when intervention date is missing."""
-        mock_model = MockModel()
-        config = {"PARAMS": {}}  # No INTERVENTION_DATE
-
-        manager = ModelsManager(config, mock_model)
-
-        data = pd.DataFrame({"date": pd.date_range("2024-01-01", periods=10), "value": range(10)})
-
-        with tempfile.TemporaryDirectory() as tmpdir:
-            from artifact_store import ArtifactStore
-
-            storage = ArtifactStore(tmpdir)
-
-            with pytest.raises(ValueError, match="INTERVENTION_DATE must be specified"):
-                manager.fit_model(data=data, output_path="results", storage=storage)
-
     def test_fit_model_missing_storage(self):
         """Test fit_model raises error when storage is missing."""
         mock_model = MockModel()
-        config = {"PARAMS": {"INTERVENTION_DATE": "2024-01-15"}}
+        config = complete_measurement_config()
 
         manager = ModelsManager(config, mock_model)
 
@@ -206,9 +207,9 @@ class TestModelsManagerFitModel:
 
         mock_model = Mock(spec=Model)
         mock_model.connect.return_value = True
-        mock_model.fit.return_value = "/path/to/results.json"
+        mock_model.fit.return_value = ModelResult(model_type="mock", data={"test": True})
 
-        config = {"PARAMS": {"INTERVENTION_DATE": "2024-01-15"}}
+        config = complete_measurement_config()
         manager = ModelsManager(config, mock_model)
 
         data = pd.DataFrame({"date": pd.date_range("2024-01-01", periods=10), "value": range(10)})
@@ -233,20 +234,17 @@ class TestModelsFactory:
 
     def test_create_models_manager_from_config_dict(self):
         """Test creating manager from config dict."""
-        register_model_adapter("mock", MockModel)
+        MODEL_REGISTRY.register("mock", MockModel)
 
         try:
-            config = {
-                "MODEL": "mock",
-                "PARAMS": {"INTERVENTION_DATE": "2024-01-15"},
-            }
+            config = complete_measurement_config()
 
             manager = create_models_manager_from_config(config)
 
             assert isinstance(manager, ModelsManager)
             assert isinstance(manager.model, MockModel)
         finally:
-            del MODEL_ADAPTERS["mock"]
+            del MODEL_REGISTRY._registry["mock"]
 
     def test_create_models_manager_from_file(self):
         """Test creating manager from config file."""
@@ -254,17 +252,22 @@ class TestModelsFactory:
             products_path = str(Path(tmpdir) / "products.csv")
             pd.DataFrame({"product_id": ["p1"]}).to_csv(products_path, index=False)
 
+            # Use new SOURCE/TRANSFORM config structure
             config = {
                 "DATA": {
-                    "TYPE": "simulator",
-                    "PATH": products_path,
-                    "START_DATE": "2024-01-01",
-                    "END_DATE": "2024-01-31",
+                    "SOURCE": {
+                        "type": "simulator",
+                        "CONFIG": {
+                            "path": products_path,
+                            "start_date": "2024-01-01",
+                            "end_date": "2024-01-31",
+                        },
+                    },
                 },
                 "MEASUREMENT": {
                     "MODEL": "interrupted_time_series",
                     "PARAMS": {
-                        "INTERVENTION_DATE": "2024-01-15",
+                        "intervention_date": "2024-01-15",
                     },
                 },
             }
@@ -275,16 +278,16 @@ class TestModelsFactory:
             manager = create_models_manager(config_path)
 
             assert isinstance(manager, ModelsManager)
-            assert manager.measurement_config == config["MEASUREMENT"]
+            # Config now has defaults merged, so check key values are present
+            assert manager.measurement_config["MODEL"] == "interrupted_time_series"
+            assert manager.measurement_config["PARAMS"]["intervention_date"] == "2024-01-15"
 
     def test_create_models_manager_unknown_type(self):
         """Test creating manager with unknown model type."""
-        config = {
-            "MODEL": "unknown_model",
-            "PARAMS": {"INTERVENTION_DATE": "2024-01-15"},
-        }
+        config = complete_measurement_config()
+        config["MODEL"] = "unknown_model"
 
-        with pytest.raises(ValueError, match="Unknown model type"):
+        with pytest.raises(ValueError, match="Unknown model"):
             create_models_manager_from_config(config)
 
     def test_register_invalid_model(self):
@@ -294,7 +297,7 @@ class TestModelsFactory:
             pass
 
         with pytest.raises(ValueError, match="must implement Model"):
-            register_model_adapter("invalid", InvalidModel)
+            MODEL_REGISTRY.register("invalid", InvalidModel)
 
 
 class TestModelsManagerConnectionFailure:
@@ -305,7 +308,7 @@ class TestModelsManagerConnectionFailure:
         mock_model = Mock(spec=Model)
         mock_model.connect.return_value = False
 
-        config = {"PARAMS": {"INTERVENTION_DATE": "2024-01-15"}}
+        config = complete_measurement_config()
 
         with pytest.raises(ConnectionError, match="Failed to connect"):
             ModelsManager(config, mock_model)

@@ -8,7 +8,8 @@ import numpy as np
 import pandas as pd
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 
-from .base import Model
+from ..base import Model, ModelResult
+from ..factory import MODEL_REGISTRY
 
 
 @dataclass
@@ -28,18 +29,14 @@ class TransformedInput:
     seasonal_order: Tuple[int, int, int, int]
 
 
+@MODEL_REGISTRY.register_decorator("interrupted_time_series")
 class InterruptedTimeSeriesAdapter(Model):
-    """
-    Adapter for Interrupted Time Series (ITS) model that implements Model interface.
+    """Estimates causal impact of an intervention using time series analysis.
 
-    This adapter uses SARIMAX from statsmodels to fit a time series model
-    with an intervention dummy variable to estimate the causal impact
-    of an intervention on a business metric.
-
-    The model assumes:
-    - Data is ordered chronologically
-    - Intervention occurs at a specific point in time
-    - Pre and post-intervention periods have sufficient observations
+    Constraints:
+    - Data must be ordered chronologically with a 'date' column
+    - intervention_date parameter required in MEASUREMENT.PARAMS
+    - Requires sufficient pre and post-intervention observations (minimum 3 total)
     """
 
     def __init__(self):
@@ -47,22 +44,26 @@ class InterruptedTimeSeriesAdapter(Model):
         self.logger = logging.getLogger(__name__)
         self.is_connected = False
         self.config = None
-        self.storage = None
 
     def connect(self, config: Dict[str, Any]) -> bool:
-        """Initialize model with configuration parameters."""
-        # Validate order parameter
-        order = config.get("order", (1, 0, 0))
+        """Initialize model with configuration parameters.
+
+        Config is pre-validated with defaults merged via process_config().
+        """
+        # Convert list to tuple if needed (YAML loads as list)
+        order = config["order"]
+        if isinstance(order, list):
+            order = tuple(order)
         if not isinstance(order, tuple) or len(order) != 3:
             raise ValueError("Order must be a tuple of 3 integers (p, d, q)")
 
-        # Validate seasonal_order parameter
-        seasonal_order = config.get("seasonal_order", (0, 0, 0, 0))
+        seasonal_order = config["seasonal_order"]
+        if isinstance(seasonal_order, list):
+            seasonal_order = tuple(seasonal_order)
         if not isinstance(seasonal_order, tuple) or len(seasonal_order) != 4:
             raise ValueError("Seasonal order must be a tuple of 4 integers (P, D, Q, s)")
 
-        # Validate dependent_variable
-        dependent_variable = config.get("dependent_variable", "revenue")
+        dependent_variable = config["dependent_variable"]
         if not isinstance(dependent_variable, str):
             raise ValueError("Dependent variable must be a string")
 
@@ -87,33 +88,49 @@ class InterruptedTimeSeriesAdapter(Model):
         except ImportError:
             return False
 
-    def fit(
-        self,
-        data: pd.DataFrame,
-        intervention_date: str,
-        output_path: str,
-        dependent_variable: str = "revenue",
-        **kwargs,
-    ) -> str:
+    def validate_params(self, params: Dict[str, Any]) -> None:
+        """Validate ITS-specific parameters.
+
+        Args:
+            params: Parameters dict with intervention_date, output_path, etc.
+
+        Raises:
+            ValueError: If intervention_date is missing.
         """
-        Fit the interrupted time series model and save results.
+        if not params.get("intervention_date"):
+            raise ValueError(
+                "intervention_date is required for InterruptedTimeSeriesAdapter. "
+                "Specify in MEASUREMENT.PARAMS configuration."
+            )
+
+    def fit(self, data: pd.DataFrame, **kwargs) -> ModelResult:
+        """
+        Fit the interrupted time series model and return results.
 
         Args:
             data: DataFrame containing time series data with 'date' column
                   and dependent variable column.
-            intervention_date: Date string (YYYY-MM-DD format) indicating when
-                             the intervention occurred.
-            output_path: Directory path where model results should be saved.
-            dependent_variable: Name of the column to model (default: "revenue").
-            **kwargs: Additional parameters (e.g., order, seasonal_order for SARIMAX).
+            **kwargs: Model parameters:
+                - intervention_date (str): Date (YYYY-MM-DD) when intervention occurred. Required.
+                - output_path (str): Directory path for saving results (used by manager).
+                - dependent_variable (str): Column to model (default: "revenue").
+                - order (tuple): SARIMAX order (p, d, q).
+                - seasonal_order (tuple): SARIMAX seasonal order (P, D, Q, s).
 
         Returns:
-            str: Path to the saved results file.
+            ModelResult: Standardized result container (storage handled by manager).
 
         Raises:
             ValueError: If data validation fails or required columns are missing.
             RuntimeError: If model fitting fails.
         """
+        # Extract required kwargs
+        intervention_date = kwargs.get("intervention_date")
+        dependent_variable = kwargs.get("dependent_variable", "revenue")
+
+        if not intervention_date:
+            raise ValueError("intervention_date is required for InterruptedTimeSeriesAdapter")
+
         if not self.is_connected:
             raise ConnectionError("Model not connected. Call connect() first.")
 
@@ -125,8 +142,14 @@ class InterruptedTimeSeriesAdapter(Model):
                 )
 
             # Prepare model input (stateless transformation)
+            # Remove extracted params from kwargs to avoid duplicate arguments
+            model_kwargs = {
+                k: v
+                for k, v in kwargs.items()
+                if k not in ("intervention_date", "output_path", "dependent_variable")
+            }
             transformed = self._prepare_model_input(
-                data, intervention_date, dependent_variable, **kwargs
+                data, intervention_date, dependent_variable, **model_kwargs
             )
 
             # Fit SARIMAX model
@@ -149,15 +172,11 @@ class InterruptedTimeSeriesAdapter(Model):
             # Format results (explicitly pass transformed data)
             standardized_results = self._format_results(results, transformed)
 
-            # Save results using storage backend
-            if not self.storage:
-                raise ValueError("Storage backend is required but not configured")
-
-            result_path = f"{output_path}/impact_results.json"
-            self.storage.write_json(result_path, standardized_results)
-            stored_path = self.storage.full_path(result_path)
-            self.logger.info(f"Model results saved to {stored_path}")
-            return stored_path
+            self.logger.info("Model fitting complete")
+            return ModelResult(
+                model_type="interrupted_time_series",
+                data=standardized_results,
+            )
 
         except Exception as e:
             self.logger.error(f"Error fitting InterruptedTimeSeriesAdapter: {e}")
@@ -251,11 +270,9 @@ class InterruptedTimeSeriesAdapter(Model):
         y = df[dependent_variable].values
         exog = df[["intervention"]]
 
-        # Get model parameters from config or kwargs
-        order = kwargs.get("order", self.config.get("order", (1, 0, 0)))
-        seasonal_order = kwargs.get(
-            "seasonal_order", self.config.get("seasonal_order", (0, 0, 0, 0))
-        )
+        # Get model parameters from kwargs or config (config has defaults from process_config)
+        order = kwargs.get("order", self.config["order"])
+        seasonal_order = kwargs.get("seasonal_order", self.config["seasonal_order"])
 
         return TransformedInput(
             y=y,
@@ -288,10 +305,9 @@ class InterruptedTimeSeriesAdapter(Model):
             transformed.data, transformed.y, model_results
         )
 
-        # Prepare standardized output
+        # Prepare standardized output (model_type is in ModelResult wrapper)
         df = transformed.data
         return {
-            "model_type": "interrupted_time_series",
             "intervention_date": transformed.intervention_date,
             "dependent_variable": transformed.dependent_variable,
             "impact_estimates": impact_estimates,
@@ -353,9 +369,7 @@ class InterruptedTimeSeriesAdapter(Model):
         Note: This method is kept for interface compliance but internally
         uses _prepare_model_input for the actual transformation.
         """
-        dependent_variable = kwargs.get(
-            "dependent_variable", self.config.get("dependent_variable", "revenue")
-        )
+        dependent_variable = kwargs.get("dependent_variable", self.config["dependent_variable"])
         transformed = self._prepare_model_input(
             data, intervention_date, dependent_variable, **kwargs
         )
