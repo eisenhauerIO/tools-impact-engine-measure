@@ -12,7 +12,8 @@
       "Bash(conda run:*)",
       "Bash(git push:*)",
       "Bash(git merge:*)",
-      "Bash(echo:*)"
+      "Bash(echo:*)",
+      "Bash(git commit:*)"
     ]
   }
 }

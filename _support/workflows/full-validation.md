@@ -20,11 +20,19 @@ Run:
 ```bash
 git status --porcelain
 ```
-If any files are listed (output is not empty), STOP. This means there are either uncommitted changes or files not under version control (untracked files).s
+If any files are listed (output is not empty), STOP. This means there are either uncommitted changes or files not under version control (untracked files).
 
 Ask the user how to proceed (commit, stash, discard changes, or add untracked files to version control).
 
-### 3. Run the Full Test Suite
+### 3. Lint the Codebase
+
+Run:
+```bash
+hatch run lint
+```
+If any linting errors are reported (non-zero exit code), STOP. Ask the user for input before continuing.
+
+### 4. Run the Full Test Suite
 
 Run:
 ```bash
@@ -32,7 +40,7 @@ hatch run pytest science/ -v
 ```
 If any test fails (non-zero exit code), STOP. Ask the user for input before continuing.
 
-### 4. Run Demo Workflow Scripts
+### 5. Run Demo Workflow Scripts
 
 Run all workflow scripts in the demo directory:
 ```bash
@@ -40,7 +48,7 @@ cd science/demo && for f in workflow*.py; do hatch run python "$f"; done
 ```
 If any demo script fails (non-zero exit code), STOP. Ask the user for input before continuing.
 
-### 5. Verify Documentation Builds
+### 6. Verify Documentation Builds
 
 Build the Sphinx documentation:
 ```bash
@@ -48,7 +56,7 @@ cd documentation && hatch -e docs run sphinx-build -b html . _build/html
 ```
 If the build fails (non-zero exit code), STOP. Warnings are acceptable, only errors require stopping.
 
-### 6. Clean Untracked Files and Directories
+### 7. Clean Untracked Files and Directories
 
 Run:
 ```bash
