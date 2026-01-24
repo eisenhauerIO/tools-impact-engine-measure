@@ -5,8 +5,8 @@
 :hidden:
 :maxdepth: 2
 
-user-stories
+usage
 configuration
-design
+architecture
 api_reference
 ```

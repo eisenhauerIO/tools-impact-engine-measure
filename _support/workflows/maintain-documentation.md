@@ -8,9 +8,9 @@ Each piece of content has a single source of truth. When updating documentation,
 
 | Content | Primary Location | Cross-references Allowed |
 |---------|------------------|--------------------------|
-| User stories | [user-stories.md](../../documentation/user-stories.md) | [README.md](../../README.md) (1-line summary) |
-| Configuration | [configuration.md](../../documentation/configuration.md) | [user-stories.md](../../documentation/user-stories.md) (in examples) |
-| Architecture & design | [design.md](../../documentation/design.md) | None - technical reference only |
+| Usage examples | [usage.md](../../documentation/usage.md) | [README.md](../../README.md) (1-line summary) |
+| Configuration | [configuration.md](../../documentation/configuration.md) | [usage.md](../../documentation/usage.md) (in examples) |
+| Architecture | [architecture.md](../../documentation/architecture.md) | None - technical reference only |
 | API reference | [api_reference.rst](../../documentation/api_reference.rst) | Auto-generated from code |
 
 > **Note**: External dependencies like `artifact-store` and `online_retail_simulator` (catalog generator) are maintained in separate repositories on GitHub. See [pyproject.toml](../../pyproject.toml) for links.
