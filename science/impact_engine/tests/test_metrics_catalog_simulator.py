@@ -91,9 +91,9 @@ class TestCatalogSimulatorAdapter:
         assert "product_characteristics" in result
         assert "rule_config" in result
 
-        # Check product characteristics (should have asin mapped from product_id)
+        # Check product characteristics (should have product_identifier mapped from product_id)
         prod_chars = result["product_characteristics"]
-        assert "asin" in prod_chars.columns
+        assert "product_identifier" in prod_chars.columns
         assert "name" in prod_chars.columns
         assert "category" in prod_chars.columns
         assert "price" in prod_chars.columns
@@ -115,10 +115,10 @@ class TestCatalogSimulatorAdapter:
 
         result = adapter.transform_outbound(products, "2024-01-01", "2024-01-31")
 
-        # Should create asin from index
+        # Should create product_identifier from index
         prod_chars = result["product_characteristics"]
-        assert "asin" in prod_chars.columns
-        assert prod_chars["asin"].iloc[0] == "0"
+        assert "product_identifier" in prod_chars.columns
+        assert prod_chars["product_identifier"].iloc[0] == "0"
 
     def test_transform_outbound_missing_optional_columns(self):
         """Test outbound transformation with missing optional columns."""
@@ -130,18 +130,18 @@ class TestCatalogSimulatorAdapter:
         result = adapter.transform_outbound(products, "2024-01-01", "2024-01-31")
 
         prod_chars = result["product_characteristics"]
-        assert "asin" in prod_chars.columns
-        assert prod_chars["asin"].iloc[0] == "prod1"
+        assert "product_identifier" in prod_chars.columns
+        assert prod_chars["product_identifier"].iloc[0] == "prod1"
         # Optional columns (name, category, price) are not fabricated
 
     def test_transform_inbound_success(self):
         """Test successful inbound transformation."""
         adapter = CatalogSimulatorAdapter()
 
-        # Mock RuleBackend output (uses asin and ordered_units)
+        # Mock RuleBackend output (uses product_identifier and ordered_units)
         external_data = pd.DataFrame(
             {
-                "asin": ["prod1"],
+                "product_identifier": ["prod1"],
                 "name": ["Product 1"],
                 "category": ["Electronics"],
                 "price": [100.0],
@@ -154,14 +154,14 @@ class TestCatalogSimulatorAdapter:
         result = adapter.transform_inbound(external_data)
 
         assert isinstance(result, pd.DataFrame)
-        assert "product_id" in result.columns  # asin mapped to product_id
+        assert "product_id" in result.columns  # product_identifier mapped to product_id
         assert "sales_volume" in result.columns  # ordered_units mapped to sales_volume
         assert "revenue" in result.columns
         assert "metrics_source" in result.columns
         assert "retrieval_timestamp" in result.columns
         # inventory_level and customer_engagement are not fabricated
 
-        # Check that asin was mapped to product_id
+        # Check that product_identifier was mapped to product_id
         assert result["product_id"].iloc[0] == "prod1"
         # Check that ordered_units was mapped to sales_volume
         assert result["sales_volume"].iloc[0] == 5
@@ -214,7 +214,7 @@ class TestCatalogSimulatorAdapter:
             # Simulate what the real function does: save metrics to job
             metrics_df = pd.DataFrame(
                 {
-                    "asin": ["prod1"],
+                    "product_identifier": ["prod1"],
                     "name": ["Product 1"],
                     "category": ["Electronics"],
                     "price": [100.0],

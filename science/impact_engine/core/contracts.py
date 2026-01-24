@@ -24,7 +24,7 @@ class ColumnContract:
     Example:
         product_id_contract = ColumnContract(
             standard_name="product_id",
-            aliases=["asin", "sku", "product_identifier"],
+            aliases=["product_identifier"],
             dtype="object",
         )
         # Find column in DataFrame
@@ -144,7 +144,7 @@ class Schema:
 
         Example:
             col = MetricsSchema.get_column(df, "product_id")
-            # Returns "product_id", "asin", or "product_identifier" depending on what exists
+            # Returns "product_id" or "product_identifier" depending on what exists
         """
         # Check standard name first
         if standard_name in df.columns:
@@ -213,8 +213,8 @@ ProductSchema = Schema(
     required=["product_id"],
     optional=["name", "category", "price"],
     mappings={
-        "catalog_simulator": {"asin": "product_id"},
-        "database": {"sku": "product_id", "product_name": "name"},
+        "catalog_simulator": {"product_identifier": "product_id"},
+        "database": {"product_name": "name"},
     },
 )
 
@@ -233,12 +233,10 @@ MetricsSchema = Schema(
     ],
     mappings={
         "catalog_simulator": {
-            "asin": "product_id",
             "product_identifier": "product_id",
             "ordered_units": "sales_volume",
         },
         "database": {
-            "sku": "product_id",
             "units_sold": "sales_volume",
             "total_revenue": "revenue",
         },
@@ -251,7 +249,6 @@ TransformSchema = Schema(
     optional=["quality_score", "revenue", "sales_volume"],
     mappings={
         "catalog_simulator": {
-            "asin": "product_id",
             "product_identifier": "product_id",
             "ordered_units": "sales_volume",
         },

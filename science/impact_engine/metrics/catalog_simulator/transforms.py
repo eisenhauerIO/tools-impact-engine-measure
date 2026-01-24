@@ -25,7 +25,7 @@ def prepare_simulator_for_approximation(data: pd.DataFrame, params: Dict[str, An
     - baseline_sales: aggregated revenue before enrichment_start (per product)
 
     Input DataFrame (time-series from adapter):
-        - product_id/product_identifier/asin: Product identifier
+        - product_id/product_identifier: Product identifier
         - date: Date of metrics
         - quality_score: Quality score at that time point
         - revenue: Sales revenue
@@ -67,7 +67,7 @@ def prepare_simulator_for_approximation(data: pd.DataFrame, params: Dict[str, An
     id_column = TransformSchema.get_column(df, "product_id")
     if not id_column:
         raise ValueError(
-            f"Data must contain product_id or alias (asin, product_identifier). "
+            f"Data must contain product_id or alias (product_identifier). "
             f"Available columns: {list(df.columns)}"
         )
 

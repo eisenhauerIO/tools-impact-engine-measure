@@ -182,11 +182,11 @@ class TestAggregateForApproximation:
         assert result[result["product_id"] == "P001"]["baseline_sales"].iloc[0] == 300
         assert result[result["product_id"] == "P002"]["baseline_sales"].iloc[0] == 400
 
-    def test_aggregation_with_asin(self):
-        """Test aggregation with asin column (catalog simulator format)."""
+    def test_aggregation_multiple_products(self):
+        """Test aggregation with multiple products."""
         data = pd.DataFrame(
             {
-                "asin": ["A001", "A001", "A002"],
+                "product_id": ["A001", "A001", "A002"],
                 "revenue": [100, 200, 300],
             }
         )
@@ -211,10 +211,10 @@ class TestAggregateForApproximation:
         assert result["baseline_sales"].iloc[0] == 300
 
     def test_missing_id_column_raises(self):
-        """Test missing product_id/asin raises ValueError."""
+        """Test missing product_id raises ValueError."""
         data = pd.DataFrame({"revenue": [100, 200]})
 
-        with pytest.raises(ValueError, match="product_id.*asin"):
+        with pytest.raises(ValueError, match="product_id"):
             aggregate_for_approximation(data, {})
 
     def test_missing_baseline_metric_raises(self):

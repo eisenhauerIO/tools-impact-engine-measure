@@ -34,16 +34,10 @@ def aggregate_for_approximation(data: pd.DataFrame, params: Dict[str, Any]) -> p
     """
     baseline_metric = params.get("baseline_metric", "revenue")
 
-    # Handle both 'product_id' and 'asin' column names
-    id_column = None
-    if "product_id" in data.columns:
-        id_column = "product_id"
-    elif "asin" in data.columns:
-        id_column = "asin"
-    else:
-        raise ValueError(
-            "Data must contain 'product_id' or 'asin' column for aggregate_for_approximation"
-        )
+    # Require 'product_id' column
+    if "product_id" not in data.columns:
+        raise ValueError("Data must contain 'product_id' column for aggregate_for_approximation")
+    id_column = "product_id"
 
     if baseline_metric not in data.columns:
         raise ValueError(f"Data must contain baseline metric column '{baseline_metric}'")

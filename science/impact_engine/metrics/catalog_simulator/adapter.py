@@ -219,14 +219,14 @@ class CatalogSimulatorAdapter(MetricsInterface):
             id_columns = [
                 col
                 for col in product_characteristics.columns
-                if "id" in col.lower() or col.lower() in ["product", "sku", "code"]
+                if "id" in col.lower() or col.lower() in ["product", "code"]
             ]
             if id_columns:
                 product_characteristics["product_id"] = product_characteristics[id_columns[0]]
             else:
                 product_characteristics["product_id"] = product_characteristics.index.astype(str)
 
-        # Use contract to transform product_id → asin
+        # Use contract to transform product_id → product_identifier
         product_characteristics = ProductSchema.to_external(
             product_characteristics, "catalog_simulator"
         )
@@ -256,13 +256,8 @@ class CatalogSimulatorAdapter(MetricsInterface):
         if external_data.empty:
             return pd.DataFrame(columns=MetricsSchema.all_columns())
 
-        # Handle case where both asin and product_identifier exist - prefer product_identifier
-        df = external_data.copy()
-        if "product_identifier" in df.columns and "asin" in df.columns:
-            df = df.drop(columns=["asin"])
-
-        # Use contract to transform product_identifier/asin → product_id, ordered_units → sales_volume
-        standardized = MetricsSchema.from_external(df, "catalog_simulator")
+        # Use contract to transform product_identifier → product_id, ordered_units → sales_volume
+        standardized = MetricsSchema.from_external(external_data, "catalog_simulator")
 
         # Handle legacy 'quantity' column (not in contract, manual fallback)
         if "quantity" in standardized.columns and "sales_volume" not in standardized.columns:
