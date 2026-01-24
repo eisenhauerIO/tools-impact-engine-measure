@@ -248,8 +248,10 @@ class TestMetricsFactory:
             manager = create_metrics_manager(config_path)
 
             assert isinstance(manager, MetricsManager)
-            # source_config is now the SOURCE.CONFIG part
-            assert manager.source_config == config["DATA"]["SOURCE"]["CONFIG"]
+            # source_config contains SOURCE.CONFIG values (merged with defaults)
+            expected_config = config["DATA"]["SOURCE"]["CONFIG"]
+            for key, value in expected_config.items():
+                assert manager.source_config[key] == value
 
     def test_create_metrics_manager_unknown_type(self):
         """Test creating manager with unknown adapter type."""

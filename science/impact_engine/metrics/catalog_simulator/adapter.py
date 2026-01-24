@@ -163,9 +163,14 @@ class CatalogSimulatorAdapter(MetricsInterface):
         products_original = self.simulation_job.load_df("product_details_original")
         products_enriched = self.simulation_job.load_df("product_details_enriched")
 
-        # Get enrichment_start from config
+        # Get enrichment_start from config (required parameter)
         enrichment_params = self.config["ENRICHMENT"].get("PARAMS", {})
-        enrichment_start = enrichment_params.get("enrichment_start", "2024-11-15")
+        enrichment_start = enrichment_params.get("enrichment_start")
+        if not enrichment_start:
+            raise ValueError(
+                "enrichment_start is required in ENRICHMENT.PARAMS when using enrichment. "
+                "Specify the date (YYYY-MM-DD) when enrichment begins."
+            )
         enrichment_date = pd.to_datetime(enrichment_start)
 
         # Create quality lookup by product

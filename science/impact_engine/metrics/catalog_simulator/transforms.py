@@ -5,7 +5,7 @@ These transforms handle the conversion of catalog simulator time-series
 metrics into formats suitable for different model types.
 """
 
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 import pandas as pd
 
@@ -63,8 +63,13 @@ def prepare_simulator_for_approximation(data: pd.DataFrame, params: Dict[str, An
     # Normalize column names using schema
     df = TransformSchema.from_external(data, "catalog_simulator")
 
-    # Detect product ID column (after normalization)
-    id_column = _detect_id_column(df, source="catalog_simulator")
+    # Detect product ID column using schema (after normalization)
+    id_column = TransformSchema.get_column(df, "product_id")
+    if not id_column:
+        raise ValueError(
+            f"Data must contain product_id or alias (asin, product_identifier). "
+            f"Available columns: {list(df.columns)}"
+        )
 
     # Validate required columns after normalization
     required_cols = ["date", "quality_score", baseline_metric]
@@ -120,36 +125,3 @@ def prepare_simulator_for_approximation(data: pd.DataFrame, params: Dict[str, An
             result[col] = before_agg[col]
 
     return result
-
-
-def _detect_id_column(df: pd.DataFrame, source: str = "catalog_simulator") -> str:
-    """Auto-detect product ID column in DataFrame using schema mappings.
-
-    Args:
-        df: DataFrame to inspect for ID column.
-        source: Source system name for schema lookup (default: catalog_simulator).
-
-    Returns:
-        str: Name of the detected ID column.
-
-    Raises:
-        ValueError: If no ID column found.
-    """
-    # Get all possible ID column names from schema
-    standard_id = "product_id"
-    possible_columns: List[str] = [standard_id]
-
-    # Add external column names from mappings
-    if source in TransformSchema.mappings:
-        for ext_col, std_col in TransformSchema.mappings[source].items():
-            if std_col == "product_id":
-                possible_columns.append(ext_col)
-
-    # Check which column exists
-    for col in possible_columns:
-        if col in df.columns:
-            return col
-
-    raise ValueError(
-        f"Data must contain one of: {possible_columns}. " f"Available columns: {list(df.columns)}"
-    )
