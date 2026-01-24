@@ -18,7 +18,12 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.intersphinx",
     "myst_parser",
+    "nbsphinx",
 ]
+
+# -- nbsphinx configuration --------------------------------------------------
+nbsphinx_execute = "always"
+nbsphinx_allow_errors = False
 
 templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]

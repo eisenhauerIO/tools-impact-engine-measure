@@ -64,5 +64,17 @@ dependencies = [
   "sphinx-rtd-theme>=1.3.0",
   "myst-parser>=2.0.0",
   "linkify-it-py>=2.0.0",
-  "sphinx-autodoc-typehints>=1.12.0"
+  "sphinx-autodoc-typehints>=1.12.0",
+  "nbsphinx>=0.9.0",
+  "ipykernel>=6.0.0",
+  "matplotlib>=3.5.0",
+  "seaborn>=0.12.0",
+  "pandas",
+  "pyyaml",
+  "statsmodels",
+  "online_retail_simulator @ git+https://github.com/eisenhauerIO/tools-catalog-generator.git",
+  "artifact-store @ git+https://github.com/eisenhauerIO/utils-artifact-store.git@b389fc5c3e558659626408996d9c896daed00b68",
 ]
+
+[tool.hatch.envs.docs.scripts]
+build = "cd documentation && sphinx-build -b html . _build/html"

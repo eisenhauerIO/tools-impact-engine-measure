@@ -3,6 +3,12 @@
 
 # Sphinx documentation
 docs/_build/
+documentation/_build/
 
 # External dependencies
 _external/
+
+# Notebook outputs
+output/
+documentation/notebooks/output/
+documentation/notebooks/data/

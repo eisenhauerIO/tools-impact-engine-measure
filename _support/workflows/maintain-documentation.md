@@ -109,6 +109,46 @@ result = evaluate_impact(config_path="config.yaml", storage_url="results/")
 For more examples, see the [User Stories](documentation/user-stories.md).
 ```
 
+## Formatting Standards
+
+### Code Elements
+
+Use backticks for all code-related elements:
+
+| Element | Format | Example |
+|---------|--------|---------|
+| Column names | `` `name` `` | `product_identifier` |
+| Functions/methods | `` `function()` `` | `evaluate_impact()` |
+| Variables | `` `variable` `` | `result_path` |
+| Parameters | `` `parameter` `` | `effect_size` |
+| Config files | `` `"file.yaml"` `` | `"config.yaml"` |
+| Object types | `` `Type` `` | `DataFrame` |
+| Directories | `` `dir/` `` (trailing slash) | `output/` |
+
+### Emphasis and Highlighting
+
+- **Bold** on first introduction of key concepts: "The **causal impact** measures..."
+- *Italics* for subtle meta-comments or emphasis: "The goal is *rapid insight generation*"
+- **Bold questions** for important callouts: "**Does improving product quality increase sales?**"
+- **UPPERCASE BOLD** for YAML configuration sections: **CHARACTERISTICS**
+- **lowercase bold** for conceptual phases: **validation**
+
+### Links and References
+
+- **First mention**: Use link with bold text: `[**Impact Engine**](https://github.com/...)`
+- **Subsequent mentions**: Plain bold or plain text (avoid re-linking)
+- Use meaningful link text (not "click here")
+
+### Numbers and Values
+
+- **Inline numbers**: Plain text: "Simulate 100 products"
+- **Parameter values**: Code formatted: "Set `effect_size: 0.5`"
+
+### String Examples
+
+- Use quotes for string values: `"2024-11-01"`
+- Use em-dash for inline examples: `**category** (such as Electronics, Clothing, or Books)`
+
 ## Review Checklist
 
 Before committing documentation changes, verify:

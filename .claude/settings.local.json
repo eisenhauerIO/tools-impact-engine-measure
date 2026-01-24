@@ -21,7 +21,10 @@
       "Bash(hatch run:*)",
       "Bash(done)",
       "Bash(hatch -e docs run:*)",
-      "Bash(git clean:*)"
+      "Bash(git clean:*)",
+      "Bash(git rm:*)",
+      "Bash(make:*)",
+      "Bash(hatch env remove:*)"
     ]
   }
 }

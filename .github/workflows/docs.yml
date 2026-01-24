@@ -29,10 +29,12 @@ jobs:
     - name: Install hatch
       run: pip install hatch
 
-    - name: Build documentation
+    - name: Execute notebooks
       run: |
-        cd documentation
-        hatch run docs:make html
+        hatch run docs:python -m jupyter nbconvert --to notebook --execute --inplace documentation/notebooks/*.ipynb
+
+    - name: Build documentation
+      run: hatch run docs:build
     
     - name: Setup Pages
       uses: actions/configure-pages@v4

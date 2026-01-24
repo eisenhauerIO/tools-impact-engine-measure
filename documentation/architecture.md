@@ -19,14 +19,21 @@ The system is organized into distinct layers:
 
 ### 2. Plugin-Based Extensibility
 
-Both metrics providers and models use a plugin architecture:
+Both metrics providers and models use a registry with decorator-based self-registration:
 
 ```python
+from impact_engine.metrics.factory import METRICS_REGISTRY
+from impact_engine.models.factory import MODEL_REGISTRY
+
 # Register custom metrics provider
-manager.register_metrics("salesforce", SalesforceAdapter)
+@METRICS_REGISTRY.register_decorator("salesforce")
+class SalesforceAdapter(MetricsInterface):
+    ...
 
 # Register custom model
-manager.register_model("causal_impact", CausalImpactModel)
+@MODEL_REGISTRY.register_decorator("my_model")
+class MyModelAdapter(Model):
+    ...
 ```
 
 ### 3. Configuration-Driven Behavior
@@ -60,10 +67,10 @@ All system behavior is controlled through declarative configuration. See [Config
          │                       ▲
          │                       │
          ▼              ┌────────┴────────┬─────────────────┐
-┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐
-│ Interrupted  │ │ Causal       │ │ Regression   │ │ Custom       │
-│ Time Series  │ │ Impact       │ │ Discontinuity│ │ Model        │
-└──────────────┘ └──────────────┘ └──────────────┘ └──────────────┘
+┌──────────────┐ ┌──────────────┐ ┌──────────────┐
+│ Interrupted  │ │ Metrics      │ │ Custom       │
+│ Time Series  │ │ Approximation│ │ Model        │
+└──────────────┘ └──────────────┘ └──────────────┘
 ```
 
 ## Package Structure
@@ -71,17 +78,35 @@ All system behavior is controlled through declarative configuration. See [Config
 ```
 impact_engine/
 ├── engine.py                    # Main orchestration engine
-├── config.py                    # Configuration parsing
+├── config.py                    # Configuration parsing (delegates to core.validation)
+├── core/
+│   ├── __init__.py             # Public API exports
+│   ├── registry.py             # Generic Registry and FunctionRegistry classes
+│   ├── contracts.py            # Schema definitions for data flow
+│   ├── transforms.py           # Transform registry and apply_transform()
+│   └── validation.py           # Centralized config validation pipeline
 ├── metrics/
 │   ├── __init__.py             # Public API exports
-│   ├── base.py                 # MetricsInterface + common utilities
+│   ├── base.py                 # MetricsInterface abstract base class
+│   ├── factory.py              # METRICS_REGISTRY and create_metrics_manager()
 │   ├── manager.py              # MetricsManager coordination logic
-│   └── adapter_catalog_simulator.py  # Built-in simulator
+│   ├── catalog_simulator/      # Built-in simulator adapter
+│   │   ├── adapter.py
+│   │   └── transforms.py
+│   └── file/                   # Built-in file adapter
+│       └── adapter.py
 └── models/
     ├── __init__.py             # Public API exports
-    ├── base.py                 # Model interface + common utilities
+    ├── base.py                 # Model abstract base class + ModelResult
+    ├── factory.py              # MODEL_REGISTRY and create_models_manager()
     ├── manager.py              # ModelsManager coordination logic
-    └── adapter_interrupted_time_series.py  # Built-in ITS model
+    ├── interrupted_time_series/  # Built-in ITS model
+    │   ├── adapter.py
+    │   └── transforms.py
+    └── metrics_approximation/  # Built-in approximation model
+        ├── adapter.py
+        ├── transforms.py
+        └── response_registry.py
 ```
 
 ## Interface Design
@@ -90,24 +115,48 @@ impact_engine/
 
 ```python
 class MetricsInterface(ABC):
+    # Required - must override
+    @abstractmethod
     def connect(self, config: Dict[str, Any]) -> bool
-    def validate_connection(self) -> bool
-    def transform_outbound(self, products, start_date, end_date) -> Dict[str, Any]
-    def transform_inbound(self, external_data) -> pd.DataFrame
-    def retrieve_business_metrics(self, products, start_date, end_date) -> pd.DataFrame
+    @abstractmethod
+    def retrieve_business_metrics(self, products: pd.DataFrame, start_date: str, end_date: str) -> pd.DataFrame
+
+    # Optional - have sensible defaults
+    def validate_connection(self) -> bool  # Default: returns True
+    def transform_outbound(self, products: pd.DataFrame, start_date: str, end_date: str) -> Dict[str, Any]  # Default: pass-through
+    def transform_inbound(self, external_data: Any) -> pd.DataFrame  # Default: returns DataFrame as-is
 ```
 
 ### Model Interface
 
 ```python
 class Model(ABC):
+    # Required - must override
+    @abstractmethod
     def connect(self, config: Dict[str, Any]) -> bool
-    def validate_connection(self) -> bool
-    def transform_outbound(self, data, intervention_date, **kwargs) -> Dict[str, Any]
-    def transform_inbound(self, model_results) -> Dict[str, Any]
-    def fit(self, data, intervention_date, output_path, **kwargs) -> str
-    def validate_data(self, data: pd.DataFrame) -> bool
-    def get_required_columns(self) -> List[str]
+    @abstractmethod
+    def fit(self, data: pd.DataFrame, **kwargs) -> ModelResult
+    @abstractmethod
+    def validate_params(self, params: Dict[str, Any]) -> None
+
+    # Optional - have sensible defaults
+    def validate_connection(self) -> bool  # Default: returns True
+    def validate_data(self, data: pd.DataFrame) -> bool  # Default: checks non-empty
+    def get_required_columns(self) -> List[str]  # Default: empty list
+    def transform_outbound(self, data: pd.DataFrame, **kwargs) -> Dict[str, Any]  # Default: pass-through
+    def transform_inbound(self, model_results: Any) -> Dict[str, Any]  # Default: wrap in dict
+```
+
+### ModelResult
+
+Models return a standardized `ModelResult` container, keeping models storage-agnostic:
+
+```python
+@dataclass
+class ModelResult:
+    model_type: str
+    data: Dict[str, Any]
+    metadata: Dict[str, Any] = field(default_factory=dict)
 ```
 
 ### Explicit Transformation
@@ -129,13 +178,50 @@ Configuration → Engine → MetricsManager → MetricsAdapter → External Data
             Analysis Output ← ← ← ← ← ← ← ← ← ← ← ← Standardized Results
 ```
 
+## Validation Strategy
+
+Validation is split between centralized config validation and adapter-specific validation to balance early failure with extensibility.
+
+### Centralized Validation (core/validation.py)
+
+Runs at startup via `process_config()`:
+
+1. **File validation**: Config file exists and is readable
+2. **Format validation**: Valid YAML/JSON syntax
+3. **Default merging**: Deep merge user config with `config_defaults.yaml`
+4. **Structure validation**: Required sections exist (`DATA`, `MEASUREMENT`, `SOURCE`, etc.)
+5. **Parameter validation**: Date formats, date ordering, universal constraints
+
+This catches structural errors before any expensive operations begin.
+
+### Adapter-Specific Validation
+
+Each model/adapter validates its own requirements via `validate_params()`:
+
+```python
+class InterruptedTimeSeriesAdapter(Model):
+    def validate_params(self, params: Dict[str, Any]) -> None:
+        if not params.get("intervention_date"):
+            raise ValueError("intervention_date is required for ITS model")
+```
+
+**Why this design?** Extensibility. Custom adapters can define arbitrary parameters without modifying centralized validation code. The system doesn't need to know about `my_custom_param` for a user-defined model—the model validates itself.
+
+### Validation Timing
+
+| What | Where | When |
+|------|-------|------|
+| Config structure | `process_config()` | Startup |
+| Date formats | `process_config()` | Startup |
+| Connection | Manager constructors | Manager creation |
+| Model params | `validate_params()` | Before `fit()` |
+| Data shape | `validate_data()` | Inside `fit()` |
+
+### Tradeoff
+
+Model-specific validation occurs after metrics retrieval. For expensive data sources, consider validating params earlier in custom orchestration code.
+
 ## Error Handling
-
-### Fail Fast Principle
-
-- Configuration validation at startup
-- Connection validation before data retrieval
-- Data schema validation before model fitting
 
 ### Graceful Degradation
 
@@ -147,25 +233,41 @@ Configuration → Engine → MetricsManager → MetricsAdapter → External Data
 
 ### For Metrics Adapter Authors
 
-1. Implement `MetricsInterface`
-2. Implement `connect()` and `validate_connection()` methods
-3. Implement `transform_outbound()` and `transform_inbound()` methods
-4. Handle source-specific connection logic
-5. Register with `MetricsManager`
+1. Implement `MetricsInterface` (required: `connect`, `retrieve_business_metrics`)
+2. Override optional methods as needed (`validate_connection`, `transform_outbound`, `transform_inbound`)
+3. Use the registry decorator to self-register:
+   ```python
+   from impact_engine.metrics.factory import METRICS_REGISTRY
+
+   @METRICS_REGISTRY.register_decorator("my_source")
+   class MySourceAdapter(MetricsInterface):
+       ...
+   ```
+3. Import your adapter module to trigger registration
 
 ### For Model Authors
 
-1. Implement `Model` interface
-2. Implement `connect()` and `validate_connection()` methods
-3. Implement `transform_outbound()` and `transform_inbound()` methods
-4. Handle model-specific fitting logic
-5. Produce standardized JSON output
-6. Register with `ModelsManager`
+1. Implement `Model` interface (required: `connect`, `fit`, `validate_params`)
+2. Override optional methods as needed (`validate_data`, `get_required_columns`, etc.)
+3. Return `ModelResult` from `fit()` — storage is handled by the manager
+4. Use the registry decorator to self-register:
+   ```python
+   from impact_engine.models.factory import MODEL_REGISTRY
+
+   @MODEL_REGISTRY.register_decorator("my_model")
+   class MyModelAdapter(Model):
+       def validate_params(self, params):
+           # Validate YOUR model's required params here
+           if not params.get("my_required_param"):
+               raise ValueError("my_required_param is required")
+       ...
+   ```
+5. Import your adapter module to trigger registration
 
 ### For Application Developers
 
-1. Create configuration file
-2. Register custom adapters (if needed)
+1. Create configuration file referencing your adapter type
+2. Ensure custom adapter modules are imported before calling the engine
 3. Call `evaluate_impact()` from `engine.py`
 
 ## Built-in Components
