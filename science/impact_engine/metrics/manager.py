@@ -7,6 +7,7 @@ This decouples coordination logic from adapter selection, enabling:
 - Adapter selection controlled by configuration, not hardcoded
 """
 
+from datetime import datetime
 from typing import Any, Dict, Optional
 
 import pandas as pd
@@ -28,6 +29,7 @@ class MetricsManager:
         self,
         source_config: Dict[str, Any],
         metrics_source: MetricsInterface,
+        source_type: str,
         parent_job: Optional[JobInfo] = None,
     ):
         """Initialize the MetricsManager with injected metrics source.
@@ -35,10 +37,12 @@ class MetricsManager:
         Args:
             source_config: SOURCE.CONFIG configuration block (pre-validated, with defaults merged).
             metrics_source: The metrics implementation to use for data retrieval.
+            source_type: The type of metrics source (e.g., "simulator", "file").
             parent_job: Optional parent job for artifact management.
         """
         self.source_config = source_config
         self.metrics_source = metrics_source
+        self.source_type = source_type
         self.parent_job = parent_job
 
         # Connect the injected metrics source
@@ -69,9 +73,15 @@ class MetricsManager:
         start_date = self.source_config["start_date"]
         end_date = self.source_config["end_date"]
 
-        return self.metrics_source.retrieve_business_metrics(
+        result = self.metrics_source.retrieve_business_metrics(
             products=products, start_date=start_date, end_date=end_date
         )
+
+        # Add metadata fields (centralized here instead of in each adapter)
+        result["metrics_source"] = self.source_type
+        result["retrieval_timestamp"] = datetime.now()
+
+        return result
 
     def get_current_config(self) -> Optional[Dict[str, Any]]:
         """Get the currently loaded configuration."""

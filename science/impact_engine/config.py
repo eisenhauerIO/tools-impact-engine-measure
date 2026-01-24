@@ -51,33 +51,3 @@ def parse_config_file(config_path: str) -> Dict[str, Any]:
     """Convenience function to parse a configuration file."""
     parser = ConfigurationParser()
     return parser.parse_config(config_path)
-
-
-# Helper functions for extracting config parts
-def get_source_config(config: Dict[str, Any]) -> Dict[str, Any]:
-    return config["DATA"]["SOURCE"]["CONFIG"]
-
-
-def get_source_type(config: Dict[str, Any]) -> str:
-    return config["DATA"]["SOURCE"]["type"]
-
-
-def get_transform_config(config: Dict[str, Any]) -> Dict[str, Any]:
-    """Injects enrichment_start into PARAMS if ENRICHMENT is configured."""
-    transform = config["DATA"]["TRANSFORM"]
-
-    enrichment = config["DATA"].get("ENRICHMENT")
-    if enrichment:
-        params = enrichment.get("PARAMS", {})
-        if "enrichment_start" in params:
-            transform["PARAMS"]["enrichment_start"] = params["enrichment_start"]
-
-    return transform
-
-
-def get_measurement_config(config: Dict[str, Any]) -> Dict[str, Any]:
-    return config["MEASUREMENT"]
-
-
-def get_measurement_params(config: Dict[str, Any]) -> Dict[str, Any]:
-    return config["MEASUREMENT"]["PARAMS"]

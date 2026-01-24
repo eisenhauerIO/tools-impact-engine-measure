@@ -4,8 +4,6 @@ from .base import MetricsInterface
 from .factory import (
     METRICS_REGISTRY,
     create_metrics_manager,
-    create_metrics_manager_from_config,
-    create_metrics_manager_from_source_config,
 )
 from .manager import MetricsManager
 
@@ -14,6 +12,4 @@ __all__ = [
     "MetricsInterface",
     "METRICS_REGISTRY",
     "create_metrics_manager",
-    "create_metrics_manager_from_config",
-    "create_metrics_manager_from_source_config",
 ]

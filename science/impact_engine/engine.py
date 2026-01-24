@@ -5,13 +5,9 @@ Impact analysis engine for the impact_engine package.
 import pandas as pd
 from artifact_store import create_job
 
-from .config import (
-    get_source_config,
-    get_transform_config,
-    parse_config_file,
-)
+from .config import parse_config_file
 from .core import apply_transform
-from .metrics import create_metrics_manager_from_source_config
+from .metrics import create_metrics_manager
 from .models import create_models_manager
 
 
@@ -29,8 +25,8 @@ def evaluate_impact(config_path: str, storage_url: str = "./data") -> str:
         str: URL to the saved model results (within the job directory)
     """
     config = parse_config_file(config_path)
-    source_config = get_source_config(config)
-    transform_config = get_transform_config(config)
+    source_config = config["DATA"]["SOURCE"]["CONFIG"]
+    transform_config = config["DATA"]["TRANSFORM"]
     data_path = source_config["path"]
 
     # storage_url allows tests to pass temp directories
@@ -42,7 +38,7 @@ def evaluate_impact(config_path: str, storage_url: str = "./data") -> str:
     products = pd.read_csv(data_path)
     job_store.write_csv("products.csv", products)
 
-    metrics_manager = create_metrics_manager_from_source_config(config, parent_job=job)
+    metrics_manager = create_metrics_manager(config, parent_job=job)
     models_manager = create_models_manager(config_path)
 
     business_metrics = metrics_manager.retrieve_metrics(products)

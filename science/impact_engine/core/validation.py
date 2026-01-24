@@ -103,7 +103,7 @@ def deep_merge(base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]
 # --- Validation Pipeline ---
 
 
-def validate_file(config_path: str) -> str:
+def _validate_file(config_path: str) -> str:
     """Stage 1: Validate file exists and is readable.
 
     Args:
@@ -126,7 +126,7 @@ def validate_file(config_path: str) -> str:
     return str(path.absolute())
 
 
-def validate_format(config_path: str) -> Dict[str, Any]:
+def _validate_format(config_path: str) -> Dict[str, Any]:
     """Stage 2: Parse file and validate it's proper YAML/JSON.
 
     Args:
@@ -157,7 +157,7 @@ def validate_format(config_path: str) -> Dict[str, Any]:
         raise ConfigValidationError(f"Failed to parse configuration file: {e}")
 
 
-def validate_structure(config: Dict[str, Any]) -> List[str]:
+def _validate_structure(config: Dict[str, Any]) -> List[str]:
     """Stage 3: Validate required top-level structure.
 
     Args:
@@ -188,7 +188,7 @@ def validate_structure(config: Dict[str, Any]) -> List[str]:
         else:
             source_config = source["CONFIG"]
             source_type = source.get("type", "simulator").lower()
-            
+
             # Required fields depend on source type
             if source_type == "file":
                 # File source only needs path
@@ -196,7 +196,7 @@ def validate_structure(config: Dict[str, Any]) -> List[str]:
             else:
                 # Simulator source needs path, start_date, end_date
                 required_fields = ["path", "start_date", "end_date"]
-            
+
             for field in required_fields:
                 if field not in source_config or source_config[field] is None:
                     errors.append(f"Missing required field: DATA.SOURCE.CONFIG.{field}")
@@ -211,7 +211,7 @@ def validate_structure(config: Dict[str, Any]) -> List[str]:
     return errors
 
 
-def validate_parameters(config: Dict[str, Any]) -> List[str]:
+def _validate_parameters(config: Dict[str, Any]) -> List[str]:
     """Stage 4: Validate parameter values and relationships.
 
     Validates:
@@ -260,59 +260,6 @@ def validate_parameters(config: Dict[str, Any]) -> List[str]:
             f"end_date ({end_date_str})"
         )
 
-    # Model-specific validation (only for known models)
-    measurement = config.get("MEASUREMENT", {})
-    model_type = measurement.get("MODEL")
-    params = measurement.get("PARAMS", {})
-
-    known = get_known_functions()
-    known_models = known.get("MODEL", set())
-
-    # Only validate params for known models
-    if model_type in known_models:
-        if model_type == "interrupted_time_series":
-            errors.extend(_validate_its_params(params))
-        # metrics_approximation has no required params at config level
-
-    return errors
-
-
-def _validate_its_params(params: Dict[str, Any]) -> List[str]:
-    """Validate Interrupted Time Series model parameters."""
-    errors = []
-
-    intervention_date = params.get("intervention_date")
-    if not intervention_date:
-        errors.append(
-            "Missing required field: MEASUREMENT.PARAMS.intervention_date "
-            "(required for interrupted_time_series model)"
-        )
-    else:
-        try:
-            datetime.strptime(intervention_date, "%Y-%m-%d")
-        except ValueError:
-            errors.append(
-                f"Invalid date format for MEASUREMENT.PARAMS.intervention_date: "
-                f"'{intervention_date}'. Expected YYYY-MM-DD"
-            )
-
-    # Validate order tuple if present
-    order = params.get("order")
-    if order is not None:
-        if not isinstance(order, (list, tuple)) or len(order) != 3:
-            errors.append(
-                f"MEASUREMENT.PARAMS.order must be a list of 3 integers (p, d, q), got: {order}"
-            )
-
-    # Validate seasonal_order tuple if present
-    seasonal_order = params.get("seasonal_order")
-    if seasonal_order is not None:
-        if not isinstance(seasonal_order, (list, tuple)) or len(seasonal_order) != 4:
-            errors.append(
-                f"MEASUREMENT.PARAMS.seasonal_order must be a list of 4 integers "
-                f"(P, D, Q, s), got: {seasonal_order}"
-            )
-
     return errors
 
 
@@ -339,10 +286,10 @@ def process_config(config_path: str) -> Dict[str, Any]:
         ConfigValidationError: If any validation stage fails.
     """
     # Stage 1: File validation
-    validated_path = validate_file(config_path)
+    validated_path = _validate_file(config_path)
 
     # Stage 2: Format validation (parse file)
-    user_config = validate_format(validated_path)
+    user_config = _validate_format(validated_path)
 
     # Load defaults
     defaults = get_defaults()
@@ -351,17 +298,27 @@ def process_config(config_path: str) -> Dict[str, Any]:
     merged_config = deep_merge(defaults, user_config)
 
     # Stage 4: Structure validation
-    structure_errors = validate_structure(merged_config)
+    structure_errors = _validate_structure(merged_config)
     if structure_errors:
         raise ConfigValidationError(
             "Configuration structure errors:\n  - " + "\n  - ".join(structure_errors)
         )
 
     # Stage 5: Parameter validation
-    param_errors = validate_parameters(merged_config)
+    param_errors = _validate_parameters(merged_config)
     if param_errors:
         raise ConfigValidationError(
             "Configuration parameter errors:\n  - " + "\n  - ".join(param_errors)
         )
+
+    # Stage 6: Inject enrichment_start into TRANSFORM.PARAMS if ENRICHMENT is configured
+    # This makes enrichment configuration explicit and predictable
+    enrichment = merged_config["DATA"].get("ENRICHMENT")
+    if enrichment:
+        params = enrichment.get("PARAMS", {})
+        if "enrichment_start" in params:
+            merged_config["DATA"]["TRANSFORM"]["PARAMS"]["enrichment_start"] = params[
+                "enrichment_start"
+            ]
 
     return merged_config

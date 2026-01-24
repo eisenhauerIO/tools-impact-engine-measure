@@ -13,15 +13,7 @@ from .validation import get_defaults
 def _get_catalog_simulator_defaults() -> Dict[str, Any]:
     """Get catalog simulator defaults from config_defaults.yaml."""
     defaults = get_defaults()
-    return defaults.get(
-        "CATALOG_SIMULATOR",
-        {
-            "sale_prob": 0.7,
-            "impression_to_visit_rate": 0.15,
-            "visit_to_cart_rate": 0.25,
-            "cart_to_order_rate": 0.80,
-        },
-    )
+    return defaults["CATALOG_SIMULATOR"]
 
 
 class ConfigBridge:

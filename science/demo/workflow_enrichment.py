@@ -15,7 +15,7 @@ import os
 
 import pandas as pd
 import yaml
-from impact_engine import evaluate_impact
+from impact_engine import evaluate_impact, parse_config_file
 from impact_engine.metrics import create_metrics_manager
 from online_retail_simulator import simulate_characteristics
 
@@ -160,7 +160,8 @@ if __name__ == "__main__":
     with open("_temp_baseline.yaml", "w") as f:
         yaml.dump(baseline_config, f)
 
-    baseline_manager = create_metrics_manager("_temp_baseline.yaml")
+    parsed_baseline_config = parse_config_file("_temp_baseline.yaml")
+    baseline_manager = create_metrics_manager(parsed_baseline_config)
     baseline_metrics = baseline_manager.retrieve_metrics(products)
     os.remove("_temp_baseline.yaml")
     print(f"  Generated {len(baseline_metrics)} baseline records")
@@ -170,7 +171,8 @@ if __name__ == "__main__":
     with open("config_enrichment.yaml", "w") as f:
         yaml.dump(config, f)
 
-    enriched_manager = create_metrics_manager("config_enrichment.yaml")
+    parsed_enriched_config = parse_config_file("config_enrichment.yaml")
+    enriched_manager = create_metrics_manager(parsed_enriched_config)
     enriched_metrics = enriched_manager.retrieve_metrics(products)
     print(f"  Generated {len(enriched_metrics)} enriched records")
 

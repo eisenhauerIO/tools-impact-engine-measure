@@ -25,20 +25,6 @@ class TestCatalogSimulatorAdapter:
         assert adapter.config["mode"] == config["mode"]
         assert adapter.config["seed"] == config["seed"]
 
-    def test_connect_invalid_mode(self):
-        """Test connection with invalid mode."""
-        adapter = CatalogSimulatorAdapter()
-
-        with pytest.raises(ValueError, match="Invalid simulator mode 'invalid'"):
-            adapter.connect({"mode": "invalid", "seed": 42})
-
-    def test_connect_invalid_seed(self):
-        """Test connection with invalid seed."""
-        adapter = CatalogSimulatorAdapter()
-
-        with pytest.raises(ValueError, match="Simulator seed must be a non-negative integer"):
-            adapter.connect({"mode": "rule", "seed": -1})
-
     def test_connect_stores_config(self):
         """Test that connect stores provided config values."""
         adapter = CatalogSimulatorAdapter()
@@ -157,15 +143,12 @@ class TestCatalogSimulatorAdapter:
         assert "product_id" in result.columns  # product_identifier mapped to product_id
         assert "sales_volume" in result.columns  # ordered_units mapped to sales_volume
         assert "revenue" in result.columns
-        assert "metrics_source" in result.columns
-        assert "retrieval_timestamp" in result.columns
-        # inventory_level and customer_engagement are not fabricated
+        # Metadata (metrics_source, retrieval_timestamp) is now added by MetricsManager
 
         # Check that product_identifier was mapped to product_id
         assert result["product_id"].iloc[0] == "prod1"
         # Check that ordered_units was mapped to sales_volume
         assert result["sales_volume"].iloc[0] == 5
-        assert result["metrics_source"].iloc[0] == "catalog_simulator"
 
     def test_transform_inbound_invalid_input(self):
         """Test inbound transformation with invalid input."""

@@ -8,7 +8,6 @@ import pandas as pd
 import pytest
 
 from impact_engine import evaluate_impact
-from impact_engine.config import ConfigurationError
 
 
 class TestEvaluateImpactIntegration:
@@ -128,8 +127,8 @@ class TestEvaluateImpactIntegration:
             with open(config_path, "w") as f:
                 json.dump(config, f)
 
-            # Should raise ConfigurationError for missing intervention_date
-            with pytest.raises(ConfigurationError, match="intervention_date"):
+            # Should raise ValueError for missing intervention_date (validated by model)
+            with pytest.raises(ValueError, match="intervention_date"):
                 evaluate_impact(config_path=config_path, storage_url=tmpdir)
 
     def test_evaluate_impact_returns_model_results_path(self):

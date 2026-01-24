@@ -8,11 +8,11 @@ from unittest.mock import Mock
 import pandas as pd
 import pytest
 
+from impact_engine import parse_config_file
 from impact_engine.metrics import (
     MetricsInterface,
     MetricsManager,
     create_metrics_manager,
-    create_metrics_manager_from_config,
 )
 from impact_engine.metrics.factory import METRICS_REGISTRY
 
@@ -81,7 +81,7 @@ class TestMetricsManagerDependencyInjection:
         mock_adapter = MockMetricsAdapter()
         config = complete_source_config()
 
-        manager = MetricsManager(config, mock_adapter)
+        manager = MetricsManager(config, mock_adapter, source_type="mock")
 
         assert manager.metrics_source is mock_adapter
         assert mock_adapter.is_connected is True
@@ -93,7 +93,7 @@ class TestMetricsManagerDependencyInjection:
 
         config = complete_source_config()
 
-        manager = MetricsManager(config, mock_adapter)
+        manager = MetricsManager(config, mock_adapter, source_type="mock")
 
         mock_adapter.connect.assert_called_once()
         assert manager.metrics_source is mock_adapter
@@ -103,7 +103,7 @@ class TestMetricsManagerDependencyInjection:
         mock_adapter = MockMetricsAdapter()
         config = complete_source_config(mode="ml", seed=123)
 
-        MetricsManager(config, mock_adapter)
+        MetricsManager(config, mock_adapter, source_type="mock")
 
         assert mock_adapter.config["mode"] == "ml"
         assert mock_adapter.config["seed"] == 123
@@ -114,7 +114,7 @@ class TestMetricsManagerDependencyInjection:
         enrichment = {"FUNCTION": "quantity_boost", "PARAMS": {"effect_size": 0.3}}
         config = complete_source_config(ENRICHMENT=enrichment)
 
-        MetricsManager(config, mock_adapter)
+        MetricsManager(config, mock_adapter, source_type="mock")
 
         assert mock_adapter.config["ENRICHMENT"] == enrichment
 
@@ -131,7 +131,7 @@ class TestMetricsManagerConfiguration:
         mock_adapter = MockMetricsAdapter()
         config = complete_source_config()
 
-        manager = MetricsManager(config, mock_adapter)
+        manager = MetricsManager(config, mock_adapter, source_type="mock")
         assert manager.get_current_config() == config
 
 
@@ -143,7 +143,7 @@ class TestMetricsManagerRetrieveMetrics:
         mock_adapter = MockMetricsAdapter()
         config = complete_source_config()
 
-        manager = MetricsManager(config, mock_adapter)
+        manager = MetricsManager(config, mock_adapter, source_type="mock")
         products = pd.DataFrame({"product_id": ["test_product"], "name": ["Test Product"]})
 
         result = manager.retrieve_metrics(products)
@@ -161,7 +161,7 @@ class TestMetricsManagerRetrieveMetrics:
         )
 
         config = complete_source_config()
-        manager = MetricsManager(config, mock_adapter)
+        manager = MetricsManager(config, mock_adapter, source_type="mock")
 
         products = pd.DataFrame({"product_id": ["p1"]})
         manager.retrieve_metrics(products)
@@ -175,7 +175,7 @@ class TestMetricsManagerRetrieveMetrics:
         mock_adapter = MockMetricsAdapter()
         config = complete_source_config()
 
-        manager = MetricsManager(config, mock_adapter)
+        manager = MetricsManager(config, mock_adapter, source_type="mock")
 
         with pytest.raises(ValueError, match="Products DataFrame cannot be empty"):
             manager.retrieve_metrics(pd.DataFrame())
@@ -185,7 +185,7 @@ class TestMetricsManagerRetrieveMetrics:
         mock_adapter = MockMetricsAdapter()
         config = complete_source_config()
 
-        manager = MetricsManager(config, mock_adapter)
+        manager = MetricsManager(config, mock_adapter, source_type="mock")
 
         with pytest.raises(ValueError, match="Products DataFrame cannot be empty"):
             manager.retrieve_metrics(None)
@@ -194,24 +194,8 @@ class TestMetricsManagerRetrieveMetrics:
 class TestMetricsFactory:
     """Tests for factory functions."""
 
-    def test_create_metrics_manager_from_config_dict(self):
-        """Test creating manager from config dict."""
-        # Register mock adapter
-        METRICS_REGISTRY.register("mock", MockMetricsAdapter)
-
-        try:
-            config = complete_source_config(TYPE="mock")
-
-            manager = create_metrics_manager_from_config(config)
-
-            assert isinstance(manager, MetricsManager)
-            assert isinstance(manager.metrics_source, MockMetricsAdapter)
-        finally:
-            # Clean up
-            del METRICS_REGISTRY._registry["mock"]
-
-    def test_create_metrics_manager_from_file(self):
-        """Test creating manager from config file."""
+    def test_create_metrics_manager_from_config(self):
+        """Test creating manager from parsed config."""
         with tempfile.TemporaryDirectory() as tmpdir:
             products_path = str(Path(tmpdir) / "products.csv")
             pd.DataFrame({"product_id": ["p1"]}).to_csv(products_path, index=False)
@@ -245,20 +229,14 @@ class TestMetricsFactory:
             with open(config_path, "w") as f:
                 json.dump(config, f)
 
-            manager = create_metrics_manager(config_path)
+            parsed_config = parse_config_file(config_path)
+            manager = create_metrics_manager(parsed_config)
 
             assert isinstance(manager, MetricsManager)
             # source_config contains SOURCE.CONFIG values (merged with defaults)
             expected_config = config["DATA"]["SOURCE"]["CONFIG"]
             for key, value in expected_config.items():
                 assert manager.source_config[key] == value
-
-    def test_create_metrics_manager_unknown_type(self):
-        """Test creating manager with unknown adapter type."""
-        config = complete_source_config(TYPE="unknown_type")
-
-        with pytest.raises(ValueError, match="Unknown metrics adapter"):
-            create_metrics_manager_from_config(config)
 
     def test_register_invalid_adapter(self):
         """Test registering invalid adapter class."""
@@ -281,4 +259,4 @@ class TestMetricsManagerConnectionFailure:
         config = complete_source_config()
 
         with pytest.raises(ConnectionError, match="Failed to connect"):
-            MetricsManager(config, mock_adapter)
+            MetricsManager(config, mock_adapter, source_type="mock")

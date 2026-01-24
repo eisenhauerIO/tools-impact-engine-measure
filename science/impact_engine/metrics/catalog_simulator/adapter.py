@@ -6,7 +6,6 @@ Integration is governed by contracts (schemas) and config bridge (config transla
 
 import os
 import tempfile
-from datetime import datetime
 from typing import Any, Dict, Optional
 
 import pandas as pd
@@ -38,22 +37,14 @@ class CatalogSimulatorAdapter(MetricsInterface):
 
         Config is pre-validated with defaults merged via process_config().
         """
-        mode = config["mode"]
-        if mode not in ["rule", "ml"]:
-            raise ValueError(f"Invalid simulator mode '{mode}'. Must be 'rule' or 'ml'")
-
-        seed = config["seed"]
-        if not isinstance(seed, int) or seed < 0:
-            raise ValueError("Simulator seed must be a non-negative integer")
-
         self.parent_job = config.get("parent_job")
 
         # storage_path is an internal parameter (not in user config), fallback is appropriate
         storage_path = config.get("storage_path", "output")
 
         self.config = {
-            "mode": mode,
-            "seed": seed,
+            "mode": config["mode"],
+            "seed": config["seed"],
             "storage_path": storage_path,
         }
 
@@ -259,18 +250,9 @@ class CatalogSimulatorAdapter(MetricsInterface):
         # Use contract to transform product_identifier → product_id, ordered_units → sales_volume
         standardized = MetricsSchema.from_external(external_data, "catalog_simulator")
 
-        # Handle legacy 'quantity' column (not in contract, manual fallback)
-        if "quantity" in standardized.columns and "sales_volume" not in standardized.columns:
-            standardized["sales_volume"] = standardized["quantity"]
-            standardized.drop("quantity", axis=1, inplace=True)
-
         # Ensure date column is datetime
         if "date" in standardized.columns:
             standardized["date"] = pd.to_datetime(standardized["date"])
-
-        # Add metadata fields
-        standardized["metrics_source"] = "catalog_simulator"
-        standardized["retrieval_timestamp"] = datetime.now()
 
         # Ensure proper data types
         if "price" in standardized.columns:

@@ -6,7 +6,6 @@ produce data files that impact-engine consumes.
 """
 
 import logging
-from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -26,12 +25,12 @@ class FileAdapter(MetricsInterface):
     Configuration:
         DATA:
             SOURCE:
-                TYPE: file
+                type: file
                 CONFIG:
-                    PATH: path/to/data.csv
+                    path: path/to/data.csv
                     # Optional parameters:
-                    DATE_COLUMN: date        # Column name for date filtering
-                    PRODUCT_ID_COLUMN: product_id  # Column name for product IDs
+                    date_column: date        # Column name for date filtering
+                    product_id_column: product_id  # Column name for product IDs
     """
 
     def __init__(self):
@@ -45,7 +44,7 @@ class FileAdapter(MetricsInterface):
         """Initialize adapter with configuration parameters.
 
         Args:
-            config: Dictionary containing:
+            config: Dictionary containing (lowercase keys, merged via process_config):
                 - path: Path to the data file (required)
                 - date_column: Column name for dates (optional)
                 - product_id_column: Column name for product IDs (optional, default: product_id)
@@ -57,8 +56,7 @@ class FileAdapter(MetricsInterface):
             ValueError: If required configuration is missing
             FileNotFoundError: If the specified file doesn't exist
         """
-        # Support both lowercase (preferred) and uppercase for backwards compatibility
-        path = config.get("path") or config.get("PATH")
+        path = config.get("path")
         if not path:
             raise ValueError("'path' is required in file adapter configuration")
 
@@ -68,8 +66,8 @@ class FileAdapter(MetricsInterface):
 
         self.config = {
             "path": str(file_path),
-            "date_column": config.get("date_column") or config.get("DATE_COLUMN"),
-            "product_id_column": config.get("product_id_column") or config.get("PRODUCT_ID_COLUMN", "product_id"),
+            "date_column": config.get("date_column"),
+            "product_id_column": config.get("product_id_column", "product_id"),
         }
 
         # Pre-load data for validation
@@ -131,7 +129,9 @@ class FileAdapter(MetricsInterface):
             start = pd.to_datetime(start_date)
             end = pd.to_datetime(end_date)
             result = result[(result[date_col] >= start) & (result[date_col] <= end)]
-            self.logger.info(f"Filtered to {len(result)} rows for date range {start_date} to {end_date}")
+            self.logger.info(
+                f"Filtered to {len(result)} rows for date range {start_date} to {end_date}"
+            )
 
         # Filter by products if provided and product_id column exists
         if products is not None and len(products) > 0:
@@ -197,9 +197,5 @@ class FileAdapter(MetricsInterface):
         id_col = self.config.get("product_id_column", "product_id")
         if id_col in result.columns and id_col != "product_id":
             result["product_id"] = result[id_col]
-
-        # Add metadata
-        result["metrics_source"] = "file"
-        result["retrieval_timestamp"] = datetime.now()
 
         return result
