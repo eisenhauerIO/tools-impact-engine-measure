@@ -9,6 +9,7 @@ This demo shows the typical usage pattern:
 Output: Impact approximation results
 """
 
+import json
 import tempfile
 from pathlib import Path
 
@@ -83,7 +84,11 @@ def run_demo():
     print("   - Transform extracts quality_before/quality_after")
     print("   - MetricsApproximationAdapter computes impact")
 
-    results = evaluate_impact(str(CONFIG_PATH), str(output_path / "results"))
+    results_path = evaluate_impact(str(CONFIG_PATH), str(output_path / "results"))
+
+    # Load results from the JSON file
+    with open(results_path) as f:
+        results = json.load(f)
 
     # 4. Display results
     print("\n4. Results:")
@@ -111,7 +116,7 @@ def run_demo():
 
     print("\n" + "=" * 60)
     print("Demo Complete!")
-    print(f"Results saved to: {output_path / 'results'}")
+    print(f"Results saved to: {results_path}")
     print("=" * 60)
 
     return results

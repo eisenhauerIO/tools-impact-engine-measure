@@ -1,5 +1,4 @@
 DATA:
-  path: output/products.csv
   SOURCE:
     CONFIG:
       end_date: '2024-11-30'
@@ -12,6 +11,7 @@ DATA:
     FUNCTION: aggregate_by_date
     PARAMS:
       metric: revenue
+  path: output/products.csv
 MEASUREMENT:
   MODEL: interrupted_time_series
   PARAMS:

@@ -18,7 +18,7 @@ This removes all existing environments and ensures a clean start.
 
 Run:
 ```bash
-git status --porcelain
+git status --porcelain | grep -v '\.claude/'
 ```
 If any files are listed (output is not empty), STOP. This means there are either uncommitted changes or files not under version control (untracked files).
 
