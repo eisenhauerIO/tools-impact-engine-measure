@@ -1,13 +1,14 @@
 """
-Generic registry for class-based components.
+Generic registries for components.
 
-This module provides a reusable Registry class that handles registration,
-lookup, and validation for adapters like models and metrics sources.
+This module provides reusable Registry classes that handle registration,
+lookup, and validation for adapters like models, metrics sources, and functions.
 """
 
 from typing import Callable, Dict, Generic, List, Type, TypeVar
 
 T = TypeVar("T")
+F = TypeVar("F", bound=Callable)
 
 
 class Registry(Generic[T]):
@@ -83,5 +84,77 @@ class Registry(Generic[T]):
         def decorator(cls: Type[T]) -> Type[T]:
             self.register(key, cls)
             return cls
+
+        return decorator
+
+
+class FunctionRegistry(Generic[F]):
+    """Generic registry for callable functions.
+
+    Unlike Registry which stores and instantiates classes,
+    FunctionRegistry stores and returns callables directly.
+
+    Example:
+        TRANSFORM_REGISTRY = FunctionRegistry("transform")
+        TRANSFORM_REGISTRY.register("my_transform", my_transform_func)
+        transform = TRANSFORM_REGISTRY.get("my_transform")
+    """
+
+    def __init__(self, name: str):
+        """Initialize the registry.
+
+        Args:
+            name: Human-readable name for error messages (e.g., "transform").
+        """
+        self._registry: Dict[str, F] = {}
+        self._name = name
+
+    def register(self, key: str, func: F) -> None:
+        """Register a function under the given key.
+
+        Args:
+            key: The identifier to register the function under.
+            func: The callable to register.
+
+        Raises:
+            ValueError: If func is not callable.
+        """
+        if not callable(func):
+            raise ValueError(f"{self._name} must be callable, got {type(func)}")
+        self._registry[key] = func
+
+    def get(self, key: str) -> F:
+        """Get a registered function by key.
+
+        Args:
+            key: The identifier to look up.
+
+        Returns:
+            The registered callable.
+
+        Raises:
+            ValueError: If the key is not registered.
+        """
+        if key not in self._registry:
+            available = list(self._registry.keys())
+            raise ValueError(f"Unknown {self._name} '{key}'. Available: {available}")
+        return self._registry[key]
+
+    def keys(self) -> List[str]:
+        """Return all registered keys."""
+        return list(self._registry.keys())
+
+    def register_decorator(self, key: str) -> Callable[[F], F]:
+        """Return a decorator that registers the function under the given key.
+
+        Example:
+            @TRANSFORM_REGISTRY.register_decorator("my_transform")
+            def my_transform(data, params):
+                ...
+        """
+
+        def decorator(func: F) -> F:
+            self.register(key, func)
+            return func
 
         return decorator

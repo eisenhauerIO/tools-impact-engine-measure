@@ -4,7 +4,7 @@ import pytest
 
 from impact_engine.models.metrics_approximation.response_library import linear_response
 from impact_engine.models.metrics_approximation.response_registry import (
-    RESPONSE_FUNCTIONS,
+    RESPONSE_REGISTRY,
     get_response_function,
     register_response_function,
 )
@@ -70,12 +70,12 @@ class TestResponseRegistry:
 
         register_response_function("custom", custom_response)
 
-        assert "custom" in RESPONSE_FUNCTIONS
+        assert "custom" in RESPONSE_REGISTRY.keys()
         func = get_response_function("custom")
         assert func(0.5, 100) == 1.0
 
         # Cleanup
-        del RESPONSE_FUNCTIONS["custom"]
+        del RESPONSE_REGISTRY._registry["custom"]
 
     def test_register_non_callable_raises(self):
         """Registering non-callable raises ValueError."""
@@ -84,4 +84,4 @@ class TestResponseRegistry:
 
     def test_linear_is_registered(self):
         """Linear function is registered by default."""
-        assert "linear" in RESPONSE_FUNCTIONS
+        assert "linear" in RESPONSE_REGISTRY.keys()

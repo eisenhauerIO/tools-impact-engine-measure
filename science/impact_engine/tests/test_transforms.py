@@ -38,7 +38,7 @@ class TestTransformRegistry:
 
     def test_get_transform_unknown_raises(self):
         """Test that unknown transform raises ValueError."""
-        with pytest.raises(ValueError, match="Unknown transform function"):
+        with pytest.raises(ValueError, match="Unknown transform"):
             get_transform("nonexistent_transform")
 
     def test_get_transform_error_message_includes_available(self):
@@ -53,11 +53,11 @@ class TestTransformRegistry:
         def custom_transform(df: pd.DataFrame, params: dict) -> pd.DataFrame:
             return df
 
-        assert "test_custom_transform" in TRANSFORM_REGISTRY
+        assert "test_custom_transform" in TRANSFORM_REGISTRY.keys()
         assert get_transform("test_custom_transform") is custom_transform
 
         # Cleanup
-        del TRANSFORM_REGISTRY["test_custom_transform"]
+        del TRANSFORM_REGISTRY._registry["test_custom_transform"]
 
     def test_register_non_callable_raises(self):
         """Test that registering non-callable raises ValueError."""
