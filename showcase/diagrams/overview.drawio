@@ -1,0 +1,77 @@
+<mxfile host="app.diagrams.net" modified="2026-01-28T00:00:00.000Z" agent="Claude" version="21.0.0" type="device">
+  <diagram name="Overview" id="overview">
+    <mxGraphModel dx="1000" dy="600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="720" pageHeight="420" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- Data Sources Group -->
+        <mxCell id="ds-group" value="Data Sources" style="swimlane;startSize=30;fillColor=#dae8fc;strokeColor=#6c8ebf;rounded=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="20" y="60" width="180" height="140" as="geometry"/>
+        </mxCell>
+        <mxCell id="ds-sim" value="Simulator" style="rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="ds-group">
+          <mxGeometry x="15" y="40" width="150" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="ds-db" value="Database" style="rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="ds-group">
+          <mxGeometry x="15" y="74" width="150" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="ds-custom" value="Custom Source..." style="rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="ds-group">
+          <mxGeometry x="15" y="108" width="150" height="28" as="geometry"/>
+        </mxCell>
+
+        <!-- Impact Engine Group -->
+        <mxCell id="ie-group" value="Impact Engine" style="swimlane;startSize=30;fillColor=#d5e8d4;strokeColor=#82b366;rounded=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="220" y="60" width="260" height="140" as="geometry"/>
+        </mxCell>
+        <mxCell id="ie-metrics" value="Metrics Layer" style="rounded=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="ie-group">
+          <mxGeometry x="20" y="45" width="100" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="ie-models" value="Models Layer" style="rounded=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="ie-group">
+          <mxGeometry x="140" y="45" width="100" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="ie-storage" value="Storage Layer" style="rounded=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="ie-group">
+          <mxGeometry x="80" y="95" width="100" height="28" as="geometry"/>
+        </mxCell>
+
+        <!-- Statistical Models Group -->
+        <mxCell id="sm-group" value="Statistical Models" style="swimlane;startSize=30;fillColor=#e1d5e7;strokeColor=#9673a6;rounded=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="500" y="60" width="180" height="140" as="geometry"/>
+        </mxCell>
+        <mxCell id="sm-its" value="InterruptedTimeSeries" style="rounded=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="sm-group">
+          <mxGeometry x="15" y="40" width="150" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="sm-ma" value="MetricsApproximation" style="rounded=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="sm-group">
+          <mxGeometry x="15" y="74" width="150" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="sm-custom" value="Custom Model..." style="rounded=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="sm-group">
+          <mxGeometry x="15" y="108" width="150" height="28" as="geometry"/>
+        </mxCell>
+
+        <!-- Data Storage Group -->
+        <mxCell id="ds-storage-group" value="Data Storage" style="swimlane;startSize=30;fillColor=#ffe6cc;strokeColor=#d79b00;rounded=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="260" y="260" width="180" height="140" as="geometry"/>
+        </mxCell>
+        <mxCell id="ds-local" value="Local Storage" style="rounded=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;" vertex="1" parent="ds-storage-group">
+          <mxGeometry x="15" y="40" width="150" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="ds-s3" value="S3 Storage" style="rounded=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;" vertex="1" parent="ds-storage-group">
+          <mxGeometry x="15" y="74" width="150" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="ds-custom-backend" value="Custom Backend..." style="rounded=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;" vertex="1" parent="ds-storage-group">
+          <mxGeometry x="15" y="108" width="150" height="28" as="geometry"/>
+        </mxCell>
+
+        <!-- Arrows -->
+        <mxCell id="arrow1" style="endArrow=classic;strokeWidth=2;strokeColor=#666666;" edge="1" parent="1" source="ds-group" target="ie-group">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="arrow2" style="endArrow=classic;strokeWidth=2;strokeColor=#666666;" edge="1" parent="1" source="sm-group" target="ie-group">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="arrow3" style="endArrow=classic;strokeWidth=2;strokeColor=#666666;" edge="1" parent="1" source="ie-group" target="ds-storage-group">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

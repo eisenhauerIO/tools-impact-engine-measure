@@ -1,0 +1,165 @@
+<mxfile host="app.diagrams.net" modified="2026-01-28T00:00:00.000Z" agent="Claude" version="21.0.0" type="device">
+  <diagram name="Integration" id="integration">
+    <mxGraphModel dx="1000" dy="700" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="800" pageHeight="600" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- Participants -->
+        <mxCell id="p-client" value="Client" style="rounded=1;fillColor=#e8eaf6;strokeColor=#3f51b5;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="30" y="20" width="80" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="p-engine" value="Engine&#xa;evaluate_impact()" style="rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="140" y="20" width="100" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="p-mm" value="MM&#xa;MetricsManager" style="rounded=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="270" y="20" width="100" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="p-adapter" value="Adapter&#xa;CatalogSimulator" style="rounded=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="400" y="20" width="100" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="p-mo" value="MO&#xa;ModelsManager" style="rounded=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="530" y="20" width="100" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="p-model" value="Model&#xa;ITS" style="rounded=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="660" y="20" width="80" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- Lifelines -->
+        <mxCell id="ll-client" style="strokeColor=#999999;strokeWidth=1;dashed=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="70" y="60" as="sourcePoint"/>
+            <mxPoint x="70" y="560" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ll-engine" style="strokeColor=#999999;strokeWidth=1;dashed=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="190" y="60" as="sourcePoint"/>
+            <mxPoint x="190" y="560" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ll-mm" style="strokeColor=#999999;strokeWidth=1;dashed=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="320" y="60" as="sourcePoint"/>
+            <mxPoint x="320" y="560" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ll-adapter" style="strokeColor=#999999;strokeWidth=1;dashed=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="450" y="60" as="sourcePoint"/>
+            <mxPoint x="450" y="560" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ll-mo" style="strokeColor=#999999;strokeWidth=1;dashed=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="580" y="60" as="sourcePoint"/>
+            <mxPoint x="580" y="560" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ll-model" style="strokeColor=#999999;strokeWidth=1;dashed=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="700" y="60" as="sourcePoint"/>
+            <mxPoint x="700" y="560" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Messages -->
+        <mxCell id="msg1" value="config_path, storage_url" style="endArrow=classic;strokeColor=#333333;" edge="1" parent="1">
+          <mxGeometry x="-0.5" relative="1" as="geometry">
+            <mxPoint x="70" y="90" as="sourcePoint"/>
+            <mxPoint x="190" y="90" as="targetPoint"/>
+            <mxPoint as="offset"/>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="msg2" value="create_metrics_manager(config)" style="endArrow=classic;strokeColor=#333333;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="190" y="130" as="sourcePoint"/>
+            <mxPoint x="320" y="130" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="msg3" value="connect(config)" style="endArrow=classic;strokeColor=#333333;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="320" y="170" as="sourcePoint"/>
+            <mxPoint x="450" y="170" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="msg4" value="retrieve_metrics(products)" style="endArrow=classic;strokeColor=#333333;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="190" y="210" as="sourcePoint"/>
+            <mxPoint x="320" y="210" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="msg5" value="retrieve_business_metrics()" style="endArrow=classic;strokeColor=#333333;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="320" y="250" as="sourcePoint"/>
+            <mxPoint x="450" y="250" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="msg6" value="standardized DataFrame" style="endArrow=classic;strokeColor=#333333;dashed=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="450" y="290" as="sourcePoint"/>
+            <mxPoint x="320" y="290" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="msg7" value="business_metrics" style="endArrow=classic;strokeColor=#333333;dashed=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="320" y="330" as="sourcePoint"/>
+            <mxPoint x="190" y="330" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="msg8" value="apply_transform()" style="rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="195" y="355" width="100" height="25" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="msg9" value="create_models_manager(config)" style="endArrow=classic;strokeColor=#333333;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="190" y="410" as="sourcePoint"/>
+            <mxPoint x="580" y="410" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="msg10" value="connect(config)" style="endArrow=classic;strokeColor=#333333;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="580" y="440" as="sourcePoint"/>
+            <mxPoint x="700" y="440" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="msg11" value="fit_model(metrics)" style="endArrow=classic;strokeColor=#333333;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="190" y="470" as="sourcePoint"/>
+            <mxPoint x="580" y="470" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="msg12" value="results" style="endArrow=classic;strokeColor=#333333;dashed=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="700" y="500" as="sourcePoint"/>
+            <mxPoint x="580" y="500" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="msg13" value="model_results" style="endArrow=classic;strokeColor=#333333;dashed=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="580" y="530" as="sourcePoint"/>
+            <mxPoint x="190" y="530" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="msg14" value="results_path" style="endArrow=classic;strokeColor=#333333;dashed=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="190" y="555" as="sourcePoint"/>
+            <mxPoint x="70" y="555" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
