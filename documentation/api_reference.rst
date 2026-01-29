@@ -41,7 +41,7 @@ Base Interface
 Catalog Simulator Adapter
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: impact_engine.metrics.adapter_catalog_simulator
+.. automodule:: impact_engine.metrics.catalog_simulator.adapter
    :members:
    :undoc-members:
    :show-inheritance:
@@ -68,7 +68,7 @@ Base Interface
 Interrupted Time Series Adapter
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: impact_engine.models.adapter_interrupted_time_series
+.. automodule:: impact_engine.models.interrupted_time_series.adapter
    :members:
    :undoc-members:
    :show-inheritance:

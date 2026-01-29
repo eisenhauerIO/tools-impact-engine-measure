@@ -26,6 +26,9 @@ jobs:
       with:
         python-version: '3.9'
     
+    - name: Install Pandoc
+      run: sudo apt-get update && sudo apt-get install -y pandoc
+
     - name: Install hatch
       run: pip install hatch
 
