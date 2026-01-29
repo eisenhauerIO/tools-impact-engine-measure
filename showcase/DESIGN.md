@@ -6,7 +6,9 @@ Impact Engine measures the causal impact of interventions on business metrics. I
 
 The system is **configuration-driven** to support iterative development. As new data sources are onboarded and model requirements evolve, adapters and models can be added without modifying the core engine—and without changing how users interact with it. Each plugin implements a common interface, registers via decorators, and is discovered at runtime. The orchestration logic and user experience remain stable while capabilities grow.
 
-![Overview](diagrams/overview.svg)
+<p align="center">
+  <img src="diagrams/overview.svg" alt="Overview">
+</p>
 
 ---
 
