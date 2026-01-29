@@ -1,8 +1,10 @@
 # Impact Engine Design
 
+*Last updated: January 2026*
+
 ## Overview
 
-Impact Engine measures the causal impact of interventions on business metrics. It answers questions like "Did this change improve our outcomes?" by comparing treatment and control groups using time-series analysis, metric approximations, and observational causal models.
+Impact Engine measures the causal impact of interventions on business metrics. It answers questions like "Did this change improve our outcomes?" by comparing treatment and control groups using time-series analysis, metric approximations, and observational and causal models.
 
 The architecture is **adapter-based**. Data sources, models, and storage backends are all pluggable. New adapters slot in without modifying the core engine or changing the user-facing API. The "Custom..." entries in the diagram below mark these extension points.
 
