@@ -24,7 +24,9 @@
       "Bash(git clean:*)",
       "Bash(git rm:*)",
       "Bash(make:*)",
-      "Bash(hatch env remove:*)"
+      "Bash(hatch env remove:*)",
+      "Bash(grep:*)",
+      "Bash(ruff check:*)"
     ]
   }
 }

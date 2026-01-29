@@ -9,7 +9,7 @@ import pandas as pd
 import pytest
 
 from impact_engine.models import (
-    Model,
+    ModelInterface,
     ModelsManager,
     create_models_manager,
     create_models_manager_from_config,
@@ -35,7 +35,7 @@ def complete_measurement_config(**overrides):
     return config
 
 
-class MockModel(Model):
+class MockModel(ModelInterface):
     """Mock model for testing.
 
     Updated to return ModelResult (storage-agnostic pattern from Phase 1).
@@ -106,8 +106,8 @@ class TestModelsManagerDependencyInjection:
         assert mock_model.is_connected is True
 
     def test_create_with_mock_spec(self):
-        """Test creating manager with Mock(spec=Model)."""
-        mock_model = Mock(spec=Model)
+        """Test creating manager with Mock(spec=ModelInterface)."""
+        mock_model = Mock(spec=ModelInterface)
         mock_model.connect.return_value = True
 
         config = complete_measurement_config()
@@ -172,7 +172,7 @@ class TestModelsManagerFitModel:
         """Test that fit_model uses intervention date from config."""
         from artifact_store import ArtifactStore
 
-        mock_model = Mock(spec=Model)
+        mock_model = Mock(spec=ModelInterface)
         mock_model.connect.return_value = True
         mock_model.fit.return_value = ModelResult(model_type="mock", data={"test": True})
 
@@ -205,7 +205,7 @@ class TestModelsManagerFitModel:
         """Test fit_model with explicitly provided parameters."""
         from artifact_store import ArtifactStore
 
-        mock_model = Mock(spec=Model)
+        mock_model = Mock(spec=ModelInterface)
         mock_model.connect.return_value = True
         mock_model.fit.return_value = ModelResult(model_type="mock", data={"test": True})
 
@@ -296,7 +296,7 @@ class TestModelsFactory:
         class InvalidModel:
             pass
 
-        with pytest.raises(ValueError, match="must implement Model"):
+        with pytest.raises(ValueError, match="must implement ModelInterface"):
             MODEL_REGISTRY.register("invalid", InvalidModel)
 
 
@@ -305,7 +305,7 @@ class TestModelsManagerConnectionFailure:
 
     def test_connection_failure_raises_error(self):
         """Test that connection failure raises ConnectionError."""
-        mock_model = Mock(spec=Model)
+        mock_model = Mock(spec=ModelInterface)
         mock_model.connect.return_value = False
 
         config = complete_measurement_config()

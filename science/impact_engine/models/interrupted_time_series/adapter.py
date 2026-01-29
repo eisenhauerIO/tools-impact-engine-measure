@@ -1,4 +1,4 @@
-"""Interrupted Time Series Model Adapter - adapts SARIMAX to Model interface."""
+"""Interrupted Time Series Model Adapter - adapts SARIMAX to ModelInterface."""
 
 import logging
 from dataclasses import dataclass
@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 
-from ..base import Model, ModelResult
+from ..base import ModelInterface, ModelResult
 from ..factory import MODEL_REGISTRY
 
 
@@ -30,7 +30,7 @@ class TransformedInput:
 
 
 @MODEL_REGISTRY.register_decorator("interrupted_time_series")
-class InterruptedTimeSeriesAdapter(Model):
+class InterruptedTimeSeriesAdapter(ModelInterface):
     """Estimates causal impact of an intervention using time series analysis.
 
     Constraints:

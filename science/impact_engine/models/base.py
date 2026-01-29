@@ -24,7 +24,7 @@ class ModelResult:
         return {"model_type": self.model_type, **self.data, "metadata": self.metadata}
 
 
-class Model(ABC):
+class ModelInterface(ABC):
     """Abstract base class for impact models.
 
     Defines the unified interface that all impact models must implement.

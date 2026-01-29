@@ -10,15 +10,15 @@ from typing import Any, Dict, List
 
 import pandas as pd
 
-from ..base import Model, ModelResult
+from ..base import ModelInterface, ModelResult
 from ..factory import MODEL_REGISTRY
 from .response_registry import get_response_function
 
 
 @MODEL_REGISTRY.register_decorator("metrics_approximation")
-class MetricsApproximationAdapter(Model):
+class MetricsApproximationAdapter(ModelInterface):
     """
-    Adapter for metrics-based impact approximation that implements Model interface.
+    Adapter for metrics-based impact approximation that implements ModelInterface.
 
     This model takes enriched products with before/after metric values and baseline
     outcomes, then applies a response function to approximate the treatment impact.

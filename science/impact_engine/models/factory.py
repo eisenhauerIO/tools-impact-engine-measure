@@ -9,11 +9,11 @@ from typing import Any, Dict
 
 from ..config import parse_config_file
 from ..core import Registry
-from .base import Model
+from .base import ModelInterface
 from .manager import ModelsManager
 
 # Registry of available models - adapters self-register via decorator
-MODEL_REGISTRY: Registry[Model] = Registry(Model, "model")
+MODEL_REGISTRY: Registry[ModelInterface] = Registry(ModelInterface, "model")
 
 
 def create_models_manager(config_path: str) -> ModelsManager:
@@ -64,14 +64,14 @@ def create_models_manager_from_config(
     )
 
 
-def get_model_adapter(model_type: str) -> Model:
+def get_model_adapter(model_type: str) -> ModelInterface:
     """Get an instance of the model adapter for the given type.
 
     Args:
         model_type: The type of model (e.g., "interrupted_time_series").
 
     Returns:
-        Model: An instance of the appropriate model.
+        ModelInterface: An instance of the appropriate model.
 
     Raises:
         ValueError: If the model type is not supported.

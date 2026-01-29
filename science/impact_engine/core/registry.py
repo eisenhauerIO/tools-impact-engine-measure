@@ -18,7 +18,7 @@ class Registry(Generic[T]):
     by name, with validation against a base class.
 
     Example:
-        MODEL_REGISTRY = Registry(Model, "model")
+        MODEL_REGISTRY = Registry(ModelInterface, "model")
         MODEL_REGISTRY.register("my_model", MyModelAdapter)
         model = MODEL_REGISTRY.get("my_model")
     """
@@ -77,7 +77,7 @@ class Registry(Generic[T]):
 
         Example:
             @MODEL_REGISTRY.register_decorator("my_model")
-            class MyModelAdapter(Model):
+            class MyModelAdapter(ModelInterface):
                 ...
         """
 

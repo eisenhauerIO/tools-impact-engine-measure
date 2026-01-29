@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="700" height="520" viewBox="-0.5 -0.5 700 520">
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#666"/>
+    </marker>
+  </defs>
+  <g>
+    <!-- Orchestration Layer -->
+    <rect x="250" y="20" width="200" height="60" rx="8" ry="8" fill="#e8eaf6" stroke="#3f51b5" stroke-width="2"/>
+    <text x="350" y="45" text-anchor="middle" font-family="Arial" font-size="14" font-weight="bold" fill="#3f51b5">Orchestration</text>
+    <rect x="280" y="55" width="140" height="20" rx="4" ry="4" fill="#c5cae9" stroke="#3f51b5"/>
+    <text x="350" y="70" text-anchor="middle" font-family="Arial" font-size="11" fill="#333">evaluate_impact</text>
+
+    <!-- Managers Layer -->
+    <rect x="100" y="120" width="500" height="70" rx="8" ry="8" fill="#e3f2fd" stroke="#1976d2" stroke-width="2"/>
+    <text x="350" y="140" text-anchor="middle" font-family="Arial" font-size="14" font-weight="bold" fill="#1976d2">Managers</text>
+    <rect x="120" y="152" width="130" height="28" rx="4" ry="4" fill="#bbdefb" stroke="#1976d2"/>
+    <text x="185" y="171" text-anchor="middle" font-family="Arial" font-size="11" fill="#333">MetricsManager</text>
+    <rect x="285" y="152" width="130" height="28" rx="4" ry="4" fill="#bbdefb" stroke="#1976d2"/>
+    <text x="350" y="171" text-anchor="middle" font-family="Arial" font-size="11" fill="#333">ModelsManager</text>
+    <rect x="450" y="152" width="130" height="28" rx="4" ry="4" fill="#bbdefb" stroke="#1976d2"/>
+    <text x="515" y="171" text-anchor="middle" font-family="Arial" font-size="11" fill="#333">StorageManager</text>
+
+    <!-- Metrics Adapters -->
+    <rect x="20" y="230" width="180" height="120" rx="8" ry="8" fill="#e8f5e9" stroke="#388e3c" stroke-width="2"/>
+    <text x="110" y="255" text-anchor="middle" font-family="Arial" font-size="13" font-weight="bold" fill="#388e3c">Metrics Adapters</text>
+    <rect x="35" y="268" width="150" height="24" rx="4" ry="4" fill="#c8e6c9" stroke="#388e3c"/>
+    <text x="110" y="285" text-anchor="middle" font-family="Arial" font-size="10" fill="#333">CatalogSimulatorAdapter</text>
+    <rect x="35" y="298" width="150" height="24" rx="4" ry="4" fill="#c8e6c9" stroke="#388e3c"/>
+    <text x="110" y="315" text-anchor="middle" font-family="Arial" font-size="10" fill="#333">FileAdapter</text>
+
+    <!-- Statistical Models -->
+    <rect x="220" y="230" width="180" height="120" rx="8" ry="8" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="2"/>
+    <text x="310" y="255" text-anchor="middle" font-family="Arial" font-size="13" font-weight="bold" fill="#7b1fa2">Statistical Models</text>
+    <rect x="235" y="268" width="150" height="24" rx="4" ry="4" fill="#e1bee7" stroke="#7b1fa2"/>
+    <text x="310" y="285" text-anchor="middle" font-family="Arial" font-size="10" fill="#333">InterruptedTimeSeries</text>
+    <rect x="235" y="298" width="150" height="24" rx="4" ry="4" fill="#e1bee7" stroke="#7b1fa2"/>
+    <text x="310" y="315" text-anchor="middle" font-family="Arial" font-size="10" fill="#333">MetricsApproximation</text>
+
+    <!-- Storage Adapters -->
+    <rect x="420" y="230" width="180" height="120" rx="8" ry="8" fill="#fff3e0" stroke="#f57c00" stroke-width="2"/>
+    <text x="510" y="255" text-anchor="middle" font-family="Arial" font-size="13" font-weight="bold" fill="#f57c00">Storage Adapters</text>
+    <rect x="435" y="268" width="150" height="24" rx="4" ry="4" fill="#ffe0b2" stroke="#f57c00"/>
+    <text x="510" y="285" text-anchor="middle" font-family="Arial" font-size="10" fill="#333">ArtifactStoreAdapter</text>
+    <rect x="435" y="298" width="150" height="24" rx="4" ry="4" fill="#ffe0b2" stroke="#f57c00"/>
+    <text x="510" y="315" text-anchor="middle" font-family="Arial" font-size="10" fill="#333">Custom Adapter...</text>
+
+    <!-- Arrows from Orchestration to Managers -->
+    <path d="M 350 80 L 350 120" stroke="#666" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+
+    <!-- Arrows from Managers to Adapters/Models -->
+    <path d="M 185 190 L 185 210 L 110 210 L 110 230" stroke="#666" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+    <path d="M 350 190 L 350 210 L 310 210 L 310 230" stroke="#666" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+    <path d="M 515 190 L 515 210 L 510 210 L 510 230" stroke="#666" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+  </g>
+</svg>

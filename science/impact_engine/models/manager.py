@@ -6,7 +6,7 @@ from typing import Any, Dict, Optional
 
 import pandas as pd
 
-from .base import Model, ModelResult
+from .base import ModelInterface, ModelResult
 
 
 class ModelsManager:
@@ -21,7 +21,7 @@ class ModelsManager:
     def __init__(
         self,
         measurement_config: Dict[str, Any],
-        model: Model,
+        model: ModelInterface,
     ):
         """Initialize the ModelsManager with injected model.
 
