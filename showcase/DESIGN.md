@@ -35,10 +35,10 @@ The system is **configuration-driven**. A single config file selects which adapt
 Each stage is handled by a dedicated manager that delegates to the configured adapter.
 
 ```yaml
-# ── Load ───────────────────────────────────────────────────────────
 DATA:
+  # ── Load ────────────────────────────────────────────────────
   SOURCE:
-    type: simulator                     # metrics adapter
+    TYPE: simulator                     # metrics adapter
     CONFIG:
       path: data/products.csv
       start_date: '2024-01-01'
@@ -59,10 +59,10 @@ MEASUREMENT:
 
 # ── Store ──────────────────────────────────────────────────────────
 OUTPUT:
-  PATH: s3://bucket/results/campaign  # storage adapter
+  PATH: s3://bucket/results/campaign    # storage adapter
 ```
 
-The config maps directly to the four stages. **Load** uses `DATA.SOURCE.type` to select the metrics adapter. **Transform** applies `DATA.TRANSFORM.FUNCTION` to reshape data. **Measure** uses `MEASUREMENT.MODEL` to run causal analysis. **Store** writes results to `OUTPUT.PATH`.
+The config maps directly to the four stages. **Load** uses `DATA.SOURCE.TYPE` to select the metrics adapter. **Transform** applies `DATA.TRANSFORM.FUNCTION` to reshape data. **Measure** uses `MEASUREMENT.MODEL` to run causal analysis. **Store** writes results to `OUTPUT.PATH`—the backend is inferred from the path prefix.
 
 ---
 
