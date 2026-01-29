@@ -23,6 +23,7 @@ Guidelines for writing and maintaining documentation in this directory.
 2. Use markdown links when referencing source files, classes, or interfaces that readers might want to navigate to
 3. Use bold sparingly for design patterns and key concepts being introduced or emphasized
 4. Keep tool and format names in plain text for readability
+5. Write in narrative prose with complete sentences. Avoid semicolons and colons.
 
 ## Architectural Symmetry
 

@@ -33,8 +33,8 @@
           <mxGeometry x="80" y="95" width="100" height="28" as="geometry"/>
         </mxCell>
 
-        <!-- Statistical Models Group -->
-        <mxCell id="sm-group" value="Statistical Models" style="swimlane;startSize=30;fillColor=#e1d5e7;strokeColor=#9673a6;rounded=1;fontSize=12;" vertex="1" parent="1">
+        <!-- Model Adapters Group -->
+        <mxCell id="sm-group" value="Model Adapters" style="swimlane;startSize=30;fillColor=#e1d5e7;strokeColor=#9673a6;rounded=1;fontSize=12;" vertex="1" parent="1">
           <mxGeometry x="500" y="60" width="180" height="140" as="geometry"/>
         </mxCell>
         <mxCell id="sm-its" value="InterruptedTimeSeries" style="rounded=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="sm-group">
