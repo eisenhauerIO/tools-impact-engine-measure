@@ -8,7 +8,6 @@
 
 usage
 configuration
-architecture
 api_reference
 ```
 
