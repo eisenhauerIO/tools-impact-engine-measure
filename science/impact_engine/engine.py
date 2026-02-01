@@ -2,6 +2,8 @@
 Impact analysis engine for the impact_engine package.
 """
 
+from typing import Optional
+
 from artifact_store import ArtifactStore
 
 from .config import parse_config_file
@@ -11,7 +13,11 @@ from .models import create_models_manager
 from .storage import create_storage_manager
 
 
-def evaluate_impact(config_path: str, storage_url: str = "./data") -> str:
+def evaluate_impact(
+    config_path: str,
+    storage_url: str = "./data",
+    job_id: Optional[str] = None,
+) -> str:
     """
     Evaluate impact using business metrics retrieved through the metrics layer
     and models layer for statistical analysis.
@@ -20,6 +26,8 @@ def evaluate_impact(config_path: str, storage_url: str = "./data") -> str:
         config_path: Path to configuration file containing metrics and model settings.
                      The config must include DATA.SOURCE.CONFIG.PATH pointing to a products CSV file.
         storage_url: Storage URL or path (e.g., "./data", "s3://bucket/prefix")
+        job_id: Optional job ID for resuming existing jobs or using custom IDs.
+            If not provided, a unique ID will be auto-generated.
 
     Returns:
         str: URL to the saved model results (within the job directory)
@@ -30,7 +38,7 @@ def evaluate_impact(config_path: str, storage_url: str = "./data") -> str:
     data_path = source_config["path"]
 
     # Create storage manager (storage_url allows tests to pass temp directories)
-    storage_manager = create_storage_manager(storage_url)
+    storage_manager = create_storage_manager(storage_url, job_id=job_id)
 
     # Save artifacts for observability
     storage_manager.write_yaml("config.yaml", config)
