@@ -6,7 +6,6 @@ produce data files that impact-engine consumes.
 """
 
 import logging
-import os
 from typing import Any, Dict, Optional
 
 import pandas as pd
@@ -93,22 +92,17 @@ class FileAdapter(MetricsInterface):
             ValueError: If file format is not supported
         """
         path = self.config["path"]
-        full_path = self.store.full_path(self.filename)
         filename_lower = self.filename.lower()
 
-        # Check if path is a directory (partitioned Parquet dataset)
-        is_local_dir = not self.store.is_s3 and os.path.isdir(full_path)
+        # Determine format: files have extensions, directories don't
+        is_dir = not filename_lower.endswith((".csv", ".parquet", ".pq"))
 
-        if is_local_dir:
+        if is_dir:
             self.data = self.store.read_parquet(self.filename)
         elif filename_lower.endswith(".csv"):
             self.data = self.store.read_csv(self.filename)
-        elif filename_lower.endswith((".parquet", ".pq")):
-            self.data = self.store.read_parquet(self.filename)
         else:
-            raise ValueError(
-                "Unsupported file format. Use .csv, .parquet, or a partitioned Parquet directory"
-            )
+            self.data = self.store.read_parquet(self.filename)
 
         self.logger.info(f"Loaded {len(self.data)} rows from {path}")
         return self.data
