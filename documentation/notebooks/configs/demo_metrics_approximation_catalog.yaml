@@ -1,0 +1,7 @@
+STORAGE:
+  PATH: output/demo_metrics_approximation/simulation
+RULE:
+  PRODUCTS:
+    FUNCTION: simulate_products_rule_based
+    PARAMS:
+      num_products: 5
