@@ -6,6 +6,7 @@ produce data files that impact-engine consumes.
 """
 
 import logging
+import os
 from typing import Any, Dict, Optional
 
 import pandas as pd
@@ -19,15 +20,17 @@ from ..factory import METRICS_REGISTRY
 class FileAdapter(MetricsInterface):
     """Adapter for file-based data sources that implements MetricsInterface.
 
-    Supports CSV and Parquet file formats. The file is expected to contain
-    pre-processed data ready for impact analysis.
+    Supports CSV and Parquet file formats, including partitioned Parquet directories.
+    The file is expected to contain pre-processed data ready for impact analysis.
 
     Configuration:
         DATA:
             SOURCE:
                 type: file
                 CONFIG:
-                    path: path/to/data.csv
+                    path: path/to/data.csv              # Single CSV file
+                    path: path/to/data.parquet          # Single Parquet file
+                    path: path/to/partitioned_data/     # Partitioned Parquet directory
                     # Optional parameters:
                     date_column: date        # Column name for date filtering
                     product_id_column: product_id  # Column name for product IDs
@@ -90,14 +93,22 @@ class FileAdapter(MetricsInterface):
             ValueError: If file format is not supported
         """
         path = self.config["path"]
+        full_path = self.store.full_path(self.filename)
         filename_lower = self.filename.lower()
 
-        if filename_lower.endswith(".csv"):
+        # Check if path is a directory (partitioned Parquet dataset)
+        is_local_dir = not self.store.is_s3 and os.path.isdir(full_path)
+
+        if is_local_dir:
+            self.data = self.store.read_parquet(self.filename)
+        elif filename_lower.endswith(".csv"):
             self.data = self.store.read_csv(self.filename)
         elif filename_lower.endswith((".parquet", ".pq")):
             self.data = self.store.read_parquet(self.filename)
         else:
-            raise ValueError("Unsupported file format. Use .csv or .parquet")
+            raise ValueError(
+                "Unsupported file format. Use .csv, .parquet, or a partitioned Parquet directory"
+            )
 
         self.logger.info(f"Loaded {len(self.data)} rows from {path}")
         return self.data
