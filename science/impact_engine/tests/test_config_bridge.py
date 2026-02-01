@@ -20,7 +20,7 @@ class TestConfigBridgeToCatalogSimulator:
         result = ConfigBridge.to_catalog_simulator(ie_config, num_products=50)
 
         assert "RULE" in result
-        assert "CHARACTERISTICS" in result["RULE"]
+        assert "PRODUCTS" in result["RULE"]
         assert "METRICS" in result["RULE"]
 
     def test_dates_mapped_correctly(self):
@@ -38,7 +38,7 @@ class TestConfigBridgeToCatalogSimulator:
         assert metrics_params["date_end"] == "2024-03-31"
 
     def test_seed_propagated(self):
-        """seed propagated to both CHARACTERISTICS and METRICS."""
+        """seed propagated to both PRODUCTS and METRICS."""
         ie_config = {
             "DATA": {
                 "seed": 123,
@@ -48,15 +48,15 @@ class TestConfigBridgeToCatalogSimulator:
         }
         result = ConfigBridge.to_catalog_simulator(ie_config)
 
-        assert result["RULE"]["CHARACTERISTICS"]["PARAMS"]["seed"] == 123
+        assert result["RULE"]["PRODUCTS"]["PARAMS"]["seed"] == 123
         assert result["RULE"]["METRICS"]["PARAMS"]["seed"] == 123
 
     def test_num_products_parameter(self):
-        """num_products parameter sets CHARACTERISTICS.PARAMS.num_products."""
+        """num_products parameter sets PRODUCTS.PARAMS.num_products."""
         ie_config = {"DATA": {"start_date": "2024-01-01", "end_date": "2024-01-31"}}
         result = ConfigBridge.to_catalog_simulator(ie_config, num_products=200)
 
-        assert result["RULE"]["CHARACTERISTICS"]["PARAMS"]["num_products"] == 200
+        assert result["RULE"]["PRODUCTS"]["PARAMS"]["num_products"] == 200
 
     def test_enrichment_mapping(self):
         """ENRICHMENT section mapped to IMPACT block."""

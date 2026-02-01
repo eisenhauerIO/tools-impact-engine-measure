@@ -42,24 +42,7 @@ packages = ["science/impact_engine"]
 dependencies = [
   "pytest",
   "black",
-  "pre-commit"
-]
-
-[tool.hatch.envs.default.scripts]
-test = "pytest science/impact_engine/tests/ -v"
-format = "black ."
-lint = "ruff check science/"
-
-[tool.ruff]
-line-length = 100
-target-version = "py38"
-
-[tool.ruff.lint]
-select = ["E", "F", "W", "I"]
-ignore = ["E501"]
-
-[tool.hatch.envs.docs]
-dependencies = [
+  "pre-commit",
   "sphinx>=7.0.0",
   "sphinx-rtd-theme>=1.3.0",
   "myst-parser>=2.0.0",
@@ -69,12 +52,19 @@ dependencies = [
   "ipykernel>=6.0.0",
   "matplotlib>=3.5.0",
   "seaborn>=0.12.0",
-  "pandas",
-  "pyyaml",
-  "statsmodels",
-  "online_retail_simulator @ git+https://github.com/eisenhauerIO/tools-catalog-generator.git",
-  "artifact-store @ git+https://github.com/eisenhauerIO/utils-artifact-store.git",
 ]
 
-[tool.hatch.envs.docs.scripts]
-build = "cd documentation && sphinx-build -b html . _build/html"
+[tool.hatch.envs.default.scripts]
+test = "pytest science/impact_engine/tests/ -v"
+format = "black ."
+lint = "ruff check science/"
+docs = "cd documentation && sphinx-build -b html . _build/html"
+
+[tool.ruff]
+line-length = 100
+target-version = "py38"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = ["E501"]
+

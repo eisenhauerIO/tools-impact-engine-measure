@@ -21,13 +21,13 @@ def products_csv(tmp_path):
 
     Note: quality_score is NOT needed here - enrich() generates it internally.
     """
-    from online_retail_simulator.simulate import simulate_characteristics
+    from online_retail_simulator.simulate import simulate_products
 
     sim_config = {
         "STORAGE": {"PATH": str(tmp_path / "simulation")},
         "RULE": {
-            "CHARACTERISTICS": {
-                "FUNCTION": "simulate_characteristics_rule_based",
+            "PRODUCTS": {
+                "FUNCTION": "simulate_products_rule_based",
                 "PARAMS": {"num_products": 5},
             },
         },
@@ -37,7 +37,7 @@ def products_csv(tmp_path):
     with open(sim_config_path, "w") as f:
         yaml.dump(sim_config, f)
 
-    job_info = simulate_characteristics(str(sim_config_path))
+    job_info = simulate_products(str(sim_config_path))
     products = job_info.load_df("products")
 
     products_path = tmp_path / "products.csv"

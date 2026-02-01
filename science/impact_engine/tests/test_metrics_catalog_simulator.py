@@ -86,7 +86,7 @@ class TestCatalogSimulatorAdapter:
 
         # Check rule config structure
         rule_config = result["rule_config"]
-        assert "CHARACTERISTICS" in rule_config
+        assert "PRODUCTS" in rule_config
         assert "METRICS" in rule_config
         assert rule_config["METRICS"]["PARAMS"]["date_start"] == "2024-01-01"
         assert rule_config["METRICS"]["PARAMS"]["date_end"] == "2024-01-31"

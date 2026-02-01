@@ -49,8 +49,8 @@ class ConfigBridge:
 
         Example output (catalog-simulator format):
             RULE:
-              CHARACTERISTICS:
-                FUNCTION: simulate_characteristics_rule_based
+              PRODUCTS:
+                FUNCTION: simulate_products_rule_based
                 PARAMS: {num_products: 100, seed: 42}
               METRICS:
                 FUNCTION: simulate_metrics_rule_based
@@ -73,8 +73,8 @@ class ConfigBridge:
         # Build RULE config
         cs_config: Dict[str, Any] = {
             "RULE": {
-                "CHARACTERISTICS": {
-                    "FUNCTION": "simulate_characteristics_rule_based",
+                "PRODUCTS": {
+                    "FUNCTION": "simulate_products_rule_based",
                     "PARAMS": {"num_products": num_products, "seed": seed},
                 },
                 "METRICS": {
