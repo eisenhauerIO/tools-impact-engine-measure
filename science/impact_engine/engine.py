@@ -2,7 +2,7 @@
 Impact analysis engine for the impact_engine package.
 """
 
-import pandas as pd
+from artifact_store import ArtifactStore
 
 from .config import parse_config_file
 from .core import apply_transform
@@ -34,7 +34,8 @@ def evaluate_impact(config_path: str, storage_url: str = "./data") -> str:
 
     # Save artifacts for observability
     storage_manager.write_yaml("config.yaml", config)
-    products = pd.read_csv(data_path)
+    data_store, data_filename = ArtifactStore.from_file_path(data_path)
+    products = data_store.read_csv(data_filename)
     storage_manager.write_csv("products.csv", products)
 
     metrics_manager = create_metrics_manager(config, parent_job=storage_manager.get_job())

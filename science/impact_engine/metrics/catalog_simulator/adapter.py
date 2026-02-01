@@ -4,12 +4,9 @@ Catalog Simulator Adapter - adapts online_retail_simulator package to MetricsInt
 Integration is governed by contracts (schemas) and config bridge (config translation).
 """
 
-import os
-import tempfile
 from typing import Any, Dict, Optional
 
 import pandas as pd
-import yaml
 from artifact_store import JobInfo, create_job
 
 from ...core import ConfigBridge, MetricsSchema, ProductSchema
@@ -77,14 +74,12 @@ class CatalogSimulatorAdapter(MetricsInterface):
 
             simulator_config = {"RULE": transformed_input["rule_config"]}
 
-            with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
-                yaml.dump(simulator_config, f)
-                config_path = f.name
+            # Write config to job storage (cloud-compatible, preserved for debugging)
+            store = self.simulation_job.get_store()
+            store.write_yaml("simulator_config.yaml", simulator_config)
+            config_path = store.full_path("simulator_config.yaml")
 
-            try:
-                simulate_metrics(self.simulation_job, config_path)
-            finally:
-                os.unlink(config_path)
+            simulate_metrics(self.simulation_job, config_path)
 
             sales_df = self.simulation_job.load_df("metrics")
 
@@ -127,28 +122,22 @@ class CatalogSimulatorAdapter(MetricsInterface):
                 "FUNCTION": "simulate_product_details_mock",
             }
         }
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
-            yaml.dump(product_details_config, f)
-            pd_config_path = f.name
+        # Write config to job storage (cloud-compatible, preserved for debugging)
+        store = self.simulation_job.get_store()
+        store.write_yaml("product_details_config.yaml", product_details_config)
+        pd_config_path = store.full_path("product_details_config.yaml")
 
-        try:
-            self.simulation_job = simulate_product_details(self.simulation_job, pd_config_path)
-        finally:
-            os.unlink(pd_config_path)
+        self.simulation_job = simulate_product_details(self.simulation_job, pd_config_path)
 
         # Use config bridge to build IMPACT config
         impact_config = ConfigBridge.build_enrichment_config(self.config["ENRICHMENT"])
 
-        # Write config to temp file
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
-            yaml.dump(impact_config, f)
-            config_path = f.name
+        # Write config to job storage (cloud-compatible, preserved for debugging)
+        store.write_yaml("enrichment_config.yaml", impact_config)
+        config_path = store.full_path("enrichment_config.yaml")
 
-        try:
-            # Apply enrichment (creates product_details_original, product_details_enriched)
-            self.simulation_job = enrich(config_path, self.simulation_job)
-        finally:
-            os.unlink(config_path)
+        # Apply enrichment (creates product_details_original, product_details_enriched)
+        self.simulation_job = enrich(config_path, self.simulation_job)
 
         # Load original and enriched product details
         products_original = self.simulation_job.load_df("product_details_original")

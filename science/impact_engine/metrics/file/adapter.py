@@ -6,10 +6,10 @@ produce data files that impact-engine consumes.
 """
 
 import logging
-from pathlib import Path
 from typing import Any, Dict, Optional
 
 import pandas as pd
+from artifact_store import ArtifactStore
 
 from ..base import MetricsInterface
 from ..factory import METRICS_REGISTRY
@@ -39,6 +39,8 @@ class FileAdapter(MetricsInterface):
         self.is_connected = False
         self.config: Optional[Dict[str, Any]] = None
         self.data: Optional[pd.DataFrame] = None
+        self.store: Optional[ArtifactStore] = None
+        self.filename: Optional[str] = None
 
     def connect(self, config: Dict[str, Any]) -> bool:
         """Initialize adapter with configuration parameters.
@@ -60,12 +62,13 @@ class FileAdapter(MetricsInterface):
         if not path:
             raise ValueError("'path' is required in file adapter configuration")
 
-        file_path = Path(path)
-        if not file_path.exists():
+        # Use artifact store for cloud compatibility (supports local and S3 paths)
+        self.store, self.filename = ArtifactStore.from_file_path(path)
+        if not self.store.exists(self.filename):
             raise FileNotFoundError(f"Data file not found: {path}")
 
         self.config = {
-            "path": str(file_path),
+            "path": path,
             "date_column": config.get("date_column"),
             "product_id_column": config.get("product_id_column", "product_id"),
         }
@@ -86,14 +89,15 @@ class FileAdapter(MetricsInterface):
         Raises:
             ValueError: If file format is not supported
         """
-        path = Path(self.config["path"])
+        path = self.config["path"]
+        filename_lower = self.filename.lower()
 
-        if path.suffix.lower() == ".csv":
-            self.data = pd.read_csv(path)
-        elif path.suffix.lower() in [".parquet", ".pq"]:
-            self.data = pd.read_parquet(path)
+        if filename_lower.endswith(".csv"):
+            self.data = self.store.read_csv(self.filename)
+        elif filename_lower.endswith((".parquet", ".pq")):
+            self.data = self.store.read_parquet(self.filename)
         else:
-            raise ValueError(f"Unsupported file format: {path.suffix}. Use .csv or .parquet")
+            raise ValueError("Unsupported file format. Use .csv or .parquet")
 
         self.logger.info(f"Loaded {len(self.data)} rows from {path}")
         return self.data
@@ -149,10 +153,10 @@ class FileAdapter(MetricsInterface):
         Returns:
             bool: True if file exists and data is loaded
         """
-        if not self.is_connected or self.config is None:
+        if not self.is_connected or self.config is None or self.store is None:
             return False
 
-        return Path(self.config["path"]).exists() and self.data is not None
+        return self.store.exists(self.filename) and self.data is not None
 
     def transform_outbound(
         self, products: pd.DataFrame, start_date: str, end_date: str
