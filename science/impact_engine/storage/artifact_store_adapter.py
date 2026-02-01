@@ -31,14 +31,17 @@ class ArtifactStoreAdapter(StorageInterface):
             config: Dictionary containing:
                 - storage_url: Path or URL (e.g., "./data", "s3://bucket/prefix")
                 - prefix: Optional job prefix (default: "job-impact-engine")
+                - job_id: Optional job ID for resuming existing jobs or custom IDs.
+                    If not provided, a unique ID will be auto-generated.
 
         Returns:
             bool: True if initialization successful, False otherwise.
         """
         storage_url = config.get("storage_url", "./data")
         prefix = config.get("prefix", "job-impact-engine")
+        job_id = config.get("job_id", None)
 
-        self.job = create_job(storage_url, prefix=prefix)
+        self.job = create_job(storage_url, prefix=prefix, job_id=job_id)
         self.store = self.job.get_store()
         self.is_connected = True
         return True

@@ -7,7 +7,7 @@ keeping the StorageManager class simple and focused on coordination.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Dict
+from typing import TYPE_CHECKING, Any, Dict, Optional
 
 from ..core import Registry
 from .base import StorageInterface
@@ -23,6 +23,7 @@ def create_storage_manager(
     storage_url: str,
     storage_type: str = "artifact_store",
     prefix: str = "job-impact-engine",
+    job_id: Optional[str] = None,
 ) -> "StorageManager":
     """Create a StorageManager with the appropriate storage adapter.
 
@@ -34,6 +35,8 @@ def create_storage_manager(
         storage_url: Path or URL for storage (e.g., "./data", "s3://bucket/prefix").
         storage_type: Type of storage adapter to use (default: "artifact_store").
         prefix: Job prefix for organizing artifacts (default: "job-impact-engine").
+        job_id: Optional job ID for resuming existing jobs or using custom IDs.
+            If not provided, a unique ID will be auto-generated.
 
     Returns:
         StorageManager: Configured manager with the appropriate adapter.
@@ -45,6 +48,7 @@ def create_storage_manager(
     storage_config = {
         "storage_url": storage_url,
         "prefix": prefix,
+        "job_id": job_id,
     }
 
     return create_storage_manager_from_config(storage_config, storage_type)
