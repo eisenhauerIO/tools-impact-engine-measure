@@ -117,7 +117,7 @@ class TestMetricsApproximationAdapterFit:
         )
 
         data = create_test_data()
-        results = adapter.fit(data, storage=mock_storage, output_path="results")
+        results = adapter.fit(data, storage=mock_storage)
 
         assert results.model_type == "metrics_approximation"
         assert results.data["response_function"] == "linear"
@@ -141,7 +141,7 @@ class TestMetricsApproximationAdapterFit:
             }
         )
 
-        results = adapter.fit(data, storage=mock_storage, output_path="results")
+        results = adapter.fit(data, storage=mock_storage)
 
         # Expected: 0.4 * 100 * 0.5 = 20.0
         product_result = results.data["per_product"][0]
@@ -165,7 +165,7 @@ class TestMetricsApproximationAdapterFit:
             }
         )
 
-        results = adapter.fit(data, storage=mock_storage, output_path="results")
+        results = adapter.fit(data, storage=mock_storage)
 
         assert results.data["impact_estimates"]["total_approximated_impact"] == 100.0
         assert results.data["impact_estimates"]["mean_approximated_impact"] == 50.0
@@ -311,7 +311,7 @@ class TestMetricsApproximationAdapterRowAttributes:
             }
         )
 
-        adapter.fit(data, storage=mock_storage, output_path="results")
+        adapter.fit(data, storage=mock_storage)
 
         # Verify attributes were captured
         assert len(captured_attributes) == 2
@@ -355,7 +355,7 @@ class TestMetricsApproximationAdapterRowAttributes:
             }
         )
 
-        results = adapter.fit(data, storage=mock_storage, output_path="results")
+        results = adapter.fit(data, storage=mock_storage)
 
         # Electronics: 0.4 * 100 * 0.8 = 32.0
         # Clothing: 0.4 * 100 * 0.5 = 20.0
@@ -383,7 +383,7 @@ class TestMetricsApproximationAdapterMissingData:
             }
         )
 
-        results = adapter.fit(data, storage=mock_storage, output_path="results")
+        results = adapter.fit(data, storage=mock_storage)
 
         assert results.data["impact_estimates"]["n_products"] == 2
         product_ids = [p["product_id"] for p in results.data["per_product"]]
@@ -405,7 +405,7 @@ class TestMetricsApproximationAdapterMissingData:
             }
         )
 
-        results = adapter.fit(data, storage=mock_storage, output_path="results")
+        results = adapter.fit(data, storage=mock_storage)
 
         assert results.data["impact_estimates"]["n_products"] == 1
         assert results.data["per_product"][0]["product_id"] == "P002"
@@ -426,7 +426,7 @@ class TestMetricsApproximationAdapterMissingData:
             }
         )
 
-        results = adapter.fit(data, storage=mock_storage, output_path="results")
+        results = adapter.fit(data, storage=mock_storage)
 
         assert results.data["impact_estimates"]["n_products"] == 1
         assert results.data["per_product"][0]["product_id"] == "P001"
@@ -447,7 +447,7 @@ class TestMetricsApproximationAdapterMissingData:
             }
         )
 
-        results = adapter.fit(data, storage=mock_storage, output_path="results")
+        results = adapter.fit(data, storage=mock_storage)
 
         assert results.data["impact_estimates"]["n_products"] == 0
         assert results.data["impact_estimates"]["total_approximated_impact"] == 0.0
@@ -462,7 +462,7 @@ class TestMetricsApproximationAdapterMissingData:
         )
 
         data = create_test_data()
-        results = adapter.fit(data, storage=mock_storage, output_path="results")
+        results = adapter.fit(data, storage=mock_storage)
 
         assert results.data["impact_estimates"]["n_products"] == 5
 
@@ -482,11 +482,11 @@ class TestMetricsApproximationAdapterMissingData:
             }
         )
 
-        adapter.fit(data, storage=mock_storage, output_path="results")
+        adapter.fit(data, storage=mock_storage)
 
         mock_storage.write_csv.assert_called_once()
         call_args = mock_storage.write_csv.call_args
-        assert call_args[0][0] == "results/filtered_products.csv"
+        assert call_args[0][0] == "filtered_products.csv"
         written_df = call_args[0][1]
         assert list(written_df["product_id"]) == ["P002", "P003"]
 
@@ -499,6 +499,6 @@ class TestMetricsApproximationAdapterMissingData:
 
         data = create_test_data()  # No NaN values
 
-        adapter.fit(data, storage=mock_storage, output_path="results")
+        adapter.fit(data, storage=mock_storage)
 
         mock_storage.write_csv.assert_not_called()

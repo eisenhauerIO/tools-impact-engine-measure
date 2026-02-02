@@ -55,8 +55,6 @@ def evaluate_impact(
     transformed_metrics = apply_transform(business_metrics, transform_config)
     storage_manager.write_csv("transformed_metrics.csv", transformed_metrics)
 
-    model_results_path = models_manager.fit_model(
-        data=transformed_metrics, output_path="results", storage=storage_manager
-    )
+    model_results_path = models_manager.fit_model(data=transformed_metrics, storage=storage_manager)
 
     return model_results_path

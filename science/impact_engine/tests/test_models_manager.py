@@ -68,9 +68,7 @@ class MockModel(ModelInterface):
         """Mock transform_inbound method."""
         return {"model_type": "mock", "results": model_results}
 
-    def fit(
-        self, data: pd.DataFrame, intervention_date: str, output_path: str, **kwargs
-    ) -> ModelResult:
+    def fit(self, data: pd.DataFrame, intervention_date: str, **kwargs) -> ModelResult:
         """Mock fit method - returns ModelResult (storage handled by manager)."""
         if not self.is_connected:
             raise ConnectionError("Model not connected. Call connect() first.")
@@ -162,7 +160,6 @@ class TestModelsManagerFitModel:
             storage = ArtifactStore(tmpdir)
             result_path = manager.fit_model(
                 data=data,
-                output_path="results",
                 storage=storage,
             )
 
@@ -183,7 +180,7 @@ class TestModelsManagerFitModel:
 
         with tempfile.TemporaryDirectory() as tmpdir:
             storage = ArtifactStore(tmpdir)
-            manager.fit_model(data=data, output_path="results", storage=storage)
+            manager.fit_model(data=data, storage=storage)
 
             # Verify fit was called with intervention_date from config
             call_kwargs = mock_model.fit.call_args[1]
@@ -199,7 +196,7 @@ class TestModelsManagerFitModel:
         data = pd.DataFrame({"date": pd.date_range("2024-01-01", periods=10), "value": range(10)})
 
         with pytest.raises(ValueError, match="Storage backend is required"):
-            manager.fit_model(data=data, output_path="results", storage=None)
+            manager.fit_model(data=data, storage=None)
 
     def test_fit_model_with_explicit_params(self):
         """Test fit_model with explicitly provided parameters."""
@@ -220,7 +217,6 @@ class TestModelsManagerFitModel:
                 data=data,
                 intervention_date="2024-01-20",  # Override config
                 dependent_variable="sales",
-                output_path="results",
                 storage=storage,
             )
 

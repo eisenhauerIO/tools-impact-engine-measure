@@ -63,7 +63,7 @@ class ModelInterface(ABC):
         Args:
             data: DataFrame containing data for model fitting.
             **kwargs: Model-specific parameters (e.g., intervention_date,
-                     output_path, dependent_variable).
+                     dependent_variable, storage).
 
         Returns:
             Model-specific results (Dict, str path, etc.)
@@ -122,7 +122,7 @@ class ModelInterface(ABC):
 
         Args:
             params: Dictionary containing parameters that will be passed to fit().
-                Typical keys: intervention_date, output_path, dependent_variable.
+                Typical keys: intervention_date, dependent_variable.
 
         Raises:
             ValueError: If required parameters are missing or invalid.

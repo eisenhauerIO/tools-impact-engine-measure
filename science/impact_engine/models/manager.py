@@ -41,7 +41,6 @@ class ModelsManager:
         self,
         data: pd.DataFrame,
         intervention_date: Optional[str] = None,
-        output_path: str = ".",
         dependent_variable: Optional[str] = None,
         storage=None,
     ) -> str:
@@ -50,7 +49,6 @@ class ModelsManager:
         Args:
             data: DataFrame containing data for model fitting.
             intervention_date: Override for intervention date (uses config if None).
-            output_path: Path for output artifacts.
             dependent_variable: Override for dependent variable (uses config if None).
             storage: Storage backend for artifacts.
 
@@ -70,7 +68,6 @@ class ModelsManager:
         self.model.validate_params(
             {
                 "intervention_date": intervention_date,
-                "output_path": output_path,
                 "dependent_variable": dependent_variable,
             }
         )
@@ -83,15 +80,22 @@ class ModelsManager:
         result: ModelResult = self.model.fit(
             data=data,
             intervention_date=intervention_date,
-            output_path=output_path,
             dependent_variable=dependent_variable,
             storage=storage,
         )
 
         # Persist to storage (centralized here, not in models)
-        result_path = f"{output_path}/impact_results.json"
-        storage.write_json(result_path, result.to_dict())
-        return storage.full_path(result_path)
+        result_dict = result.to_dict()
+
+        # Extract per_product to separate CSV file (can be large)
+        if "per_product" in result_dict:
+            per_product = result_dict.pop("per_product")
+            if per_product:
+                per_product_df = pd.DataFrame(per_product)
+                storage.write_csv("product_level_impacts.csv", per_product_df)
+
+        storage.write_json("impact_results.json", result_dict)
+        return storage.full_path("impact_results.json")
 
     def get_current_config(self) -> Optional[Dict[str, Any]]:
         """Get the currently loaded configuration."""

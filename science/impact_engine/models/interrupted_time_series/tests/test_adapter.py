@@ -149,7 +149,7 @@ class TestInterruptedTimeSeriesAdapter:
         data = pd.DataFrame({"date": pd.date_range("2024-01-01", periods=10), "revenue": range(10)})
 
         with pytest.raises(ConnectionError, match="Model not connected"):
-            model.fit(data, intervention_date="2024-01-05", output_path="/tmp")
+            model.fit(data, intervention_date="2024-01-05")
 
     def test_fit_returns_model_result(self):
         """Test that fit returns ModelResult (adapter is storage-agnostic)."""
