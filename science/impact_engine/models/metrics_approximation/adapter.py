@@ -149,6 +149,12 @@ class MetricsApproximationAdapter(ModelInterface):
         # Work on a copy to avoid modifying input data
         df = data.copy()
 
+        # Filter rows with missing values in required columns
+        required_columns = [metric_before_col, metric_after_col, baseline_col]
+        df = self._filter_missing_values(
+            df, required_columns, kwargs["storage"], kwargs["output_path"]
+        )
+
         # Vectorize delta computation
         df["_delta_metric"] = df[metric_after_col] - df[metric_before_col]
 
@@ -241,3 +247,35 @@ class MetricsApproximationAdapter(ModelInterface):
             self.config["metric_after_column"],
             self.config["baseline_column"],
         ]
+
+    def _filter_missing_values(
+        self,
+        df: pd.DataFrame,
+        required_columns: List[str],
+        storage,
+        output_path: str,
+    ) -> pd.DataFrame:
+        """Filter rows with missing values in required columns and log them.
+
+        Args:
+            df: DataFrame to filter
+            required_columns: Columns to check for NaN/None values
+            storage: Storage backend for writing filtered products CSV
+            output_path: Output path for CSV file
+
+        Returns:
+            Filtered DataFrame with missing value rows removed
+        """
+        mask = df[required_columns].notna().all(axis=1)
+        filtered_ids = df.loc[~mask, "product_id"].tolist()
+
+        if filtered_ids:
+            self.logger.warning(
+                f"Filtered {len(filtered_ids)} rows with missing values in columns "
+                f"{required_columns}. See filtered_products.csv for details."
+            )
+            filtered_df = pd.DataFrame({"product_id": filtered_ids})
+            filtered_path = f"{output_path}/filtered_products.csv"
+            storage.write_csv(filtered_path, filtered_df)
+
+        return df[mask].copy()

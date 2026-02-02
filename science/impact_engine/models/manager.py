@@ -85,6 +85,7 @@ class ModelsManager:
             intervention_date=intervention_date,
             output_path=output_path,
             dependent_variable=dependent_variable,
+            storage=storage,
         )
 
         # Persist to storage (centralized here, not in models)

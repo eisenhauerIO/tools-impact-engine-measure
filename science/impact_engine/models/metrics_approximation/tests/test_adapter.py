@@ -1,10 +1,18 @@
 """Tests for MetricsApproximationAdapter."""
 
+from unittest.mock import MagicMock
+
 import pandas as pd
 import pytest
 
 from impact_engine.models.conftest import merge_model_params
 from impact_engine.models.metrics_approximation.adapter import MetricsApproximationAdapter
+
+
+@pytest.fixture
+def mock_storage():
+    """Create mock storage for tests."""
+    return MagicMock()
 
 
 def create_test_data():
@@ -101,7 +109,7 @@ class TestMetricsApproximationAdapterValidateConnection:
 class TestMetricsApproximationAdapterFit:
     """Tests for fit() method."""
 
-    def test_fit_basic(self):
+    def test_fit_basic(self, mock_storage):
         """Basic fit with default configuration."""
         adapter = MetricsApproximationAdapter()
         adapter.connect(
@@ -109,14 +117,14 @@ class TestMetricsApproximationAdapterFit:
         )
 
         data = create_test_data()
-        results = adapter.fit(data)
+        results = adapter.fit(data, storage=mock_storage, output_path="results")
 
         assert results.model_type == "metrics_approximation"
         assert results.data["response_function"] == "linear"
         assert results.data["impact_estimates"]["n_products"] == 5
         assert len(results.data["per_product"]) == 5
 
-    def test_fit_calculates_correct_impact(self):
+    def test_fit_calculates_correct_impact(self, mock_storage):
         """Verify impact calculation is correct."""
         adapter = MetricsApproximationAdapter()
         adapter.connect(
@@ -133,7 +141,7 @@ class TestMetricsApproximationAdapterFit:
             }
         )
 
-        results = adapter.fit(data)
+        results = adapter.fit(data, storage=mock_storage, output_path="results")
 
         # Expected: 0.4 * 100 * 0.5 = 20.0
         product_result = results.data["per_product"][0]
@@ -141,7 +149,7 @@ class TestMetricsApproximationAdapterFit:
         assert product_result["approximated_impact"] == 20.0
         assert results.data["impact_estimates"]["total_approximated_impact"] == 20.0
 
-    def test_fit_aggregate_statistics(self):
+    def test_fit_aggregate_statistics(self, mock_storage):
         """Verify aggregate statistics are correct."""
         adapter = MetricsApproximationAdapter()
         adapter.connect(
@@ -157,7 +165,7 @@ class TestMetricsApproximationAdapterFit:
             }
         )
 
-        results = adapter.fit(data)
+        results = adapter.fit(data, storage=mock_storage, output_path="results")
 
         assert results.data["impact_estimates"]["total_approximated_impact"] == 100.0
         assert results.data["impact_estimates"]["mean_approximated_impact"] == 50.0
@@ -273,7 +281,7 @@ class TestMetricsApproximationAdapterGetRequiredColumns:
 class TestMetricsApproximationAdapterRowAttributes:
     """Tests for row_attributes passing to response functions."""
 
-    def test_row_attributes_passed_to_response_function(self):
+    def test_row_attributes_passed_to_response_function(self, mock_storage):
         """Verify row_attributes dict is passed to response function."""
         from impact_engine.models.metrics_approximation.response_registry import (
             register_response_function,
@@ -303,7 +311,7 @@ class TestMetricsApproximationAdapterRowAttributes:
             }
         )
 
-        adapter.fit(data)
+        adapter.fit(data, storage=mock_storage, output_path="results")
 
         # Verify attributes were captured
         assert len(captured_attributes) == 2
@@ -312,7 +320,7 @@ class TestMetricsApproximationAdapterRowAttributes:
         assert captured_attributes[1]["category"] == "Clothing"
         assert captured_attributes[1]["brand"] == "Nike"
 
-    def test_attribute_based_conditioning(self):
+    def test_attribute_based_conditioning(self, mock_storage):
         """Verify response function can use attributes for conditional logic."""
         from impact_engine.models.metrics_approximation.response_registry import (
             register_response_function,
@@ -347,10 +355,150 @@ class TestMetricsApproximationAdapterRowAttributes:
             }
         )
 
-        results = adapter.fit(data)
+        results = adapter.fit(data, storage=mock_storage, output_path="results")
 
         # Electronics: 0.4 * 100 * 0.8 = 32.0
         # Clothing: 0.4 * 100 * 0.5 = 20.0
         per_product = results.data["per_product"]
         assert per_product[0]["approximated_impact"] == 32.0
         assert per_product[1]["approximated_impact"] == 20.0
+
+
+class TestMetricsApproximationAdapterMissingData:
+    """Tests for missing data handling in fit() method."""
+
+    def test_fit_filters_rows_with_nan_metric_before(self, mock_storage):
+        """Rows with NaN in metric_before are filtered."""
+        adapter = MetricsApproximationAdapter()
+        adapter.connect(
+            merge_model_params({"RESPONSE": {"FUNCTION": "linear", "PARAMS": {"coefficient": 1.0}}})
+        )
+
+        data = pd.DataFrame(
+            {
+                "product_id": ["P001", "P002", "P003"],
+                "quality_before": [0.4, float("nan"), 0.3],
+                "quality_after": [0.8, 0.6, 0.7],
+                "baseline_sales": [100.0, 200.0, 150.0],
+            }
+        )
+
+        results = adapter.fit(data, storage=mock_storage, output_path="results")
+
+        assert results.data["impact_estimates"]["n_products"] == 2
+        product_ids = [p["product_id"] for p in results.data["per_product"]]
+        assert "P002" not in product_ids
+
+    def test_fit_filters_rows_with_nan_metric_after(self, mock_storage):
+        """Rows with NaN in metric_after are filtered."""
+        adapter = MetricsApproximationAdapter()
+        adapter.connect(
+            merge_model_params({"RESPONSE": {"FUNCTION": "linear", "PARAMS": {"coefficient": 1.0}}})
+        )
+
+        data = pd.DataFrame(
+            {
+                "product_id": ["P001", "P002"],
+                "quality_before": [0.4, 0.3],
+                "quality_after": [float("nan"), 0.7],
+                "baseline_sales": [100.0, 150.0],
+            }
+        )
+
+        results = adapter.fit(data, storage=mock_storage, output_path="results")
+
+        assert results.data["impact_estimates"]["n_products"] == 1
+        assert results.data["per_product"][0]["product_id"] == "P002"
+
+    def test_fit_filters_rows_with_nan_baseline(self, mock_storage):
+        """Rows with NaN in baseline are filtered."""
+        adapter = MetricsApproximationAdapter()
+        adapter.connect(
+            merge_model_params({"RESPONSE": {"FUNCTION": "linear", "PARAMS": {"coefficient": 1.0}}})
+        )
+
+        data = pd.DataFrame(
+            {
+                "product_id": ["P001", "P002"],
+                "quality_before": [0.4, 0.3],
+                "quality_after": [0.8, 0.7],
+                "baseline_sales": [100.0, float("nan")],
+            }
+        )
+
+        results = adapter.fit(data, storage=mock_storage, output_path="results")
+
+        assert results.data["impact_estimates"]["n_products"] == 1
+        assert results.data["per_product"][0]["product_id"] == "P001"
+
+    def test_fit_all_rows_filtered_returns_zero_impact(self, mock_storage):
+        """All rows filtered returns zero impact (no error)."""
+        adapter = MetricsApproximationAdapter()
+        adapter.connect(
+            merge_model_params({"RESPONSE": {"FUNCTION": "linear", "PARAMS": {"coefficient": 1.0}}})
+        )
+
+        data = pd.DataFrame(
+            {
+                "product_id": ["P001", "P002"],
+                "quality_before": [float("nan"), float("nan")],
+                "quality_after": [0.8, 0.7],
+                "baseline_sales": [100.0, 150.0],
+            }
+        )
+
+        results = adapter.fit(data, storage=mock_storage, output_path="results")
+
+        assert results.data["impact_estimates"]["n_products"] == 0
+        assert results.data["impact_estimates"]["total_approximated_impact"] == 0.0
+        assert results.data["impact_estimates"]["mean_approximated_impact"] == 0.0
+        assert results.data["per_product"] == []
+
+    def test_fit_no_missing_values_processes_all(self, mock_storage):
+        """Data with no missing values processes all rows."""
+        adapter = MetricsApproximationAdapter()
+        adapter.connect(
+            merge_model_params({"RESPONSE": {"FUNCTION": "linear", "PARAMS": {"coefficient": 1.0}}})
+        )
+
+        data = create_test_data()
+        results = adapter.fit(data, storage=mock_storage, output_path="results")
+
+        assert results.data["impact_estimates"]["n_products"] == 5
+
+    def test_fit_writes_filtered_products_csv(self, mock_storage):
+        """Filtered products are written to CSV via storage."""
+        adapter = MetricsApproximationAdapter()
+        adapter.connect(
+            merge_model_params({"RESPONSE": {"FUNCTION": "linear", "PARAMS": {"coefficient": 1.0}}})
+        )
+
+        data = pd.DataFrame(
+            {
+                "product_id": ["P001", "P002", "P003"],
+                "quality_before": [0.4, float("nan"), float("nan")],
+                "quality_after": [0.8, 0.6, 0.7],
+                "baseline_sales": [100.0, 200.0, 150.0],
+            }
+        )
+
+        adapter.fit(data, storage=mock_storage, output_path="results")
+
+        mock_storage.write_csv.assert_called_once()
+        call_args = mock_storage.write_csv.call_args
+        assert call_args[0][0] == "results/filtered_products.csv"
+        written_df = call_args[0][1]
+        assert list(written_df["product_id"]) == ["P002", "P003"]
+
+    def test_fit_no_csv_written_when_no_filtered_products(self, mock_storage):
+        """No CSV written when all products are valid."""
+        adapter = MetricsApproximationAdapter()
+        adapter.connect(
+            merge_model_params({"RESPONSE": {"FUNCTION": "linear", "PARAMS": {"coefficient": 1.0}}})
+        )
+
+        data = create_test_data()  # No NaN values
+
+        adapter.fit(data, storage=mock_storage, output_path="results")
+
+        mock_storage.write_csv.assert_not_called()
