@@ -43,7 +43,7 @@ def evaluate_impact(
     # Save artifacts for observability
     storage_manager.write_yaml("config.yaml", config)
     data_store, data_filename = ArtifactStore.from_file_path(data_path)
-    products = data_store.read_csv(data_filename)
+    products = data_store.read_data(data_filename)
     storage_manager.write_csv("products.csv", products)
 
     metrics_manager = create_metrics_manager(config, parent_job=storage_manager.get_job())

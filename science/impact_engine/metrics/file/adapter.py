@@ -92,18 +92,7 @@ class FileAdapter(MetricsInterface):
             ValueError: If file format is not supported
         """
         path = self.config["path"]
-        filename_lower = self.filename.lower()
-
-        # Determine format: files have extensions, directories don't
-        is_dir = not filename_lower.endswith((".csv", ".parquet", ".pq"))
-
-        if is_dir:
-            self.data = self.store.read_parquet(self.filename)
-        elif filename_lower.endswith(".csv"):
-            self.data = self.store.read_csv(self.filename)
-        else:
-            self.data = self.store.read_parquet(self.filename)
-
+        self.data = self.store.read_data(self.filename)
         self.logger.info(f"Loaded {len(self.data)} rows from {path}")
         return self.data
 
