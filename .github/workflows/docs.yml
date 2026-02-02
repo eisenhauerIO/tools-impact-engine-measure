@@ -34,10 +34,10 @@ jobs:
 
     - name: Execute notebooks
       run: |
-        hatch run docs:python -m jupyter nbconvert --to notebook --execute --inplace documentation/notebooks/*.ipynb
+        hatch run python -m jupyter nbconvert --to notebook --execute --inplace documentation/notebooks/*.ipynb
 
     - name: Build documentation
-      run: hatch run docs:build
+      run: hatch run docs
     
     - name: Setup Pages
       uses: actions/configure-pages@v4
