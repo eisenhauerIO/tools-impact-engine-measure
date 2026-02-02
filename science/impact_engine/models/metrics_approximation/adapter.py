@@ -180,7 +180,8 @@ class MetricsApproximationAdapter(ModelInterface):
                 "approximated_impact": round(row["_impact"], 2),
             }
 
-        per_product = df.apply(build_product_result, axis=1).tolist()
+        per_product_df = pd.DataFrame(df.apply(build_product_result, axis=1).tolist())
+        kwargs["storage"].write_csv("product_level_impacts.csv", per_product_df)
 
         # Compute aggregates from vectorized columns
         total_impact = df["_impact"].sum()
@@ -208,7 +209,6 @@ class MetricsApproximationAdapter(ModelInterface):
                 "response_function": self.config["response_function"],
                 "response_params": self.config["response_params"],
                 "impact_estimates": impact_estimates,
-                "per_product": per_product,
             },
         )
 
@@ -294,6 +294,5 @@ class MetricsApproximationAdapter(ModelInterface):
                     "mean_metric_change": 0.0,
                     "n_products": 0,
                 },
-                "per_product": [],
             },
         )

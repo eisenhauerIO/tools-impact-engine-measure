@@ -122,7 +122,11 @@ class TestMetricsApproximationAdapterFit:
         assert results.model_type == "metrics_approximation"
         assert results.data["response_function"] == "linear"
         assert results.data["impact_estimates"]["n_products"] == 5
-        assert len(results.data["per_product"]) == 5
+
+        # Per-product written to CSV, not in result
+        call_args = mock_storage.write_csv.call_args
+        assert call_args[0][0] == "product_level_impacts.csv"
+        assert len(call_args[0][1]) == 5
 
     def test_fit_calculates_correct_impact(self, mock_storage):
         """Verify impact calculation is correct."""
@@ -144,9 +148,9 @@ class TestMetricsApproximationAdapterFit:
         results = adapter.fit(data, storage=mock_storage)
 
         # Expected: 0.4 * 100 * 0.5 = 20.0
-        product_result = results.data["per_product"][0]
-        assert product_result["delta_metric"] == 0.4
-        assert product_result["approximated_impact"] == 20.0
+        per_product_df = mock_storage.write_csv.call_args[0][1]
+        assert per_product_df.iloc[0]["delta_metric"] == 0.4
+        assert per_product_df.iloc[0]["approximated_impact"] == 20.0
         assert results.data["impact_estimates"]["total_approximated_impact"] == 20.0
 
     def test_fit_aggregate_statistics(self, mock_storage):
@@ -355,13 +359,13 @@ class TestMetricsApproximationAdapterRowAttributes:
             }
         )
 
-        results = adapter.fit(data, storage=mock_storage)
+        adapter.fit(data, storage=mock_storage)
 
         # Electronics: 0.4 * 100 * 0.8 = 32.0
         # Clothing: 0.4 * 100 * 0.5 = 20.0
-        per_product = results.data["per_product"]
-        assert per_product[0]["approximated_impact"] == 32.0
-        assert per_product[1]["approximated_impact"] == 20.0
+        per_product_df = mock_storage.write_csv.call_args[0][1]
+        assert per_product_df.iloc[0]["approximated_impact"] == 32.0
+        assert per_product_df.iloc[1]["approximated_impact"] == 20.0
 
 
 class TestMetricsApproximationAdapterMissingData:
@@ -386,7 +390,13 @@ class TestMetricsApproximationAdapterMissingData:
         results = adapter.fit(data, storage=mock_storage)
 
         assert results.data["impact_estimates"]["n_products"] == 2
-        product_ids = [p["product_id"] for p in results.data["per_product"]]
+        # Find the product_level_impacts.csv call
+        per_product_call = [
+            c
+            for c in mock_storage.write_csv.call_args_list
+            if c[0][0] == "product_level_impacts.csv"
+        ][0]
+        product_ids = list(per_product_call[0][1]["product_id"])
         assert "P002" not in product_ids
 
     def test_fit_filters_rows_with_nan_metric_after(self, mock_storage):
@@ -408,7 +418,12 @@ class TestMetricsApproximationAdapterMissingData:
         results = adapter.fit(data, storage=mock_storage)
 
         assert results.data["impact_estimates"]["n_products"] == 1
-        assert results.data["per_product"][0]["product_id"] == "P002"
+        per_product_call = [
+            c
+            for c in mock_storage.write_csv.call_args_list
+            if c[0][0] == "product_level_impacts.csv"
+        ][0]
+        assert per_product_call[0][1].iloc[0]["product_id"] == "P002"
 
     def test_fit_filters_rows_with_nan_baseline(self, mock_storage):
         """Rows with NaN in baseline are filtered."""
@@ -429,7 +444,12 @@ class TestMetricsApproximationAdapterMissingData:
         results = adapter.fit(data, storage=mock_storage)
 
         assert results.data["impact_estimates"]["n_products"] == 1
-        assert results.data["per_product"][0]["product_id"] == "P001"
+        per_product_call = [
+            c
+            for c in mock_storage.write_csv.call_args_list
+            if c[0][0] == "product_level_impacts.csv"
+        ][0]
+        assert per_product_call[0][1].iloc[0]["product_id"] == "P001"
 
     def test_fit_all_rows_filtered_returns_zero_impact(self, mock_storage):
         """All rows filtered returns zero impact (no error)."""
@@ -452,7 +472,13 @@ class TestMetricsApproximationAdapterMissingData:
         assert results.data["impact_estimates"]["n_products"] == 0
         assert results.data["impact_estimates"]["total_approximated_impact"] == 0.0
         assert results.data["impact_estimates"]["mean_approximated_impact"] == 0.0
-        assert results.data["per_product"] == []
+        # No product_level_impacts.csv written when all rows filtered
+        product_level_calls = [
+            c
+            for c in mock_storage.write_csv.call_args_list
+            if c[0][0] == "product_level_impacts.csv"
+        ]
+        assert len(product_level_calls) == 0
 
     def test_fit_no_missing_values_processes_all(self, mock_storage):
         """Data with no missing values processes all rows."""
@@ -484,14 +510,15 @@ class TestMetricsApproximationAdapterMissingData:
 
         adapter.fit(data, storage=mock_storage)
 
-        mock_storage.write_csv.assert_called_once()
-        call_args = mock_storage.write_csv.call_args
-        assert call_args[0][0] == "filtered_products.csv"
-        written_df = call_args[0][1]
+        # Two CSVs written: filtered_products.csv and product_level_impacts.csv
+        filtered_call = [
+            c for c in mock_storage.write_csv.call_args_list if c[0][0] == "filtered_products.csv"
+        ][0]
+        written_df = filtered_call[0][1]
         assert list(written_df["product_id"]) == ["P002", "P003"]
 
-    def test_fit_no_csv_written_when_no_filtered_products(self, mock_storage):
-        """No CSV written when all products are valid."""
+    def test_fit_no_filtered_csv_written_when_no_filtered_products(self, mock_storage):
+        """No filtered_products.csv written when all products are valid."""
         adapter = MetricsApproximationAdapter()
         adapter.connect(
             merge_model_params({"RESPONSE": {"FUNCTION": "linear", "PARAMS": {"coefficient": 1.0}}})
@@ -501,4 +528,8 @@ class TestMetricsApproximationAdapterMissingData:
 
         adapter.fit(data, storage=mock_storage)
 
-        mock_storage.write_csv.assert_not_called()
+        # Only product_level_impacts.csv written, not filtered_products.csv
+        filtered_calls = [
+            c for c in mock_storage.write_csv.call_args_list if c[0][0] == "filtered_products.csv"
+        ]
+        assert len(filtered_calls) == 0

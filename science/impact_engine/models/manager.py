@@ -85,16 +85,7 @@ class ModelsManager:
         )
 
         # Persist to storage (centralized here, not in models)
-        result_dict = result.to_dict()
-
-        # Extract per_product to separate CSV file (can be large)
-        if "per_product" in result_dict:
-            per_product = result_dict.pop("per_product")
-            if per_product:
-                per_product_df = pd.DataFrame(per_product)
-                storage.write_csv("product_level_impacts.csv", per_product_df)
-
-        storage.write_json("impact_results.json", result_dict)
+        storage.write_json("impact_results.json", result.to_dict())
         return storage.full_path("impact_results.json")
 
     def get_current_config(self) -> Optional[Dict[str, Any]]:
