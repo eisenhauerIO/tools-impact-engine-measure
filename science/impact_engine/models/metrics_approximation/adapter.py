@@ -155,6 +155,9 @@ class MetricsApproximationAdapter(ModelInterface):
             df, required_columns, kwargs["storage"], kwargs["output_path"]
         )
 
+        if df.empty:
+            return self._empty_result()
+
         # Vectorize delta computation
         df["_delta_metric"] = df[metric_after_col] - df[metric_before_col]
 
@@ -279,3 +282,23 @@ class MetricsApproximationAdapter(ModelInterface):
             storage.write_csv(filtered_path, filtered_df)
 
         return df[mask].copy()
+
+    def _empty_result(self) -> ModelResult:
+        """Return zero-impact result when no valid data remains after filtering.
+
+        This enables pipeline testing with mock/incomplete data without errors.
+        """
+        return ModelResult(
+            model_type="metrics_approximation",
+            data={
+                "response_function": self.config["response_function"],
+                "response_params": self.config["response_params"],
+                "impact_estimates": {
+                    "total_approximated_impact": 0.0,
+                    "mean_approximated_impact": 0.0,
+                    "mean_metric_change": 0.0,
+                    "n_products": 0,
+                },
+                "per_product": [],
+            },
+        )
