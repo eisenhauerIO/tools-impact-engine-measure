@@ -15,6 +15,11 @@ from ..factory import MODEL_REGISTRY
 from .response_registry import get_response_function
 
 
+def _normalize_result(result):
+    """Normalize response function output to dict format."""
+    return result if isinstance(result, dict) else {"impact": result}
+
+
 @MODEL_REGISTRY.register_decorator("metrics_approximation")
 class MetricsApproximationAdapter(ModelInterface):
     """
@@ -162,45 +167,44 @@ class MetricsApproximationAdapter(ModelInterface):
         # Use apply() instead of iterrows() for better performance
         # Pass row_attributes to enable attribute-based conditioning in response functions
         def compute_impact(row):
-            return response_fn(
+            result = response_fn(
                 row["_delta_metric"],
                 row[baseline_col],
                 row_attributes=row.to_dict(),
                 **response_params,
             )
+            return _normalize_result(result)
 
-        df["_impact"] = df.apply(compute_impact, axis=1)
+        # Expand dict results into multiple DataFrame columns
+        df["_result"] = df.apply(compute_impact, axis=1)
+        result_df = pd.DataFrame(df["_result"].tolist(), index=df.index)
+        impact_keys = result_df.columns.tolist()
+        df = pd.concat([df, result_df], axis=1)
 
-        # Build per-product results
+        # Build per-product results with dynamic keys
         def build_product_result(row):
-            return {
+            result = {
                 "product_id": row.get("product_id", str(row.name)),
                 "delta_metric": round(row["_delta_metric"], 4),
                 "baseline_outcome": round(row[baseline_col], 2),
-                "approximated_impact": round(row["_impact"], 2),
             }
+            for key in impact_keys:
+                result[key] = round(row[key], 2)
+            return result
 
         per_product_df = pd.DataFrame(df.apply(build_product_result, axis=1).tolist())
         kwargs["storage"].write_csv("product_level_impacts.csv", per_product_df)
 
         # Compute aggregates from vectorized columns
-        total_impact = df["_impact"].sum()
-        total_delta = df["_delta_metric"].sum()
         n_products = len(df)
 
-        # Build aggregate estimates
-        impact_estimates = {
-            "total_approximated_impact": round(total_impact, 2),
-            "mean_approximated_impact": round(total_impact / n_products, 2)
-            if n_products > 0
-            else 0.0,
-            "mean_metric_change": round(total_delta / n_products, 4) if n_products > 0 else 0.0,
-            "n_products": n_products,
-        }
+        # Build aggregate estimates with dynamic keys
+        impact_estimates = {key: round(df[key].sum(), 2) for key in impact_keys}
+        impact_estimates["n_products"] = n_products
 
         self.logger.info(
             f"Metrics approximation complete: {n_products} products, "
-            f"total impact={impact_estimates['total_approximated_impact']}"
+            f"impact_estimates={impact_estimates}"
         )
 
         return ModelResult(
@@ -289,9 +293,7 @@ class MetricsApproximationAdapter(ModelInterface):
                 "response_function": self.config["response_function"],
                 "response_params": self.config["response_params"],
                 "impact_estimates": {
-                    "total_approximated_impact": 0.0,
-                    "mean_approximated_impact": 0.0,
-                    "mean_metric_change": 0.0,
+                    "impact": 0.0,
                     "n_products": 0,
                 },
             },

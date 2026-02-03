@@ -93,4 +93,4 @@ class TestRealCatalogSimulatorPipeline:
         assert results["model_type"] == "metrics_approximation"
         assert results["response_function"] == "linear"
         assert results["impact_estimates"]["n_products"] == 5
-        assert results["impact_estimates"]["total_approximated_impact"] >= 0
+        assert results["impact_estimates"]["impact"] >= 0

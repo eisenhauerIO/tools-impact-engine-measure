@@ -150,8 +150,8 @@ class TestMetricsApproximationAdapterFit:
         # Expected: 0.4 * 100 * 0.5 = 20.0
         per_product_df = mock_storage.write_csv.call_args[0][1]
         assert per_product_df.iloc[0]["delta_metric"] == 0.4
-        assert per_product_df.iloc[0]["approximated_impact"] == 20.0
-        assert results.data["impact_estimates"]["total_approximated_impact"] == 20.0
+        assert per_product_df.iloc[0]["impact"] == 20.0
+        assert results.data["impact_estimates"]["impact"] == 20.0
 
     def test_fit_aggregate_statistics(self, mock_storage):
         """Verify aggregate statistics are correct."""
@@ -171,9 +171,7 @@ class TestMetricsApproximationAdapterFit:
 
         results = adapter.fit(data, storage=mock_storage)
 
-        assert results.data["impact_estimates"]["total_approximated_impact"] == 100.0
-        assert results.data["impact_estimates"]["mean_approximated_impact"] == 50.0
-        assert results.data["impact_estimates"]["mean_metric_change"] == 0.35
+        assert results.data["impact_estimates"]["impact"] == 100.0
         assert results.data["impact_estimates"]["n_products"] == 2
 
     def test_fit_not_connected_raises(self):
@@ -364,8 +362,8 @@ class TestMetricsApproximationAdapterRowAttributes:
         # Electronics: 0.4 * 100 * 0.8 = 32.0
         # Clothing: 0.4 * 100 * 0.5 = 20.0
         per_product_df = mock_storage.write_csv.call_args[0][1]
-        assert per_product_df.iloc[0]["approximated_impact"] == 32.0
-        assert per_product_df.iloc[1]["approximated_impact"] == 20.0
+        assert per_product_df.iloc[0]["impact"] == 32.0
+        assert per_product_df.iloc[1]["impact"] == 20.0
 
 
 class TestMetricsApproximationAdapterMissingData:
@@ -470,8 +468,7 @@ class TestMetricsApproximationAdapterMissingData:
         results = adapter.fit(data, storage=mock_storage)
 
         assert results.data["impact_estimates"]["n_products"] == 0
-        assert results.data["impact_estimates"]["total_approximated_impact"] == 0.0
-        assert results.data["impact_estimates"]["mean_approximated_impact"] == 0.0
+        assert results.data["impact_estimates"]["impact"] == 0.0
         # No product_level_impacts.csv written when all rows filtered
         product_level_calls = [
             c
@@ -533,3 +530,97 @@ class TestMetricsApproximationAdapterMissingData:
             c for c in mock_storage.write_csv.call_args_list if c[0][0] == "filtered_products.csv"
         ]
         assert len(filtered_calls) == 0
+
+
+class TestMetricsApproximationAdapterMultiOutput:
+    """Tests for multi-output response functions."""
+
+    def test_fit_multi_output_response(self, mock_storage):
+        """Response function returning dict produces multiple columns."""
+        from impact_engine.models.metrics_approximation.response_registry import (
+            register_response_function,
+        )
+
+        def multi_output_response(delta_metric, baseline_outcome, **kwargs):
+            """Return impact with confidence bounds."""
+            impact = delta_metric * baseline_outcome
+            return {
+                "impact": impact,
+                "lower": impact * 0.8,
+                "upper": impact * 1.2,
+            }
+
+        register_response_function("multi_output", multi_output_response)
+
+        adapter = MetricsApproximationAdapter()
+        adapter.connect(merge_model_params({"RESPONSE": {"FUNCTION": "multi_output"}}))
+
+        data = pd.DataFrame(
+            {
+                "product_id": ["P001", "P002"],
+                "quality_before": [0.4, 0.3],
+                "quality_after": [0.8, 0.6],  # deltas: 0.4, 0.3
+                "baseline_sales": [100.0, 200.0],  # impacts: 40, 60
+            }
+        )
+
+        results = adapter.fit(data, storage=mock_storage)
+
+        # Verify per-product CSV has all columns
+        per_product_df = mock_storage.write_csv.call_args[0][1]
+        assert "impact" in per_product_df.columns
+        assert "lower" in per_product_df.columns
+        assert "upper" in per_product_df.columns
+
+        # P001: impact=40, lower=32, upper=48
+        # P002: impact=60, lower=48, upper=72
+        assert per_product_df.iloc[0]["impact"] == 40.0
+        assert per_product_df.iloc[0]["lower"] == 32.0
+        assert per_product_df.iloc[0]["upper"] == 48.0
+
+        # Verify aggregates
+        assert results.data["impact_estimates"]["impact"] == 100.0
+        assert results.data["impact_estimates"]["lower"] == 80.0
+        assert results.data["impact_estimates"]["upper"] == 120.0
+        assert results.data["impact_estimates"]["n_products"] == 2
+
+    def test_fit_custom_key_names(self, mock_storage):
+        """Response function can use any key names."""
+        from impact_engine.models.metrics_approximation.response_registry import (
+            register_response_function,
+        )
+
+        def custom_keys_response(delta_metric, baseline_outcome, **kwargs):
+            """Return with custom key names."""
+            value = delta_metric * baseline_outcome
+            return {
+                "point_estimate": value,
+                "ci_low": value * 0.9,
+                "ci_high": value * 1.1,
+            }
+
+        register_response_function("custom_keys", custom_keys_response)
+
+        adapter = MetricsApproximationAdapter()
+        adapter.connect(merge_model_params({"RESPONSE": {"FUNCTION": "custom_keys"}}))
+
+        data = pd.DataFrame(
+            {
+                "product_id": ["P001"],
+                "quality_before": [0.4],
+                "quality_after": [0.8],
+                "baseline_sales": [100.0],
+            }
+        )
+
+        results = adapter.fit(data, storage=mock_storage)
+
+        # Verify custom keys are used
+        per_product_df = mock_storage.write_csv.call_args[0][1]
+        assert "point_estimate" in per_product_df.columns
+        assert "ci_low" in per_product_df.columns
+        assert "ci_high" in per_product_df.columns
+
+        assert results.data["impact_estimates"]["point_estimate"] == 40.0
+        assert results.data["impact_estimates"]["ci_low"] == 36.0
+        assert results.data["impact_estimates"]["ci_high"] == 44.0
