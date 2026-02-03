@@ -193,7 +193,7 @@ class MetricsApproximationAdapter(ModelInterface):
             return result
 
         per_product_df = pd.DataFrame(df.apply(build_product_result, axis=1).tolist())
-        kwargs["storage"].write_csv("product_level_impacts.csv", per_product_df)
+        kwargs["storage"].write_parquet("product_level_impacts.parquet", per_product_df)
 
         # Compute aggregates from vectorized columns
         n_products = len(df)
@@ -275,10 +275,10 @@ class MetricsApproximationAdapter(ModelInterface):
         if filtered_ids:
             self.logger.warning(
                 f"Filtered {len(filtered_ids)} rows with missing values in columns "
-                f"{required_columns}. See filtered_products.csv for details."
+                f"{required_columns}. See filtered_products.parquet for details."
             )
             filtered_df = pd.DataFrame({"product_id": filtered_ids})
-            storage.write_csv("filtered_products.csv", filtered_df)
+            storage.write_parquet("filtered_products.parquet", filtered_df)
 
         return df[mask].copy()
 

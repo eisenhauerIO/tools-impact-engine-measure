@@ -16,6 +16,7 @@ class StorageInterface(ABC):
         - write_json: Write JSON data to storage
         - write_csv: Write DataFrame to CSV
         - write_yaml: Write YAML data to storage
+        - write_parquet: Write DataFrame to Parquet
         - full_path: Get full path/URL for a relative path
 
     Optional methods (have sensible defaults):
@@ -61,6 +62,16 @@ class StorageInterface(ABC):
         Args:
             path: Relative path within the storage location.
             data: Dictionary to serialize as YAML.
+        """
+        pass
+
+    @abstractmethod
+    def write_parquet(self, path: str, df: pd.DataFrame) -> None:
+        """Write DataFrame to Parquet in storage.
+
+        Args:
+            path: Relative path within the storage location.
+            df: DataFrame to write.
         """
         pass
 

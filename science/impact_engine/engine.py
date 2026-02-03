@@ -44,16 +44,16 @@ def evaluate_impact(
     storage_manager.write_yaml("config.yaml", config)
     data_store, data_filename = ArtifactStore.from_file_path(data_path)
     products = data_store.read_data(data_filename)
-    storage_manager.write_csv("products.csv", products)
+    storage_manager.write_parquet("products.parquet", products)
 
     metrics_manager = create_metrics_manager(config, parent_job=storage_manager.get_job())
     models_manager = create_models_manager(config_path)
 
     business_metrics = metrics_manager.retrieve_metrics(products)
-    storage_manager.write_csv("business_metrics.csv", business_metrics)
+    storage_manager.write_parquet("business_metrics.parquet", business_metrics)
 
     transformed_metrics = apply_transform(business_metrics, transform_config)
-    storage_manager.write_csv("transformed_metrics.csv", transformed_metrics)
+    storage_manager.write_parquet("transformed_metrics.parquet", transformed_metrics)
 
     model_results_path = models_manager.fit_model(data=transformed_metrics, storage=storage_manager)
 

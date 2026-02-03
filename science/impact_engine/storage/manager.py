@@ -66,6 +66,15 @@ class StorageManager:
         """
         self.adapter.write_yaml(path, data)
 
+    def write_parquet(self, path: str, df: pd.DataFrame) -> None:
+        """Write DataFrame to Parquet in storage.
+
+        Args:
+            path: Relative path within the storage location.
+            df: DataFrame to write.
+        """
+        self.adapter.write_parquet(path, df)
+
     def full_path(self, path: str) -> str:
         """Get the full path/URL for a relative path.
 

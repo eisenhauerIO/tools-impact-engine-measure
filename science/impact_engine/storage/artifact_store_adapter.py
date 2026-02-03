@@ -64,6 +64,12 @@ class ArtifactStoreAdapter(StorageInterface):
             raise ConnectionError("Storage not connected. Call connect() first.")
         self.store.write_yaml(path, data)
 
+    def write_parquet(self, path: str, df: pd.DataFrame) -> None:
+        """Write DataFrame to Parquet in storage."""
+        if not self.is_connected:
+            raise ConnectionError("Storage not connected. Call connect() first.")
+        self.store.write_parquet(path, df)
+
     def full_path(self, path: str) -> str:
         """Get the full path/URL for a relative path."""
         if not self.is_connected:

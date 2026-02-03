@@ -123,9 +123,9 @@ class TestMetricsApproximationAdapterFit:
         assert results.data["response_function"] == "linear"
         assert results.data["impact_estimates"]["n_products"] == 5
 
-        # Per-product written to CSV, not in result
-        call_args = mock_storage.write_csv.call_args
-        assert call_args[0][0] == "product_level_impacts.csv"
+        # Per-product written to parquet, not in result
+        call_args = mock_storage.write_parquet.call_args
+        assert call_args[0][0] == "product_level_impacts.parquet"
         assert len(call_args[0][1]) == 5
 
     def test_fit_calculates_correct_impact(self, mock_storage):
@@ -148,7 +148,7 @@ class TestMetricsApproximationAdapterFit:
         results = adapter.fit(data, storage=mock_storage)
 
         # Expected: 0.4 * 100 * 0.5 = 20.0
-        per_product_df = mock_storage.write_csv.call_args[0][1]
+        per_product_df = mock_storage.write_parquet.call_args[0][1]
         assert per_product_df.iloc[0]["delta_metric"] == 0.4
         assert per_product_df.iloc[0]["impact"] == 20.0
         assert results.data["impact_estimates"]["impact"] == 20.0
@@ -361,7 +361,7 @@ class TestMetricsApproximationAdapterRowAttributes:
 
         # Electronics: 0.4 * 100 * 0.8 = 32.0
         # Clothing: 0.4 * 100 * 0.5 = 20.0
-        per_product_df = mock_storage.write_csv.call_args[0][1]
+        per_product_df = mock_storage.write_parquet.call_args[0][1]
         assert per_product_df.iloc[0]["impact"] == 32.0
         assert per_product_df.iloc[1]["impact"] == 20.0
 
@@ -388,11 +388,11 @@ class TestMetricsApproximationAdapterMissingData:
         results = adapter.fit(data, storage=mock_storage)
 
         assert results.data["impact_estimates"]["n_products"] == 2
-        # Find the product_level_impacts.csv call
+        # Find the product_level_impacts.parquet call
         per_product_call = [
             c
-            for c in mock_storage.write_csv.call_args_list
-            if c[0][0] == "product_level_impacts.csv"
+            for c in mock_storage.write_parquet.call_args_list
+            if c[0][0] == "product_level_impacts.parquet"
         ][0]
         product_ids = list(per_product_call[0][1]["product_id"])
         assert "P002" not in product_ids
@@ -418,8 +418,8 @@ class TestMetricsApproximationAdapterMissingData:
         assert results.data["impact_estimates"]["n_products"] == 1
         per_product_call = [
             c
-            for c in mock_storage.write_csv.call_args_list
-            if c[0][0] == "product_level_impacts.csv"
+            for c in mock_storage.write_parquet.call_args_list
+            if c[0][0] == "product_level_impacts.parquet"
         ][0]
         assert per_product_call[0][1].iloc[0]["product_id"] == "P002"
 
@@ -444,8 +444,8 @@ class TestMetricsApproximationAdapterMissingData:
         assert results.data["impact_estimates"]["n_products"] == 1
         per_product_call = [
             c
-            for c in mock_storage.write_csv.call_args_list
-            if c[0][0] == "product_level_impacts.csv"
+            for c in mock_storage.write_parquet.call_args_list
+            if c[0][0] == "product_level_impacts.parquet"
         ][0]
         assert per_product_call[0][1].iloc[0]["product_id"] == "P001"
 
@@ -469,11 +469,11 @@ class TestMetricsApproximationAdapterMissingData:
 
         assert results.data["impact_estimates"]["n_products"] == 0
         assert results.data["impact_estimates"]["impact"] == 0.0
-        # No product_level_impacts.csv written when all rows filtered
+        # No product_level_impacts.parquet written when all rows filtered
         product_level_calls = [
             c
-            for c in mock_storage.write_csv.call_args_list
-            if c[0][0] == "product_level_impacts.csv"
+            for c in mock_storage.write_parquet.call_args_list
+            if c[0][0] == "product_level_impacts.parquet"
         ]
         assert len(product_level_calls) == 0
 
@@ -489,8 +489,8 @@ class TestMetricsApproximationAdapterMissingData:
 
         assert results.data["impact_estimates"]["n_products"] == 5
 
-    def test_fit_writes_filtered_products_csv(self, mock_storage):
-        """Filtered products are written to CSV via storage."""
+    def test_fit_writes_filtered_products_parquet(self, mock_storage):
+        """Filtered products are written to parquet via storage."""
         adapter = MetricsApproximationAdapter()
         adapter.connect(
             merge_model_params({"RESPONSE": {"FUNCTION": "linear", "PARAMS": {"coefficient": 1.0}}})
@@ -507,15 +507,17 @@ class TestMetricsApproximationAdapterMissingData:
 
         adapter.fit(data, storage=mock_storage)
 
-        # Two CSVs written: filtered_products.csv and product_level_impacts.csv
+        # Two parquets written: filtered_products.parquet and product_level_impacts.parquet
         filtered_call = [
-            c for c in mock_storage.write_csv.call_args_list if c[0][0] == "filtered_products.csv"
+            c
+            for c in mock_storage.write_parquet.call_args_list
+            if c[0][0] == "filtered_products.parquet"
         ][0]
         written_df = filtered_call[0][1]
         assert list(written_df["product_id"]) == ["P002", "P003"]
 
-    def test_fit_no_filtered_csv_written_when_no_filtered_products(self, mock_storage):
-        """No filtered_products.csv written when all products are valid."""
+    def test_fit_no_filtered_parquet_written_when_no_filtered_products(self, mock_storage):
+        """No filtered_products.parquet written when all products are valid."""
         adapter = MetricsApproximationAdapter()
         adapter.connect(
             merge_model_params({"RESPONSE": {"FUNCTION": "linear", "PARAMS": {"coefficient": 1.0}}})
@@ -525,9 +527,11 @@ class TestMetricsApproximationAdapterMissingData:
 
         adapter.fit(data, storage=mock_storage)
 
-        # Only product_level_impacts.csv written, not filtered_products.csv
+        # Only product_level_impacts.parquet written, not filtered_products.parquet
         filtered_calls = [
-            c for c in mock_storage.write_csv.call_args_list if c[0][0] == "filtered_products.csv"
+            c
+            for c in mock_storage.write_parquet.call_args_list
+            if c[0][0] == "filtered_products.parquet"
         ]
         assert len(filtered_calls) == 0
 
@@ -566,8 +570,8 @@ class TestMetricsApproximationAdapterMultiOutput:
 
         results = adapter.fit(data, storage=mock_storage)
 
-        # Verify per-product CSV has all columns
-        per_product_df = mock_storage.write_csv.call_args[0][1]
+        # Verify per-product parquet has all columns
+        per_product_df = mock_storage.write_parquet.call_args[0][1]
         assert "impact" in per_product_df.columns
         assert "lower" in per_product_df.columns
         assert "upper" in per_product_df.columns
@@ -616,7 +620,7 @@ class TestMetricsApproximationAdapterMultiOutput:
         results = adapter.fit(data, storage=mock_storage)
 
         # Verify custom keys are used
-        per_product_df = mock_storage.write_csv.call_args[0][1]
+        per_product_df = mock_storage.write_parquet.call_args[0][1]
         assert "point_estimate" in per_product_df.columns
         assert "ci_low" in per_product_df.columns
         assert "ci_high" in per_product_df.columns
