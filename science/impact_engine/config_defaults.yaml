@@ -48,6 +48,9 @@ MEASUREMENT:
     treatment_column: null     # REQUIRED for subclassification model
     covariate_columns: null    # REQUIRED for subclassification model
 
+    # Experiment model params
+    formula: null              # REQUIRED for experiment model (R-style, e.g., 'y ~ treatment + x1')
+
     # Metrics approximation model params
     metric_before_column: quality_before
     metric_after_column: quality_after

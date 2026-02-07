@@ -1,0 +1,140 @@
+"""Experiment Model Adapter - thin wrapper around statsmodels OLS with R-style formulas."""
+
+import logging
+from typing import Any, Dict, List
+
+import pandas as pd
+import statsmodels.formula.api as smf
+
+from ..base import ModelInterface, ModelResult
+from ..factory import MODEL_REGISTRY
+
+
+@MODEL_REGISTRY.register_decorator("experiment")
+class ExperimentAdapter(ModelInterface):
+    """Estimates treatment effects via OLS regression with R-style formulas.
+
+    Constraints:
+    - formula parameter required in MEASUREMENT.PARAMS
+    - DataFrame must contain all variables referenced in the formula
+    """
+
+    def __init__(self):
+        """Initialize the ExperimentAdapter."""
+        self.logger = logging.getLogger(__name__)
+        self.is_connected = False
+        self.config = None
+
+    def connect(self, config: Dict[str, Any]) -> bool:
+        """Initialize model with configuration parameters.
+
+        Config is pre-validated with defaults merged via process_config().
+        All parameters are stored for pass-through to statsmodels.
+        """
+        formula = config.get("formula")
+        if not formula or not isinstance(formula, str):
+            raise ValueError(
+                "formula is required and must be a string (e.g., 'y ~ treatment + x1'). "
+                "Specify in MEASUREMENT.PARAMS configuration."
+            )
+
+        self.config = dict(config)
+        self.is_connected = True
+        return True
+
+    def validate_connection(self) -> bool:
+        """Validate that the model is properly initialized and ready to use."""
+        if not self.is_connected:
+            return False
+
+        try:
+            import statsmodels.formula.api  # noqa: F401
+
+            return True
+        except ImportError:
+            return False
+
+    def validate_params(self, params: Dict[str, Any]) -> None:
+        """Validate experiment-specific parameters.
+
+        Args:
+            params: Parameters dict with formula, etc.
+
+        Raises:
+            ValueError: If formula is missing.
+        """
+        if not params.get("formula"):
+            raise ValueError(
+                "formula is required for ExperimentAdapter. "
+                "Specify in MEASUREMENT.PARAMS configuration."
+            )
+
+    def fit(self, data: pd.DataFrame, **kwargs) -> ModelResult:
+        """Fit OLS model using statsmodels formula API and return results.
+
+        Args:
+            data: DataFrame containing all variables referenced in the formula.
+            **kwargs: Passed through to statsmodels OLS .fit()
+                (e.g., cov_type='HC3' for robust standard errors).
+
+        Returns:
+            ModelResult: Standardized result container.
+
+        Raises:
+            ConnectionError: If model not connected.
+            RuntimeError: If model fitting fails.
+        """
+        if not self.is_connected:
+            raise ConnectionError("Model not connected. Call connect() first.")
+
+        formula = self.config["formula"]
+
+        try:
+            model = smf.ols(formula, data=data)
+            results = model.fit(**kwargs)
+
+            # Extract confidence intervals as a nested dict
+            conf_int_df = results.conf_int()
+            conf_int = {
+                var: [float(conf_int_df.loc[var, 0]), float(conf_int_df.loc[var, 1])]
+                for var in conf_int_df.index
+            }
+
+            impact_estimates = {
+                "params": {k: float(v) for k, v in results.params.items()},
+                "bse": {k: float(v) for k, v in results.bse.items()},
+                "tvalues": {k: float(v) for k, v in results.tvalues.items()},
+                "pvalues": {k: float(v) for k, v in results.pvalues.items()},
+                "conf_int": conf_int,
+                "rsquared": float(results.rsquared),
+                "rsquared_adj": float(results.rsquared_adj),
+                "fvalue": float(results.fvalue),
+                "f_pvalue": float(results.f_pvalue),
+                "nobs": int(results.nobs),
+                "df_resid": float(results.df_resid),
+            }
+
+            self.logger.info(
+                f"Experiment model fit complete: formula='{formula}', "
+                f"nobs={int(results.nobs)}, R²={results.rsquared:.4f}"
+            )
+
+            return ModelResult(
+                model_type="experiment",
+                data={
+                    "formula": formula,
+                    "impact_estimates": impact_estimates,
+                },
+            )
+
+        except Exception as e:
+            self.logger.error(f"Error fitting ExperimentAdapter: {e}")
+            raise RuntimeError(f"Model fitting failed: {e}") from e
+
+    def get_required_columns(self) -> List[str]:
+        """Get required column names.
+
+        Returns empty list; statsmodels validates formula variables against
+        the DataFrame natively.
+        """
+        return []

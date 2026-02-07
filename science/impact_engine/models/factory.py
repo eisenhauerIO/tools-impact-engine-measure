@@ -81,6 +81,7 @@ def get_model_adapter(model_type: str) -> ModelInterface:
 
 # Import adapters to trigger self-registration via decorators
 # These imports must be at the end after MODEL_REGISTRY is defined
+from .experiment import ExperimentAdapter  # noqa: E402, F401
 from .interrupted_time_series import InterruptedTimeSeriesAdapter  # noqa: E402, F401
 from .metrics_approximation import MetricsApproximationAdapter  # noqa: E402, F401
 from .subclassification import SubclassificationAdapter  # noqa: E402, F401
