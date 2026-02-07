@@ -1,31 +1,21 @@
----
-name: add-measurement-model
-description: Scaffold a new measurement model adapter following the project's adapter pattern, including adapter class, transforms, tests, and registry wiring. Use when creating a new model for the impact engine.
-argument-hint: [model-name-in-snake-case]
-allowed-tools: Read, Grep, Write, Edit, Bash, Glob
----
+# Feature Type: Measurement Model
 
-# Add Measurement Model
+Instructions for scaffolding a new measurement model adapter in the impact-engine-measure project. The project uses an adapter-based plugin architecture where each model is a self-contained subpackage under `science/impact_engine/models/`.
 
-You are adding a new measurement model adapter to the impact-engine-measure project. The project uses an adapter-based plugin architecture where each model is a self-contained subpackage under `science/impact_engine/models/`.
+Adapters must be thin wrappers around the underlying library — keep custom logic minimal.
 
-Before starting, read `DESIGN-PHILOSOPHY.md` in the project root and follow its principles throughout. In particular, adapters must be thin wrappers around the underlying library — keep custom logic minimal.
+## Naming
 
-## Step 0: Parse the argument
+Derive these values from `FEATURE_NAME`:
 
-The user provides a model name in snake_case (e.g., `difference_in_differences`, `synthetic_control`). Store it as `MODEL_NAME`.
-
-Derive these values:
 - `MODEL_NAME`: The snake_case name (e.g., `difference_in_differences`)
 - `CLASS_NAME`: PascalCase + "Adapter" suffix (e.g., `DifferenceInDifferencesAdapter`)
 - `MODEL_DIR`: `science/impact_engine/models/{MODEL_NAME}`
 - `REGISTRY_KEY`: Same as `MODEL_NAME` (used in `@MODEL_REGISTRY.register_decorator("MODEL_NAME")`)
 
-## Step 1: Gather requirements from the user
+## Requirements
 
-Before writing any code, gather answers to the following questions. Use a **two-phase approach**:
-
-**Phase A — Overview.** Print all 8 questions at once so the user can see the full scope of what you'll need:
+Ask the user these 8 questions:
 
 1. **Statistical method**: What statistical/ML method does this model implement? (e.g., difference-in-differences, synthetic control, Bayesian structural time series, propensity score matching)
 2. **Python library**: What library implements this method? (e.g., statsmodels, causalimpact, scikit-learn, or custom implementation)
@@ -36,11 +26,9 @@ Before writing any code, gather answers to the following questions. Use a **two-
 7. **Model summary fields**: What model diagnostics should go in `model_summary`? (e.g., n_observations, r_squared, aic, bic)
 8. **Transform needs**: Does the model need a custom data transform in `transforms.py`? (e.g., aggregation, pivoting, differencing)
 
-**Phase B — Walk through one by one.** After printing the overview, ask each question **individually** using AskUserQuestion (or plain text), waiting for the user's answer before moving to the next question. This keeps the conversation focused and avoids overwhelming the user.
+## References
 
-## Step 2: Read reference files
-
-Before writing any code, read these files to match exact code style and patterns:
+Read these files before writing any code to match exact code style and patterns:
 
 ```
 science/impact_engine/models/base.py
@@ -54,37 +42,34 @@ science/impact_engine/models/metrics_approximation/adapter.py
 science/impact_engine/config_defaults.yaml
 ```
 
-## Step 3: Write a plan
+## Plan
 
-Before writing any code, write out a concrete implementation plan and present it to the user for approval. The plan should include:
+The implementation plan should include:
 
-1. **Files to create/modify** — list every file path that will be created or edited.
-2. **Adapter design** — summarize what the adapter's `connect()`, `fit()`, and `validate_data()` methods will do, including which library calls they delegate to.
-3. **Data flow** — describe the path from raw input DataFrame through any transforms to the library's API and back to `ModelResult`.
-4. **Key decisions** — note any non-obvious choices (e.g., how config params map to library kwargs, what gets cast to `float()`, error handling strategy).
-5. **Transform details** — if a custom transform is needed, describe what it does.
+1. **Adapter design** — summarize what the adapter's `connect()`, `fit()`, and `validate_data()` methods will do, including which library calls they delegate to.
+2. **Data flow** — describe the path from raw input DataFrame through any transforms to the library's API and back to `ModelResult`.
+3. **Transform details** — if a custom transform is needed, describe what it does.
 
-Wait for the user to approve (or adjust) the plan before proceeding to code.
+## Implementation
 
-## Step 4: Create the directory structure
+### Create directory structure
 
-Create these directories:
 ```
 science/impact_engine/models/{MODEL_NAME}/
 science/impact_engine/models/{MODEL_NAME}/tests/
 ```
 
-## Step 5: Create `adapter.py`
+### Create `adapter.py`
 
 Create `science/impact_engine/models/{MODEL_NAME}/adapter.py`.
 
-### File structure (in this order):
+#### File structure (in this order):
 1. Module docstring describing the model
 2. Imports: `logging`, standard lib, third-party libs, then relative imports from `..base` and `..factory`
 3. Optional: `@dataclass` container for transformed input (like `TransformedInput` in ITS adapter)
 4. The adapter class with `@MODEL_REGISTRY.register_decorator("{MODEL_NAME}")`
 
-### Class requirements:
+#### Class requirements:
 ```python
 @MODEL_REGISTRY.register_decorator("{MODEL_NAME}")
 class {CLASS_NAME}(ModelInterface):
@@ -157,7 +142,7 @@ class {CLASS_NAME}(ModelInterface):
         # Return list of required column names
 ```
 
-### Style rules (match existing code exactly):
+#### Style rules (match existing code exactly):
 - Line length: 100 chars (ruff configured)
 - Type hints on all public method signatures
 - Google-style docstrings with Args/Returns/Raises sections
@@ -165,7 +150,7 @@ class {CLASS_NAME}(ModelInterface):
 - All numeric values in results must be cast to `float()` or `int()` for JSON serialization
 - Error messages must reference the config path (e.g., "Specify in MEASUREMENT.PARAMS configuration")
 
-## Step 6: Create `__init__.py`
+### Create `__init__.py`
 
 Create `science/impact_engine/models/{MODEL_NAME}/__init__.py`:
 
@@ -185,24 +170,22 @@ __all__ = [
 
 If `transforms.py` is created, also export the transform function(s).
 
-## Step 7: Create `transforms.py` (only if needed)
+### Create `transforms.py` (only if needed)
 
-Only create this if the user indicated custom transforms are needed in Step 1.
+Only create this if the user indicated custom transforms are needed. Follow the pattern from `science/impact_engine/models/interrupted_time_series/transforms.py`.
 
-Follow the pattern from `science/impact_engine/models/interrupted_time_series/transforms.py`.
-
-## Step 8: Create `tests/__init__.py`
+### Create `tests/__init__.py`
 
 Create `science/impact_engine/models/{MODEL_NAME}/tests/__init__.py`:
 ```python
 """Tests for {model name in human-readable form} model."""
 ```
 
-## Step 9: Create `tests/test_adapter.py`
+### Create `tests/test_adapter.py`
 
 Create `science/impact_engine/models/{MODEL_NAME}/tests/test_adapter.py`.
 
-### Required test classes:
+#### Required test classes:
 
 ```python
 """Tests for {CLASS_NAME}."""
@@ -248,13 +231,13 @@ class Test{CLASS_NAME}GetRequiredColumns:
     def test_required_columns(self): ...
 ```
 
-### Test patterns:
+#### Test patterns:
 - Use `merge_model_params()` from `impact_engine.models.conftest` for configs needing defaults
 - Use `pytest.raises(ExceptionType, match="pattern")` for error tests
 - Create test data inline as `pd.DataFrame` (no external fixture files)
 - Assert `isinstance(result, ModelResult)` and `result.model_type == "{MODEL_NAME}"`
 
-## Step 10: Update `factory.py`
+### Update `factory.py`
 
 Edit `science/impact_engine/models/factory.py` to add the import trigger at the bottom, maintaining alphabetical order:
 
@@ -266,7 +249,7 @@ from .{MODEL_NAME} import {CLASS_NAME}  # noqa: E402, F401
 
 The `# noqa: E402, F401` comment is required to suppress ruff warnings.
 
-## Step 11: Update `config_defaults.yaml` (if needed)
+### Update `config_defaults.yaml` (if needed)
 
 If the model has default configuration parameters, add them under `MEASUREMENT.PARAMS` in `science/impact_engine/config_defaults.yaml`. Group with a comment:
 
@@ -277,73 +260,10 @@ If the model has default configuration parameters, add them under `MEASUREMENT.P
 
 Use `null` for REQUIRED parameters. Use actual values for optional parameters with defaults.
 
-## Step 12: Create a feature branch
-
-All work must be done on a feature branch, not on `main`.
-
-```bash
-git checkout -b add-model-{MODEL_NAME}
-```
-
-Commit all new and modified files with a descriptive message:
-```bash
-git add science/impact_engine/models/{MODEL_NAME}/ science/impact_engine/models/factory.py science/impact_engine/config_defaults.yaml
-git commit -m "Add {MODEL_NAME} measurement model adapter"
-```
-
-## Step 13: Run the test suite locally
-
-Run model-specific tests first:
-```bash
-python -m pytest science/impact_engine/models/{MODEL_NAME}/tests/ -v
-```
-
-Then run the full test suite to check for regressions:
-```bash
-python -m pytest science/impact_engine/tests/ -v
-```
-
-Also run the linter (matches CI):
-```bash
-ruff check science/
-```
-
-Fix any failures before proceeding.
-
-## Step 14: Push and create a pull request
-
-Push the branch and create a PR targeting `main`:
-```bash
-git push -u origin add-model-{MODEL_NAME}
-gh pr create --title "Add {MODEL_NAME} measurement model" --body "$(cat <<'EOF'
-## Summary
-- New measurement model adapter: `{MODEL_NAME}`
-- Implements {brief method description}
-- Includes adapter, tests, registry wiring, and config defaults
-
-## Test plan
-- [ ] Model-specific tests pass
-- [ ] Full test suite passes
-- [ ] Ruff lint passes
-- [ ] GitHub Actions CI passes
-
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
-EOF
-)"
-```
-
-## Step 15: Verify GitHub Actions pass
-
-After creating the PR, wait for CI and check the result:
-```bash
-gh pr checks --watch
-```
-
-If CI fails, fix the issues, commit, push, and re-check. Do not consider the task complete until CI is green.
-
-## Step 16: Final verification checklist
+## Verification
 
 Before declaring done, verify:
+
 - [ ] Work is on a feature branch (not `main`)
 - [ ] `adapter.py` has `@MODEL_REGISTRY.register_decorator("{MODEL_NAME}")` decorator
 - [ ] `adapter.py` class extends `ModelInterface` and implements `connect`, `fit`, `validate_params`
@@ -355,7 +275,7 @@ Before declaring done, verify:
 - [ ] `tests/test_adapter.py` covers connect, validate_params, fit, validate_data, get_required_columns
 - [ ] `tests/test_adapter.py` uses `merge_model_params()` for configs needing defaults
 - [ ] All local tests pass
-- [ ] Ruff lint passes
+- [ ] Lint passes
 - [ ] `config_defaults.yaml` updated if the model has default parameters
 - [ ] PR created targeting `main`
-- [ ] GitHub Actions CI is green
+- [ ] CI is green
