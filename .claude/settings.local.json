@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wc:*)",
+      "Bash(pre-commit run:*)",
+      "Bash(hatch env show:*)",
+      "Bash(python -m pytest:*)",
+      "Bash(hatch run test:*)",
+      "Bash(xargs -I {} bash -c 'echo \"\"=== {} ===\"\" && head -20 \"\"{}\"\"')",
+      "Bash(git fsck:*)",
+      "Bash(git ls-tree:*)",
+      "Bash(git update-index:*)"
+    ]
+  }
+}
