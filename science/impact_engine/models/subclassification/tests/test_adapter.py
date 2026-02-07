@@ -253,22 +253,17 @@ class TestSubclassificationAdapterFit:
         effect = result.data["impact_estimates"]["treatment_effect"]
         assert abs(effect - 5.0) < 2.0, f"Expected ~5, got {effect}"
 
-    def test_fit_writes_stratum_details(self):
-        """Test that fit writes stratum_details.parquet when storage provided."""
-        from unittest.mock import Mock
-
+    def test_fit_returns_stratum_details_artifact(self):
+        """Test that fit returns stratum_details in artifacts."""
         model = SubclassificationAdapter()
         model.connect(_make_config())
 
         data = _make_data()
-        storage = Mock()
 
-        model.fit(data, storage=storage)
+        result = model.fit(data)
 
-        storage.write_parquet.assert_called_once()
-        call_args = storage.write_parquet.call_args
-        assert call_args[0][0] == "stratum_details.parquet"
-        assert isinstance(call_args[0][1], pd.DataFrame)
+        assert "stratum_details" in result.artifacts
+        assert isinstance(result.artifacts["stratum_details"], pd.DataFrame)
 
     def test_fit_no_common_support_all_dropped(self):
         """Test that all strata dropped returns zero-effect result."""

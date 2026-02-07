@@ -113,7 +113,6 @@ class InterruptedTimeSeriesAdapter(ModelInterface):
             **kwargs: Model parameters:
                 - intervention_date (str): Date (YYYY-MM-DD) when intervention occurred. Required.
                 - dependent_variable (str): Column to model (default: "revenue").
-                - storage: Storage backend for artifacts.
                 - order (tuple): SARIMAX order (p, d, q).
                 - seasonal_order (tuple): SARIMAX seasonal order (P, D, Q, s).
 
@@ -146,7 +145,7 @@ class InterruptedTimeSeriesAdapter(ModelInterface):
             model_kwargs = {
                 k: v
                 for k, v in kwargs.items()
-                if k not in ("intervention_date", "dependent_variable", "storage")
+                if k not in ("intervention_date", "dependent_variable")
             }
             transformed = self._prepare_model_input(
                 data, intervention_date, dependent_variable, **model_kwargs

@@ -72,11 +72,15 @@ class ModelsManager:
         # Fit model - all models return ModelResult (storage-agnostic)
         result: ModelResult = self.model.fit(
             data=data,
-            storage=storage,
             **params,
         )
 
-        # Persist to storage (centralized here, not in models)
+        # Persist artifacts to storage (centralized here, not in models)
+        for name, df in result.artifacts.items():
+            if not isinstance(df, pd.DataFrame):
+                raise TypeError(f"Artifact '{name}' must be a DataFrame, got {type(df).__name__}")
+            storage.write_parquet(f"{name}.parquet", df)
+
         storage.write_json("impact_results.json", result.to_dict())
         return storage.full_path("impact_results.json")
 

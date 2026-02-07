@@ -13,11 +13,19 @@ class ModelResult:
 
     All models return this structure, allowing the manager to handle
     storage uniformly while models remain storage-agnostic.
+
+    Attributes:
+        model_type: Identifier for the model that produced this result.
+        data: Primary result data (serialized to JSON by the manager).
+        metadata: Optional metadata about the model run.
+        artifacts: Supplementary DataFrames to persist (e.g., per-product details).
+            Keys are format-agnostic names; the manager appends the file extension.
     """
 
     model_type: str
     data: Dict[str, Any]
     metadata: Dict[str, Any] = field(default_factory=dict)
+    artifacts: Dict[str, pd.DataFrame] = field(default_factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for storage/serialization."""
@@ -63,7 +71,7 @@ class ModelInterface(ABC):
         Args:
             data: DataFrame containing data for model fitting.
             **kwargs: Model-specific parameters (e.g., intervention_date,
-                     dependent_variable, storage).
+                     dependent_variable).
 
         Returns:
             Model-specific results (Dict, str path, etc.)

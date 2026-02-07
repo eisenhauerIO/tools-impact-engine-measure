@@ -103,7 +103,7 @@ class SubclassificationAdapter(ModelInterface):
 
         Args:
             data: DataFrame with treatment indicator, covariates, and outcome.
-            **kwargs: All MEASUREMENT.PARAMS forwarded by the manager, plus storage.
+            **kwargs: All MEASUREMENT.PARAMS forwarded by the manager.
 
         Returns:
             ModelResult: Standardized result container.
@@ -117,7 +117,6 @@ class SubclassificationAdapter(ModelInterface):
             raise ConnectionError("Model not connected. Call connect() first.")
 
         dependent_variable = kwargs.get("dependent_variable", self.config["dependent_variable"])
-        storage = kwargs.get("storage")
 
         if not self.validate_data(data):
             raise ValueError(
@@ -142,11 +141,7 @@ class SubclassificationAdapter(ModelInterface):
             # 4. Aggregate stratum effects into overall estimate
             treatment_effect = self._aggregate_effects(stratum_effects)
 
-            # 5. Write supplementary stratum details
-            if storage:
-                storage.write_parquet("stratum_details.parquet", stratum_effects)
-
-            # 6. Build result
+            # 5. Build result
             treatment_col = self.config["treatment_column"]
             n_treated = int((data[treatment_col] == 1).sum())
             n_control = int((data[treatment_col] == 0).sum())
@@ -167,6 +162,7 @@ class SubclassificationAdapter(ModelInterface):
                         "estimand": self.config["estimand"],
                     },
                 },
+                artifacts={"stratum_details": stratum_effects},
             )
 
         except Exception as e:

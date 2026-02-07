@@ -156,7 +156,11 @@ class MetricsApproximationAdapter(ModelInterface):
 
         # Filter rows with missing values in required columns
         required_columns = [metric_before_col, metric_after_col, baseline_col]
-        df = self._filter_missing_values(df, required_columns, kwargs["storage"])
+        df, filtered_ids_df = self._filter_missing_values(df, required_columns)
+        artifacts = {}
+
+        if not filtered_ids_df.empty:
+            artifacts["filtered_products"] = filtered_ids_df
 
         if df.empty:
             return self._empty_result()
@@ -193,7 +197,7 @@ class MetricsApproximationAdapter(ModelInterface):
             return result
 
         per_product_df = pd.DataFrame(df.apply(build_product_result, axis=1).tolist())
-        kwargs["storage"].write_parquet("product_level_impacts.parquet", per_product_df)
+        artifacts["product_level_impacts"] = per_product_df
 
         # Compute aggregates from vectorized columns
         n_products = len(df)
@@ -214,6 +218,7 @@ class MetricsApproximationAdapter(ModelInterface):
                 "response_params": self.config["response_params"],
                 "impact_estimates": impact_estimates,
             },
+            artifacts=artifacts,
         )
 
     def validate_data(self, data: pd.DataFrame) -> bool:
@@ -257,17 +262,16 @@ class MetricsApproximationAdapter(ModelInterface):
         self,
         df: pd.DataFrame,
         required_columns: List[str],
-        storage,
-    ) -> pd.DataFrame:
+    ) -> tuple:
         """Filter rows with missing values in required columns and log them.
 
         Args:
             df: DataFrame to filter
             required_columns: Columns to check for NaN/None values
-            storage: Storage backend for writing filtered products CSV
 
         Returns:
-            Filtered DataFrame with missing value rows removed
+            Tuple of (filtered DataFrame, DataFrame of filtered product IDs).
+            The second DataFrame is empty when no rows were filtered.
         """
         mask = df[required_columns].notna().all(axis=1)
         filtered_ids = df.loc[~mask, "product_id"].tolist()
@@ -277,10 +281,11 @@ class MetricsApproximationAdapter(ModelInterface):
                 f"Filtered {len(filtered_ids)} rows with missing values in columns "
                 f"{required_columns}. See filtered_products.parquet for details."
             )
-            filtered_df = pd.DataFrame({"product_id": filtered_ids})
-            storage.write_parquet("filtered_products.parquet", filtered_df)
+            filtered_ids_df = pd.DataFrame({"product_id": filtered_ids})
+        else:
+            filtered_ids_df = pd.DataFrame()
 
-        return df[mask].copy()
+        return df[mask].copy(), filtered_ids_df
 
     def _empty_result(self) -> ModelResult:
         """Return zero-impact result when no valid data remains after filtering.

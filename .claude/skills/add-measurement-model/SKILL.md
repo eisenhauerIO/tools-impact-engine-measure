@@ -23,7 +23,9 @@ Derive these values:
 
 ## Step 1: Gather requirements from the user
 
-Before writing any code, ask the user these questions using AskUserQuestion or plain text. Wait for answers before proceeding.
+Before writing any code, gather answers to the following questions. Use a **two-phase approach**:
+
+**Phase A — Overview.** Print all 8 questions at once so the user can see the full scope of what you'll need:
 
 1. **Statistical method**: What statistical/ML method does this model implement? (e.g., difference-in-differences, synthetic control, Bayesian structural time series, propensity score matching)
 2. **Python library**: What library implements this method? (e.g., statsmodels, causalimpact, scikit-learn, or custom implementation)
@@ -33,6 +35,8 @@ Before writing any code, ask the user these questions using AskUserQuestion or p
 6. **Output structure**: What should `impact_estimates` contain in the `ModelResult.data` dict? (e.g., treatment_effect, standard_error, p_value, confidence_interval)
 7. **Model summary fields**: What model diagnostics should go in `model_summary`? (e.g., n_observations, r_squared, aic, bic)
 8. **Transform needs**: Does the model need a custom data transform in `transforms.py`? (e.g., aggregation, pivoting, differencing)
+
+**Phase B — Walk through one by one.** After printing the overview, ask each question **individually** using AskUserQuestion (or plain text), waiting for the user's answer before moving to the next question. This keeps the conversation focused and avoids overwhelming the user.
 
 ## Step 2: Read reference files
 
@@ -50,7 +54,19 @@ science/impact_engine/models/metrics_approximation/adapter.py
 science/impact_engine/config_defaults.yaml
 ```
 
-## Step 3: Create the directory structure
+## Step 3: Write a plan
+
+Before writing any code, write out a concrete implementation plan and present it to the user for approval. The plan should include:
+
+1. **Files to create/modify** — list every file path that will be created or edited.
+2. **Adapter design** — summarize what the adapter's `connect()`, `fit()`, and `validate_data()` methods will do, including which library calls they delegate to.
+3. **Data flow** — describe the path from raw input DataFrame through any transforms to the library's API and back to `ModelResult`.
+4. **Key decisions** — note any non-obvious choices (e.g., how config params map to library kwargs, what gets cast to `float()`, error handling strategy).
+5. **Transform details** — if a custom transform is needed, describe what it does.
+
+Wait for the user to approve (or adjust) the plan before proceeding to code.
+
+## Step 4: Create the directory structure
 
 Create these directories:
 ```
@@ -58,7 +74,7 @@ science/impact_engine/models/{MODEL_NAME}/
 science/impact_engine/models/{MODEL_NAME}/tests/
 ```
 
-## Step 4: Create `adapter.py`
+## Step 5: Create `adapter.py`
 
 Create `science/impact_engine/models/{MODEL_NAME}/adapter.py`.
 
@@ -149,7 +165,7 @@ class {CLASS_NAME}(ModelInterface):
 - All numeric values in results must be cast to `float()` or `int()` for JSON serialization
 - Error messages must reference the config path (e.g., "Specify in MEASUREMENT.PARAMS configuration")
 
-## Step 5: Create `__init__.py`
+## Step 6: Create `__init__.py`
 
 Create `science/impact_engine/models/{MODEL_NAME}/__init__.py`:
 
@@ -169,20 +185,20 @@ __all__ = [
 
 If `transforms.py` is created, also export the transform function(s).
 
-## Step 6: Create `transforms.py` (only if needed)
+## Step 7: Create `transforms.py` (only if needed)
 
 Only create this if the user indicated custom transforms are needed in Step 1.
 
 Follow the pattern from `science/impact_engine/models/interrupted_time_series/transforms.py`.
 
-## Step 7: Create `tests/__init__.py`
+## Step 8: Create `tests/__init__.py`
 
 Create `science/impact_engine/models/{MODEL_NAME}/tests/__init__.py`:
 ```python
 """Tests for {model name in human-readable form} model."""
 ```
 
-## Step 8: Create `tests/test_adapter.py`
+## Step 9: Create `tests/test_adapter.py`
 
 Create `science/impact_engine/models/{MODEL_NAME}/tests/test_adapter.py`.
 
@@ -238,7 +254,7 @@ class Test{CLASS_NAME}GetRequiredColumns:
 - Create test data inline as `pd.DataFrame` (no external fixture files)
 - Assert `isinstance(result, ModelResult)` and `result.model_type == "{MODEL_NAME}"`
 
-## Step 9: Update `factory.py`
+## Step 10: Update `factory.py`
 
 Edit `science/impact_engine/models/factory.py` to add the import trigger at the bottom, maintaining alphabetical order:
 
@@ -250,7 +266,7 @@ from .{MODEL_NAME} import {CLASS_NAME}  # noqa: E402, F401
 
 The `# noqa: E402, F401` comment is required to suppress ruff warnings.
 
-## Step 10: Update `config_defaults.yaml` (if needed)
+## Step 11: Update `config_defaults.yaml` (if needed)
 
 If the model has default configuration parameters, add them under `MEASUREMENT.PARAMS` in `science/impact_engine/config_defaults.yaml`. Group with a comment:
 
@@ -261,7 +277,7 @@ If the model has default configuration parameters, add them under `MEASUREMENT.P
 
 Use `null` for REQUIRED parameters. Use actual values for optional parameters with defaults.
 
-## Step 11: Create a feature branch
+## Step 12: Create a feature branch
 
 All work must be done on a feature branch, not on `main`.
 
@@ -275,7 +291,7 @@ git add science/impact_engine/models/{MODEL_NAME}/ science/impact_engine/models/
 git commit -m "Add {MODEL_NAME} measurement model adapter"
 ```
 
-## Step 12: Run the test suite locally
+## Step 13: Run the test suite locally
 
 Run model-specific tests first:
 ```bash
@@ -294,7 +310,7 @@ ruff check science/
 
 Fix any failures before proceeding.
 
-## Step 13: Push and create a pull request
+## Step 14: Push and create a pull request
 
 Push the branch and create a PR targeting `main`:
 ```bash
@@ -316,7 +332,7 @@ EOF
 )"
 ```
 
-## Step 14: Verify GitHub Actions pass
+## Step 15: Verify GitHub Actions pass
 
 After creating the PR, wait for CI and check the result:
 ```bash
@@ -325,7 +341,7 @@ gh pr checks --watch
 
 If CI fails, fix the issues, commit, push, and re-check. Do not consider the task complete until CI is green.
 
-## Step 15: Final verification checklist
+## Step 16: Final verification checklist
 
 Before declaring done, verify:
 - [ ] Work is on a feature branch (not `main`)

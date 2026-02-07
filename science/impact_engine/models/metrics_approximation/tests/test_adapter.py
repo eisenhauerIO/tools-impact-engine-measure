@@ -1,18 +1,10 @@
 """Tests for MetricsApproximationAdapter."""
 
-from unittest.mock import MagicMock
-
 import pandas as pd
 import pytest
 
 from impact_engine.models.conftest import merge_model_params
 from impact_engine.models.metrics_approximation.adapter import MetricsApproximationAdapter
-
-
-@pytest.fixture
-def mock_storage():
-    """Create mock storage for tests."""
-    return MagicMock()
 
 
 def create_test_data():
@@ -109,7 +101,7 @@ class TestMetricsApproximationAdapterValidateConnection:
 class TestMetricsApproximationAdapterFit:
     """Tests for fit() method."""
 
-    def test_fit_basic(self, mock_storage):
+    def test_fit_basic(self):
         """Basic fit with default configuration."""
         adapter = MetricsApproximationAdapter()
         adapter.connect(
@@ -117,18 +109,17 @@ class TestMetricsApproximationAdapterFit:
         )
 
         data = create_test_data()
-        results = adapter.fit(data, storage=mock_storage)
+        results = adapter.fit(data)
 
         assert results.model_type == "metrics_approximation"
         assert results.data["response_function"] == "linear"
         assert results.data["impact_estimates"]["n_products"] == 5
 
-        # Per-product written to parquet, not in result
-        call_args = mock_storage.write_parquet.call_args
-        assert call_args[0][0] == "product_level_impacts.parquet"
-        assert len(call_args[0][1]) == 5
+        # Per-product results in artifacts
+        per_product_df = results.artifacts["product_level_impacts"]
+        assert len(per_product_df) == 5
 
-    def test_fit_calculates_correct_impact(self, mock_storage):
+    def test_fit_calculates_correct_impact(self):
         """Verify impact calculation is correct."""
         adapter = MetricsApproximationAdapter()
         adapter.connect(
@@ -145,15 +136,15 @@ class TestMetricsApproximationAdapterFit:
             }
         )
 
-        results = adapter.fit(data, storage=mock_storage)
+        results = adapter.fit(data)
 
         # Expected: 0.4 * 100 * 0.5 = 20.0
-        per_product_df = mock_storage.write_parquet.call_args[0][1]
+        per_product_df = results.artifacts["product_level_impacts"]
         assert per_product_df.iloc[0]["delta_metric"] == 0.4
         assert per_product_df.iloc[0]["impact"] == 20.0
         assert results.data["impact_estimates"]["impact"] == 20.0
 
-    def test_fit_aggregate_statistics(self, mock_storage):
+    def test_fit_aggregate_statistics(self):
         """Verify aggregate statistics are correct."""
         adapter = MetricsApproximationAdapter()
         adapter.connect(
@@ -169,7 +160,7 @@ class TestMetricsApproximationAdapterFit:
             }
         )
 
-        results = adapter.fit(data, storage=mock_storage)
+        results = adapter.fit(data)
 
         assert results.data["impact_estimates"]["impact"] == 100.0
         assert results.data["impact_estimates"]["n_products"] == 2
@@ -283,7 +274,7 @@ class TestMetricsApproximationAdapterGetRequiredColumns:
 class TestMetricsApproximationAdapterRowAttributes:
     """Tests for row_attributes passing to response functions."""
 
-    def test_row_attributes_passed_to_response_function(self, mock_storage):
+    def test_row_attributes_passed_to_response_function(self):
         """Verify row_attributes dict is passed to response function."""
         from impact_engine.models.metrics_approximation.response_registry import (
             register_response_function,
@@ -313,7 +304,7 @@ class TestMetricsApproximationAdapterRowAttributes:
             }
         )
 
-        adapter.fit(data, storage=mock_storage)
+        adapter.fit(data)
 
         # Verify attributes were captured
         assert len(captured_attributes) == 2
@@ -322,7 +313,7 @@ class TestMetricsApproximationAdapterRowAttributes:
         assert captured_attributes[1]["category"] == "Clothing"
         assert captured_attributes[1]["brand"] == "Nike"
 
-    def test_attribute_based_conditioning(self, mock_storage):
+    def test_attribute_based_conditioning(self):
         """Verify response function can use attributes for conditional logic."""
         from impact_engine.models.metrics_approximation.response_registry import (
             register_response_function,
@@ -357,11 +348,11 @@ class TestMetricsApproximationAdapterRowAttributes:
             }
         )
 
-        adapter.fit(data, storage=mock_storage)
+        results = adapter.fit(data)
 
         # Electronics: 0.4 * 100 * 0.8 = 32.0
         # Clothing: 0.4 * 100 * 0.5 = 20.0
-        per_product_df = mock_storage.write_parquet.call_args[0][1]
+        per_product_df = results.artifacts["product_level_impacts"]
         assert per_product_df.iloc[0]["impact"] == 32.0
         assert per_product_df.iloc[1]["impact"] == 20.0
 
@@ -369,7 +360,7 @@ class TestMetricsApproximationAdapterRowAttributes:
 class TestMetricsApproximationAdapterMissingData:
     """Tests for missing data handling in fit() method."""
 
-    def test_fit_filters_rows_with_nan_metric_before(self, mock_storage):
+    def test_fit_filters_rows_with_nan_metric_before(self):
         """Rows with NaN in metric_before are filtered."""
         adapter = MetricsApproximationAdapter()
         adapter.connect(
@@ -385,19 +376,13 @@ class TestMetricsApproximationAdapterMissingData:
             }
         )
 
-        results = adapter.fit(data, storage=mock_storage)
+        results = adapter.fit(data)
 
         assert results.data["impact_estimates"]["n_products"] == 2
-        # Find the product_level_impacts.parquet call
-        per_product_call = [
-            c
-            for c in mock_storage.write_parquet.call_args_list
-            if c[0][0] == "product_level_impacts.parquet"
-        ][0]
-        product_ids = list(per_product_call[0][1]["product_id"])
+        product_ids = list(results.artifacts["product_level_impacts"]["product_id"])
         assert "P002" not in product_ids
 
-    def test_fit_filters_rows_with_nan_metric_after(self, mock_storage):
+    def test_fit_filters_rows_with_nan_metric_after(self):
         """Rows with NaN in metric_after are filtered."""
         adapter = MetricsApproximationAdapter()
         adapter.connect(
@@ -413,17 +398,12 @@ class TestMetricsApproximationAdapterMissingData:
             }
         )
 
-        results = adapter.fit(data, storage=mock_storage)
+        results = adapter.fit(data)
 
         assert results.data["impact_estimates"]["n_products"] == 1
-        per_product_call = [
-            c
-            for c in mock_storage.write_parquet.call_args_list
-            if c[0][0] == "product_level_impacts.parquet"
-        ][0]
-        assert per_product_call[0][1].iloc[0]["product_id"] == "P002"
+        assert results.artifacts["product_level_impacts"].iloc[0]["product_id"] == "P002"
 
-    def test_fit_filters_rows_with_nan_baseline(self, mock_storage):
+    def test_fit_filters_rows_with_nan_baseline(self):
         """Rows with NaN in baseline are filtered."""
         adapter = MetricsApproximationAdapter()
         adapter.connect(
@@ -439,17 +419,12 @@ class TestMetricsApproximationAdapterMissingData:
             }
         )
 
-        results = adapter.fit(data, storage=mock_storage)
+        results = adapter.fit(data)
 
         assert results.data["impact_estimates"]["n_products"] == 1
-        per_product_call = [
-            c
-            for c in mock_storage.write_parquet.call_args_list
-            if c[0][0] == "product_level_impacts.parquet"
-        ][0]
-        assert per_product_call[0][1].iloc[0]["product_id"] == "P001"
+        assert results.artifacts["product_level_impacts"].iloc[0]["product_id"] == "P001"
 
-    def test_fit_all_rows_filtered_returns_zero_impact(self, mock_storage):
+    def test_fit_all_rows_filtered_returns_zero_impact(self):
         """All rows filtered returns zero impact (no error)."""
         adapter = MetricsApproximationAdapter()
         adapter.connect(
@@ -465,19 +440,14 @@ class TestMetricsApproximationAdapterMissingData:
             }
         )
 
-        results = adapter.fit(data, storage=mock_storage)
+        results = adapter.fit(data)
 
         assert results.data["impact_estimates"]["n_products"] == 0
         assert results.data["impact_estimates"]["impact"] == 0.0
-        # No product_level_impacts.parquet written when all rows filtered
-        product_level_calls = [
-            c
-            for c in mock_storage.write_parquet.call_args_list
-            if c[0][0] == "product_level_impacts.parquet"
-        ]
-        assert len(product_level_calls) == 0
+        # No product_level_impacts artifact when all rows filtered
+        assert "product_level_impacts" not in results.artifacts
 
-    def test_fit_no_missing_values_processes_all(self, mock_storage):
+    def test_fit_no_missing_values_processes_all(self):
         """Data with no missing values processes all rows."""
         adapter = MetricsApproximationAdapter()
         adapter.connect(
@@ -485,12 +455,12 @@ class TestMetricsApproximationAdapterMissingData:
         )
 
         data = create_test_data()
-        results = adapter.fit(data, storage=mock_storage)
+        results = adapter.fit(data)
 
         assert results.data["impact_estimates"]["n_products"] == 5
 
-    def test_fit_writes_filtered_products_parquet(self, mock_storage):
-        """Filtered products are written to parquet via storage."""
+    def test_fit_writes_filtered_products_artifact(self):
+        """Filtered products are included in artifacts."""
         adapter = MetricsApproximationAdapter()
         adapter.connect(
             merge_model_params({"RESPONSE": {"FUNCTION": "linear", "PARAMS": {"coefficient": 1.0}}})
@@ -505,19 +475,13 @@ class TestMetricsApproximationAdapterMissingData:
             }
         )
 
-        adapter.fit(data, storage=mock_storage)
+        results = adapter.fit(data)
 
-        # Two parquets written: filtered_products.parquet and product_level_impacts.parquet
-        filtered_call = [
-            c
-            for c in mock_storage.write_parquet.call_args_list
-            if c[0][0] == "filtered_products.parquet"
-        ][0]
-        written_df = filtered_call[0][1]
-        assert list(written_df["product_id"]) == ["P002", "P003"]
+        filtered_df = results.artifacts["filtered_products"]
+        assert list(filtered_df["product_id"]) == ["P002", "P003"]
 
-    def test_fit_no_filtered_parquet_written_when_no_filtered_products(self, mock_storage):
-        """No filtered_products.parquet written when all products are valid."""
+    def test_fit_no_filtered_artifact_when_no_filtered_products(self):
+        """No filtered_products artifact when all products are valid."""
         adapter = MetricsApproximationAdapter()
         adapter.connect(
             merge_model_params({"RESPONSE": {"FUNCTION": "linear", "PARAMS": {"coefficient": 1.0}}})
@@ -525,21 +489,15 @@ class TestMetricsApproximationAdapterMissingData:
 
         data = create_test_data()  # No NaN values
 
-        adapter.fit(data, storage=mock_storage)
+        results = adapter.fit(data)
 
-        # Only product_level_impacts.parquet written, not filtered_products.parquet
-        filtered_calls = [
-            c
-            for c in mock_storage.write_parquet.call_args_list
-            if c[0][0] == "filtered_products.parquet"
-        ]
-        assert len(filtered_calls) == 0
+        assert "filtered_products" not in results.artifacts
 
 
 class TestMetricsApproximationAdapterMultiOutput:
     """Tests for multi-output response functions."""
 
-    def test_fit_multi_output_response(self, mock_storage):
+    def test_fit_multi_output_response(self):
         """Response function returning dict produces multiple columns."""
         from impact_engine.models.metrics_approximation.response_registry import (
             register_response_function,
@@ -568,10 +526,10 @@ class TestMetricsApproximationAdapterMultiOutput:
             }
         )
 
-        results = adapter.fit(data, storage=mock_storage)
+        results = adapter.fit(data)
 
-        # Verify per-product parquet has all columns
-        per_product_df = mock_storage.write_parquet.call_args[0][1]
+        # Verify per-product artifact has all columns
+        per_product_df = results.artifacts["product_level_impacts"]
         assert "impact" in per_product_df.columns
         assert "lower" in per_product_df.columns
         assert "upper" in per_product_df.columns
@@ -588,7 +546,7 @@ class TestMetricsApproximationAdapterMultiOutput:
         assert results.data["impact_estimates"]["upper"] == 120.0
         assert results.data["impact_estimates"]["n_products"] == 2
 
-    def test_fit_custom_key_names(self, mock_storage):
+    def test_fit_custom_key_names(self):
         """Response function can use any key names."""
         from impact_engine.models.metrics_approximation.response_registry import (
             register_response_function,
@@ -617,10 +575,10 @@ class TestMetricsApproximationAdapterMultiOutput:
             }
         )
 
-        results = adapter.fit(data, storage=mock_storage)
+        results = adapter.fit(data)
 
         # Verify custom keys are used
-        per_product_df = mock_storage.write_parquet.call_args[0][1]
+        per_product_df = results.artifacts["product_level_impacts"]
         assert "point_estimate" in per_product_df.columns
         assert "ci_low" in per_product_df.columns
         assert "ci_high" in per_product_df.columns
