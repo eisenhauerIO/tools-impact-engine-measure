@@ -42,6 +42,12 @@ MEASUREMENT:
       - 0
       - 0
 
+    # Subclassification model params
+    n_strata: 5
+    estimand: att
+    treatment_column: null     # REQUIRED for subclassification model
+    covariate_columns: null    # REQUIRED for subclassification model
+
     # Metrics approximation model params
     metric_before_column: quality_before
     metric_after_column: quality_after

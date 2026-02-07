@@ -83,3 +83,4 @@ def get_model_adapter(model_type: str) -> ModelInterface:
 # These imports must be at the end after MODEL_REGISTRY is defined
 from .interrupted_time_series import InterruptedTimeSeriesAdapter  # noqa: E402, F401
 from .metrics_approximation import MetricsApproximationAdapter  # noqa: E402, F401
+from .subclassification import SubclassificationAdapter  # noqa: E402, F401

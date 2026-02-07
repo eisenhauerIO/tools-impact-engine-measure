@@ -199,7 +199,7 @@ class TestModelsManagerFitModel:
             manager.fit_model(data=data, storage=None)
 
     def test_fit_model_with_explicit_params(self):
-        """Test fit_model with explicitly provided parameters."""
+        """Test fit_model with explicitly provided parameters (overrides)."""
         from artifact_store import ArtifactStore
 
         mock_model = Mock(spec=ModelInterface)
@@ -215,9 +215,9 @@ class TestModelsManagerFitModel:
             storage = ArtifactStore(tmpdir)
             manager.fit_model(
                 data=data,
+                storage=storage,
                 intervention_date="2024-01-20",  # Override config
                 dependent_variable="sales",
-                storage=storage,
             )
 
             call_kwargs = mock_model.fit.call_args[1]

@@ -40,37 +40,30 @@ class ModelsManager:
     def fit_model(
         self,
         data: pd.DataFrame,
-        intervention_date: Optional[str] = None,
-        dependent_variable: Optional[str] = None,
         storage=None,
+        **overrides,
     ) -> str:
         """Fit model using configuration parameters.
 
+        All PARAMS from config are forwarded as kwargs to validate_params() and fit().
+        Callers can override any config param via **overrides.
+
         Args:
             data: DataFrame containing data for model fitting.
-            intervention_date: Override for intervention date (uses config if None).
-            dependent_variable: Override for dependent variable (uses config if None).
             storage: Storage backend for artifacts.
+            **overrides: Override any MEASUREMENT.PARAMS value (e.g., intervention_date,
+                dependent_variable).
 
         Returns:
             Path to output artifacts.
         """
-        params = self.measurement_config["PARAMS"]
+        params = dict(self.measurement_config["PARAMS"])
 
-        # Use config values if not overridden by caller
-        if intervention_date is None:
-            intervention_date = params["intervention_date"]
-
-        if dependent_variable is None:
-            dependent_variable = params["dependent_variable"]
+        # Apply caller overrides on top of config values
+        params.update({k: v for k, v in overrides.items() if v is not None})
 
         # Delegate parameter validation to the model
-        self.model.validate_params(
-            {
-                "intervention_date": intervention_date,
-                "dependent_variable": dependent_variable,
-            }
-        )
+        self.model.validate_params(params)
 
         # Storage backend is required
         if not storage:
@@ -79,9 +72,8 @@ class ModelsManager:
         # Fit model - all models return ModelResult (storage-agnostic)
         result: ModelResult = self.model.fit(
             data=data,
-            intervention_date=intervention_date,
-            dependent_variable=dependent_variable,
             storage=storage,
+            **params,
         )
 
         # Persist to storage (centralized here, not in models)
