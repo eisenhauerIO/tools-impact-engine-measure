@@ -9,7 +9,15 @@
       "Bash(xargs -I {} bash -c 'echo \"\"=== {} ===\"\" && head -20 \"\"{}\"\"')",
       "Bash(git fsck:*)",
       "Bash(git ls-tree:*)",
-      "Bash(git update-index:*)"
+      "Bash(git update-index:*)",
+      "Skill(add-measurement-model)",
+      "Skill(add-measurement-model:*)",
+      "Bash(hatch run pytest:*)",
+      "Bash(hatch run ruff check:*)",
+      "Bash(git status:*)",
+      "Bash(git push:*)",
+      "Bash(gh pr create:*)",
+      "Bash(gh pr checks:*)"
     ]
   }
 }
