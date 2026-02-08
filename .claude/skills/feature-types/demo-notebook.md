@@ -8,7 +8,9 @@ All demo notebooks use the online retail simulator for data generation.
 
 Derive these values from `MODEL_NAME`:
 
+- `SCRIPT_FILE`: `documentation/notebooks/demo_{MODEL_NAME}.py`
 - `NOTEBOOK_FILE`: `documentation/notebooks/demo_{MODEL_NAME}.ipynb`
+- `MODEL_CONFIG`: `documentation/notebooks/configs/demo_{MODEL_NAME}.yaml`
 - `CATALOG_CONFIG`: `documentation/notebooks/configs/demo_{MODEL_NAME}_catalog.yaml`
 - `OUTPUT_DIR`: `output/demo_{MODEL_NAME}` (relative to notebooks directory)
 
@@ -28,9 +30,9 @@ Ask the user these questions:
 Read these files before writing any code to match exact style and patterns:
 
 ```
-documentation/notebooks/demo_metrics_approximation.ipynb
-documentation/notebooks/configs/demo_metrics_approximation_catalog.yaml
-documentation/notebooks/demo_basic.ipynb
+documentation/notebooks/demo_subclassification.py
+documentation/notebooks/configs/demo_subclassification.yaml
+documentation/notebooks/configs/demo_subclassification_catalog.yaml
 science/impact_engine/models/{MODEL_NAME}/adapter.py
 ```
 
@@ -53,26 +55,50 @@ RULE:
       seed: 42
 ```
 
-### 2. Create debug script (develop first, delete after)
+### 2. Create model config
+
+**File**: `documentation/notebooks/configs/demo_{MODEL_NAME}.yaml`
+
+All configuration lives in this YAML file. The script/notebook reads it from disk — never builds config dicts inline. Use `path: null` as a placeholder; the script injects the actual products path at runtime.
+
+```yaml
+DATA:
+  SOURCE:
+    type: simulator
+    CONFIG:
+      mode: rule
+      seed: 42
+      start_date: "..."
+      end_date: "..."
+      path: null  # injected at runtime from catalog simulator output
+  # ENRICHMENT block (if needed)
+  # TRANSFORM block (if needed, omit for passthrough)
+MEASUREMENT:
+  MODEL: {MODEL_NAME}
+  PARAMS:
+    ...
+```
+
+### 3. Create debug script (develop first, delete after)
 
 **File**: `documentation/notebooks/demo_{MODEL_NAME}.py`
 
 A plain Python script with the same logic as the eventual notebook. Allows running with `hatch run python documentation/notebooks/demo_{MODEL_NAME}.py` for easy debugging (breakpoints, stack traces). Run from the `documentation/notebooks/` directory.
 
 Script structure:
-1. Create output directory, run `simulate()`, save products CSV
-2. Build config dict, write YAML
+1. Create output directory, run `simulate()` with catalog config
+2. Load model config from YAML, inject products path, write merged config
 3. Call `evaluate_impact(config_path, results_path)`
 4. Load and print results JSON
 5. Load and print artifact parquet files
 
 Once it works end-to-end, convert to notebook and delete the script.
 
-### 3. Create notebook (convert from script)
+### 4. Create notebook (convert from script)
 
 **File**: `documentation/notebooks/demo_{MODEL_NAME}.ipynb`
 
-Follow the `demo_metrics_approximation.ipynb` cell pattern:
+Follow this cell pattern:
 
 | Cell | Type | Content |
 |------|------|---------|
@@ -81,42 +107,18 @@ Follow the `demo_metrics_approximation.ipynb` cell pattern:
 | 2 | code | Imports |
 | 3 | md | "## Step 1: Create Products Catalog" + note |
 | 4 | code | `simulate()`, save CSV, print summary |
-| 5 | md | "## Step 2: Configure {Model}" + config explanation |
-| 6 | code | Build config dict, write YAML, print summary |
+| 5 | md | "## Step 2: Load Config & Inject Products Path" + explanation |
+| 6 | code | Load YAML, inject path, write merged config, print summary |
 | 7 | md | "## Step 3: Run Impact Evaluation" + pipeline explanation |
 | 8 | code | `evaluate_impact()`, print results path |
 | 9 | md | "## Step 4: Review Results" |
 | 10 | code | Load JSON, print formatted results |
 | 11 | code | Load artifact parquet, print formatted table |
 
-### Config dict pattern
-
-```python
-config = {
-    "DATA": {
-        "SOURCE": {
-            "type": "simulator",
-            "CONFIG": {
-                "mode": "rule",
-                "seed": 42,
-                "start_date": "...",
-                "end_date": "...",
-                "path": str(products_path),
-            },
-        },
-        # ENRICHMENT block (if needed)
-        # TRANSFORM block (if needed, omit for passthrough)
-    },
-    "MEASUREMENT": {
-        "MODEL": "{MODEL_NAME}",
-        "PARAMS": { ... },
-    },
-}
-```
-
 ## Verification
 
 - [ ] Catalog config created at `configs/demo_{MODEL_NAME}_catalog.yaml`
+- [ ] Model config created at `configs/demo_{MODEL_NAME}.yaml`
 - [ ] Notebook created at `demo_{MODEL_NAME}.ipynb`
 - [ ] Debug script deleted
 - [ ] Notebook cell structure matches the pattern (md/code alternating)

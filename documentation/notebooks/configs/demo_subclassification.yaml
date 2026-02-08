@@ -1,0 +1,25 @@
+DATA:
+  SOURCE:
+    type: simulator
+    CONFIG:
+      mode: rule
+      seed: 42
+      start_date: "2024-01-08"
+      end_date: "2024-01-08"
+      path: output/demo_subclassification/catalog/products.csv
+  ENRICHMENT:
+    FUNCTION: product_detail_boost
+    PARAMS:
+      enrichment_fraction: 0.5
+      enrichment_start: "2024-01-08"
+      quality_boost: 0.15
+      seed: 42
+MEASUREMENT:
+  MODEL: subclassification
+  PARAMS:
+    treatment_column: enriched
+    covariate_columns:
+      - price
+    n_strata: 5
+    estimand: att
+    dependent_variable: revenue

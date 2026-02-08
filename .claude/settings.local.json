@@ -35,7 +35,24 @@
       "Bash(git -C /home/peisenha/office/business/eisenhauer-io/tools/impact-engine-measure merge add-model-nearest_neighbour_matching)",
       "Bash(git -C /home/peisenha/office/business/eisenhauer-io/tools/impact-engine-measure push origin main)",
       "Bash(git -C /home/peisenha/office/business/eisenhauer-io/tools/impact-engine-measure branch:*)",
-      "Bash(git -C /home/peisenha/office/business/eisenhauer-io/tools/impact-engine-measure push origin --delete add-model-nearest_neighbour_matching)"
+      "Bash(git -C /home/peisenha/office/business/eisenhauer-io/tools/impact-engine-measure push origin --delete add-model-nearest_neighbour_matching)",
+      "Bash(git config:*)",
+      "Bash(pip cache:*)",
+      "Bash(pip install:*)",
+      "Bash(gh api:*)",
+      "Bash(cache_dir=\".claude/.cache/utils-agentic-support\")",
+      "Bash(if [ -d \"$cache_dir/.git\" ])",
+      "Bash(then git -C \"$cache_dir\" pull --ff-only)",
+      "Bash(else mkdir -p .claude/.cache)",
+      "Bash(git clone:*)",
+      "Bash(fi)",
+      "Bash(for d in \"$cache_dir\"/claude/skills/*/)",
+      "Bash(target=\".claude/skills/$name\")",
+      "Bash(if [ ! -e \"$target\" ])",
+      "Bash(then ln -s \"../.cache/utils-agentic-support/claude/skills/$name\" \"$target\")",
+      "Bash(echo:*)",
+      "Bash(else echo \"Skipped \\(exists\\): $name\")",
+      "Bash(done)"
     ]
   }
 }

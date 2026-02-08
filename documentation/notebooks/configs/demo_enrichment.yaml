@@ -1,0 +1,27 @@
+DATA:
+  SOURCE:
+    type: simulator
+    CONFIG:
+      mode: rule
+      seed: 42
+      path: output/demo_enrichment/catalog/products.csv
+      start_date: "2024-11-16"
+      end_date: "2024-11-30"
+  ENRICHMENT:
+    FUNCTION: product_detail_boost
+    PARAMS:
+      enrichment_fraction: 1.0
+      enrichment_start: "2024-11-23"
+      quality_boost: 0.3
+      seed: 42
+  TRANSFORM:
+    FUNCTION: aggregate_by_date
+    PARAMS:
+      metric: revenue
+MEASUREMENT:
+  MODEL: interrupted_time_series
+  PARAMS:
+    intervention_date: "2024-11-23"
+    dependent_variable: revenue
+    start_date: "2024-11-16"
+    end_date: "2024-11-30"
