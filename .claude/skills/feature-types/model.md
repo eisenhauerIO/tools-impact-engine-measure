@@ -232,6 +232,7 @@ class Test{CLASS_NAME}GetRequiredColumns:
 ```
 
 #### Test patterns:
+- **No mocking the underlying library.** Fit tests must be real end-to-end: create synthetic data, call the actual library, and verify results. This is the primary value of adapter tests — proving the integration works.
 - Use `merge_model_params()` from `impact_engine.models.conftest` for configs needing defaults
 - Use `pytest.raises(ExceptionType, match="pattern")` for error tests
 - Create test data inline as `pd.DataFrame` (no external fixture files)
@@ -248,6 +249,10 @@ from .{MODEL_NAME} import {CLASS_NAME}  # noqa: E402, F401
 ```
 
 The `# noqa: E402, F401` comment is required to suppress ruff warnings.
+
+### Update `ExperimentAdapter` denylist
+
+The `ExperimentAdapter` uses a denylist (`_CONFIG_PARAMS`) to exclude known config keys from other models. When adding new config params, you **must** add them to `science/impact_engine/models/experiment/adapter.py` `_CONFIG_PARAMS` frozenset. Otherwise, the new params will leak through to `statsmodels.OLS.fit()` as unrecognized kwargs.
 
 ### Update `config_defaults.yaml` (if needed)
 
