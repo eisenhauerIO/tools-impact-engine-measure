@@ -51,6 +51,17 @@ MEASUREMENT:
     # Experiment model params
     formula: null              # REQUIRED for experiment model (R-style, e.g., 'y ~ treatment + x1')
 
+    # Synthetic control model params
+    treatment_time: null         # REQUIRED for synthetic_control model
+    treated_unit: null           # REQUIRED for synthetic_control model
+    unit_column: unit_id
+    outcome_column: null         # REQUIRED for synthetic_control model
+    time_column: date
+    n_samples: 2000
+    n_chains: 4
+    target_accept: 0.95
+    random_seed: null
+
     # Metrics approximation model params
     metric_before_column: quality_before
     metric_after_column: quality_after
