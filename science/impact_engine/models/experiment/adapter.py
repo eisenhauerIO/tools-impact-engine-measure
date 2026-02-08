@@ -84,6 +84,13 @@ class ExperimentAdapter(ModelInterface):
             "metric_after_column",
             "baseline_column",
             "RESPONSE",
+            # Nearest neighbour matching params
+            "caliper",
+            "replace",
+            "ratio",
+            "shuffle",
+            "random_state",
+            "n_jobs",
         }
     )
 
