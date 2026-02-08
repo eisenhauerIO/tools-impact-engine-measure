@@ -43,6 +43,7 @@ packages = ["science/impact_engine"]
 [tool.hatch.envs.default]
 dependencies = [
   "pytest",
+  "ruff",
   "black",
   "pre-commit",
   "sphinx>=7.0.0",
