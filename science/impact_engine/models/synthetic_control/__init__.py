@@ -6,9 +6,10 @@ combination of control units as a counterfactual.
 """
 
 from .adapter import SyntheticControlAdapter
-from .transforms import pivot_to_wide
+from .transforms import pivot_to_wide, prepare_for_synthetic_control
 
 __all__ = [
     "SyntheticControlAdapter",
     "pivot_to_wide",
+    "prepare_for_synthetic_control",
 ]

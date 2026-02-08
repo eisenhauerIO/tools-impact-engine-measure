@@ -20,4 +20,7 @@ api_reference
 models/demo_interrupted_time_series
 models/demo_metrics_approximation
 models/demo_subclassification
+models/demo_experiment
+models/demo_nearest_neighbour_matching
+models/demo_synthetic_control
 ```

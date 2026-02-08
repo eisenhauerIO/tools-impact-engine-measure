@@ -285,7 +285,7 @@ class TestSyntheticControlAdapterFit:
         assert "model_params" in result.data
         assert "impact_estimates" in result.data
         assert "model_summary" in result.data
-        assert result.data["model_params"]["treatment_time"] == treatment_time
+        assert result.data["model_params"]["treatment_time"] == str(treatment_time)
         assert result.data["model_params"]["treated_unit"] == "treated"
 
     def test_fit_impact_estimates_structure(self):
@@ -342,7 +342,7 @@ class TestSyntheticControlAdapterFit:
         assert "sampler_stats" in summary
         # treated_unit and treatment_time are in model_params
         assert result.data["model_params"]["treated_unit"] == "treated"
-        assert result.data["model_params"]["treatment_time"] == treatment_time
+        assert result.data["model_params"]["treatment_time"] == str(treatment_time)
         assert summary["sampler_stats"]["n_samples"] == 200
         assert summary["sampler_stats"]["n_chains"] == 2
 

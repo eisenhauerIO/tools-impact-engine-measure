@@ -1,0 +1,20 @@
+DATA:
+  SOURCE:
+    type: simulator
+    CONFIG:
+      mode: rule
+      seed: 42
+      start_date: "2024-01-08"
+      end_date: "2024-01-08"
+      path: output/demo_experiment/catalog/products.csv
+  ENRICHMENT:
+    FUNCTION: product_detail_boost
+    PARAMS:
+      enrichment_fraction: 0.5
+      enrichment_start: "2024-01-08"
+      quality_boost: 0.15
+      seed: 42
+MEASUREMENT:
+  MODEL: experiment
+  PARAMS:
+    formula: "revenue ~ enriched + price"

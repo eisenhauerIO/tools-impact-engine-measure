@@ -1,0 +1,8 @@
+STORAGE:
+  PATH: output/demo_synthetic_control
+RULE:
+  PRODUCTS:
+    FUNCTION: simulate_products_rule_based
+    PARAMS:
+      num_products: 20
+      seed: 42

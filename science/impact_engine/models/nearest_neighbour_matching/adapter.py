@@ -184,8 +184,10 @@ class NearestNeighbourMatchingAdapter(ModelInterface):
             atc_se = self._matched_se(matched_atc, treatment_col, dependent_variable)
 
             # --- Covariate balance ---
-            balance_before = create_table_one(data, treatment_col, score_cols)
-            balance_after = create_table_one(matched_att, treatment_col, score_cols)
+            # create_table_one returns formatted strings (e.g. "185.47 (288.30)");
+            # cast to str dtype so Parquet serialization succeeds.
+            balance_before = create_table_one(data, treatment_col, score_cols).astype(str)
+            balance_after = create_table_one(matched_att, treatment_col, score_cols).astype(str)
 
             self.logger.info(
                 f"Nearest neighbour matching complete: "

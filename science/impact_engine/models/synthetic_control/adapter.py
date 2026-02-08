@@ -168,6 +168,12 @@ class SyntheticControlAdapter(ModelInterface):
                 outcome_column=outcome_column,
             )
 
+            # CausalPy requires treatment_time to match the index dtype
+            if isinstance(wide_df.index, pd.DatetimeIndex) and not isinstance(
+                treatment_time, pd.Timestamp
+            ):
+                treatment_time = pd.Timestamp(treatment_time)
+
             # Build sample_kwargs for CausalPy
             sample_kwargs = {
                 "draws": n_samples,
@@ -240,7 +246,7 @@ class SyntheticControlAdapter(ModelInterface):
                 model_type="synthetic_control",
                 data={
                     "model_params": {
-                        "treatment_time": treatment_time,
+                        "treatment_time": str(treatment_time),
                         "treated_unit": treated_unit,
                     },
                     "impact_estimates": impact_estimates,
