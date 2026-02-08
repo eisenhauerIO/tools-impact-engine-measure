@@ -1,58 +1,89 @@
 # Usage
 
-## Basic Workflow
+## Workflow
 
-**1. Create configuration file** (`config.yaml`):
+Every analysis follows the same three steps regardless of which measurement model is used.
+
+**1. Prepare a product catalog.** Provide a CSV with product characteristics (`product_identifier`, `category`, `price`). In demo notebooks, the catalog simulator generates this automatically.
+
+**2. Write a YAML configuration file.** The config has three sections: `DATA` selects the data source and optional transformations, `MEASUREMENT` selects the model and its parameters, and `OUTPUT` sets the storage path. See [Configuration](configuration.md) for the full parameter reference.
 
 ```yaml
 DATA:
   SOURCE:
     type: simulator
     CONFIG:
-      mode: rule
-      seed: 42
       path: data/products.csv
       start_date: "2024-01-01"
       end_date: "2024-01-31"
+  TRANSFORM:
+    FUNCTION: aggregate_by_date
+    PARAMS:
+      metric: revenue
 
 MEASUREMENT:
   MODEL: interrupted_time_series
   PARAMS:
     intervention_date: "2024-01-15"
     dependent_variable: revenue
+
+OUTPUT:
+  PATH: output
 ```
 
-**2. Run analysis**:
+**3. Run the analysis.**
 
 ```python
 from impact_engine import evaluate_impact
 
-result_path = evaluate_impact(
-    config_path='config.yaml',
-    storage_url='results/'
+results_path = evaluate_impact(
+    config_path="config.yaml",
+    storage_url="./results"
 )
-
-print(f"Results saved to: {result_path}")
 ```
 
-**3. Review results** (YAML output):
+The engine loads products, retrieves metrics, applies transformations, fits the model, and writes results. The return value is the path to `impact_results.json`.
 
-```yaml
-model_type: interrupted_time_series
-intervention_date: "2024-01-15"
-dependent_variable: revenue
-impact_estimates:
-  intervention_effect: 1250.75
-  pre_intervention_mean: 5000.0
-  post_intervention_mean: 6250.75
-  absolute_change: 1250.75
-  percent_change: 25.015
-model_summary:
-  n_observations: 365
-  pre_period_length: 180
-  post_period_length: 185
+---
+
+## Output
+
+Every run produces a standardized output regardless of which model was used.
+
+**`impact_results.json`** contains the result envelope:
+
+```json
+{
+  "schema_version": "2.0",
+  "model_type": "<model_name>",
+  "data": {
+    "model_params": { },
+    "impact_estimates": { },
+    "model_summary": { }
+  },
+  "metadata": {
+    "executed_at": "2026-02-08T12:00:00+00:00"
+  }
+}
 ```
 
-## Extending Impact Engine
+The three keys inside `data` are standardized across all models. `model_params` echoes the input parameters. `impact_estimates` holds the treatment effect measurements. `model_summary` provides fit diagnostics and sample sizes.
 
-For custom metrics adapters or statistical models, see the [Architecture documentation](architecture.md).
+**`manifest.json`** lists all output files and their formats, making the output self-describing. Consumers should read the manifest to resolve file paths rather than hardcoding filenames.
+
+Some models produce **supplementary artifacts** as Parquet files (e.g., per-stratum breakdowns, matched data). These are listed in the manifest and named `{model_type}__{artifact_name}.parquet`.
+
+---
+
+## Available Models
+
+Each model has a demo notebook with a runnable end-to-end example including truth recovery validation and convergence analysis.
+
+| Model | Description | Demo |
+|-------|-------------|------|
+| Interrupted Time Series | ARIMA-based pre/post intervention comparison on aggregated time series | [demo_basic](notebooks/demo_basic) |
+| Subclassification | Propensity stratification with within-stratum treatment effects | [demo_subclassification](notebooks/demo_subclassification) |
+| Metrics Approximation | Response function approximation using a library of candidate functions | [demo_metrics_approximation](notebooks/demo_metrics_approximation) |
+| Nearest Neighbour Matching | Causal matching on covariates for ATT/ATC estimation | — |
+| Experiment | Linear regression for randomized A/B tests | — |
+| Synthetic Control | Synthetic control method for aggregate intervention analysis | — |

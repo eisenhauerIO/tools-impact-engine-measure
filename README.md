@@ -8,6 +8,8 @@
 
 Evaluate **causal impact** of product interventions using business metrics and statistical modeling.
 
+Impact Engine is adapter-based. Each measurement model is a thin wrapper around an established statistical library—not a reimplementation. The engine is extensible in three dimensions: data sources, measurement models, and storage backends all plug in independently through a common interface and decorator-based registry. Custom adapters can live in private repositories. A single YAML configuration file selects all adapters, and the output contract (`impact_results.json` + `manifest.json`) is standardized across models, making results integrable into downstream workflows.
+
 ## Installation
 
 ```bash
@@ -32,7 +34,7 @@ result_path = evaluate_impact(
 |-------|-------------|
 | [Usage](documentation/usage.md) | Getting started with basic workflow |
 | [Configuration](documentation/configuration.md) | All configuration options |
-| [Design](showcase/DESIGN.md) | System design & architecture |
+| [Design](documentation/design.md) | System design & architecture |
 
 ## License
 

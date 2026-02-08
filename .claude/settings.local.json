@@ -52,7 +52,8 @@
       "Bash(then ln -s \"../.cache/utils-agentic-support/claude/skills/$name\" \"$target\")",
       "Bash(echo:*)",
       "Bash(else echo \"Skipped \\(exists\\): $name\")",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(find:*)"
     ]
   }
 }

@@ -6,6 +6,7 @@
 :maxdepth: 2
 :caption: Guides
 
+design
 usage
 configuration
 api_reference
@@ -19,4 +20,5 @@ api_reference
 notebooks/demo_basic
 notebooks/demo_enrichment_validation
 notebooks/demo_metrics_approximation
+notebooks/demo_subclassification
 ```

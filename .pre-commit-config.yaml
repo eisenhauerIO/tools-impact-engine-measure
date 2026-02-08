@@ -6,6 +6,11 @@ repos:
         args: [--fix]
       - id: ruff-format
 
+  - repo: https://github.com/kynan/nbstripout
+    rev: 0.8.1
+    hooks:
+      - id: nbstripout
+
   - repo: local
     hooks:
       - id: pytest

@@ -46,6 +46,14 @@ Catalog Simulator Adapter
    :undoc-members:
    :show-inheritance:
 
+File Adapter
+^^^^^^^^^^^^
+
+.. automodule:: impact_engine.metrics.file.adapter
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Models Layer
 ------------
 
@@ -69,6 +77,73 @@ Interrupted Time Series Adapter
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: impact_engine.models.interrupted_time_series.adapter
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Experiment Adapter
+^^^^^^^^^^^^^^^^^^
+
+.. automodule:: impact_engine.models.experiment.adapter
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Metrics Approximation Adapter
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. automodule:: impact_engine.models.metrics_approximation.adapter
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Nearest Neighbour Matching Adapter
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. automodule:: impact_engine.models.nearest_neighbour_matching.adapter
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Subclassification Adapter
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. automodule:: impact_engine.models.subclassification.adapter
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Synthetic Control Adapter
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. automodule:: impact_engine.models.synthetic_control.adapter
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Storage Layer
+-------------
+
+Manager
+^^^^^^^
+
+.. automodule:: impact_engine.storage.manager
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Base Interface
+^^^^^^^^^^^^^^
+
+.. automodule:: impact_engine.storage.base
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Artifact Store Adapter
+^^^^^^^^^^^^^^^^^^^^^^
+
+.. automodule:: impact_engine.storage.artifact_store_adapter
    :members:
    :undoc-members:
    :show-inheritance:

@@ -31,7 +31,9 @@ Configures where metrics data comes from and how it's transformed.
 | `type` | string | No | Data source type: `"simulator"` (default) |
 | `CONFIG` | object | Yes | Source-specific configuration |
 
-### Simulator CONFIG Parameters
+### Simulator CONFIG Parameters (default)
+
+The simulator generates synthetic metrics data from a product catalog.
 
 ```yaml
 DATA:
@@ -52,6 +54,26 @@ DATA:
 | `end_date` | string | Yes | - | Analysis end date (YYYY-MM-DD) |
 | `mode` | string | No | `"rule"` | Simulation mode: `"rule"` (deterministic) |
 | `seed` | int | No | `42` | Random seed for reproducibility |
+
+### File CONFIG Parameters
+
+Load metrics from an existing CSV or Parquet file instead of simulating.
+
+```yaml
+DATA:
+  SOURCE:
+    type: file
+    CONFIG:
+      path: data/metrics.csv
+      product_id_column: product_id
+      date_column: date
+```
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `path` | string | Yes | - | Path to data file (CSV, Parquet, or partitioned Parquet directory) |
+| `product_id_column` | string | No | `"product_id"` | Column name for product identifiers |
+| `date_column` | string | No | `"date"` | Column name for dates |
 
 ### Enrichment Configuration
 
@@ -130,6 +152,126 @@ MEASUREMENT:
 | `dependent_variable` | string | No | `"revenue"` | Column name to analyze |
 | `order` | array | No | `[1, 0, 0]` | ARIMA order (p, d, q) |
 | `seasonal_order` | array | No | `[0, 0, 0, 0]` | Seasonal ARIMA order (P, D, Q, s) |
+
+### Experiment Model
+
+```yaml
+MEASUREMENT:
+  MODEL: experiment
+  PARAMS:
+    formula: "revenue ~ treatment + price"
+```
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `formula` | string | Yes | - | R-style formula where all variables must exist in the DataFrame |
+
+---
+
+### Subclassification Model
+
+```yaml
+MEASUREMENT:
+  MODEL: subclassification
+  PARAMS:
+    dependent_variable: revenue
+    treatment_column: treatment
+    covariate_columns:
+      - price
+    n_strata: 5
+    estimand: att
+```
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `dependent_variable` | string | No | `"revenue"` | Outcome column name |
+| `treatment_column` | string | Yes | - | Binary treatment indicator column |
+| `covariate_columns` | list | Yes | - | Columns used for propensity stratification |
+| `n_strata` | int | No | `5` | Number of quantile-based strata |
+| `estimand` | string | No | `"att"` | Estimand: `"att"` or `"ate"` |
+
+---
+
+### Nearest Neighbour Matching Model
+
+```yaml
+MEASUREMENT:
+  MODEL: nearest_neighbour_matching
+  PARAMS:
+    dependent_variable: revenue
+    treatment_column: treatment
+    covariate_columns:
+      - price
+    caliper: 0.2
+    replace: false
+    ratio: 1
+```
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `dependent_variable` | string | No | `"revenue"` | Outcome column name |
+| `treatment_column` | string | Yes | - | Binary treatment indicator column |
+| `covariate_columns` | list | Yes | - | Columns used for matching |
+| `caliper` | float | No | `0.2` | Maximum distance for a valid match |
+| `replace` | bool | No | `false` | Whether to match with replacement |
+| `ratio` | int | No | `1` | Number of matches per unit |
+| `shuffle` | bool | No | `true` | Shuffle data before matching |
+| `random_state` | int | No | `null` | Random seed for reproducibility |
+| `n_jobs` | int | No | `1` | Number of parallel jobs |
+
+---
+
+### Metrics Approximation Model
+
+```yaml
+MEASUREMENT:
+  MODEL: metrics_approximation
+  PARAMS:
+    metric_before_column: quality_before
+    metric_after_column: quality_after
+    baseline_column: baseline_sales
+    RESPONSE:
+      FUNCTION: linear
+      PARAMS:
+        coefficient: 0.5
+```
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `metric_before_column` | string | No | `"quality_before"` | Column name for pre-intervention metric |
+| `metric_after_column` | string | No | `"quality_after"` | Column name for post-intervention metric |
+| `baseline_column` | string | No | `"baseline_sales"` | Column name for baseline outcome |
+| `RESPONSE.FUNCTION` | string | No | `"linear"` | Response function name from the response registry |
+| `RESPONSE.PARAMS.coefficient` | float | No | `0.5` | Coefficient for the linear response function |
+
+---
+
+### Synthetic Control Model
+
+```yaml
+MEASUREMENT:
+  MODEL: synthetic_control
+  PARAMS:
+    treatment_time: 15
+    treated_unit: "unit_A"
+    outcome_column: revenue
+    unit_column: unit_id
+    time_column: date
+```
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `treatment_time` | int | Yes | - | Time index when intervention occurred |
+| `treated_unit` | string | Yes | - | Name of the treated unit |
+| `outcome_column` | string | Yes | - | Column with the outcome variable |
+| `unit_column` | string | No | `"unit_id"` | Column identifying units |
+| `time_column` | string | No | `"date"` | Column identifying time periods |
+| `n_samples` | int | No | `2000` | Number of posterior samples |
+| `n_chains` | int | No | `4` | Number of MCMC chains |
+| `target_accept` | float | No | `0.95` | Target acceptance rate |
+| `random_seed` | int | No | `null` | Random seed for reproducibility |
+
+---
 
 ## OUTPUT Section
 
