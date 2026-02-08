@@ -24,7 +24,9 @@
       "Bash(git remote prune:*)",
       "Bash(hatch run lint:*)",
       "Bash(git checkout:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(grep:*)",
+      "Bash(python3 -c:*)"
     ]
   }
 }

@@ -1,6 +1,6 @@
-"""Integration tests for metrics approximation pipeline with evaluate_impact().
+"""Integration test for metrics_approximation through evaluate_impact().
 
-Tests the typical usage pattern:
+Tests the typical end-to-end usage pattern:
 1. User provides products.csv
 2. User provides config.yaml with DATA.ENRICHMENT section
 3. User calls evaluate_impact(config.yaml)
@@ -12,7 +12,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-CONFIG_PATH = Path(__file__).parent / "fixtures" / "config_metrics_approximation_pipeline.yaml"
+CONFIG_PATH = Path(__file__).parent / "fixtures" / "config_pipeline.yaml"
 
 
 @pytest.fixture
@@ -49,14 +49,11 @@ def products_csv(tmp_path):
 @pytest.fixture
 def impact_config(tmp_path, products_csv):
     """Load config and update PATH to point to products.csv."""
-    # Read the config file
     with open(CONFIG_PATH) as f:
         config = yaml.safe_load(f)
 
-    # Update PATH to point to the generated products.csv
     config["DATA"]["SOURCE"]["CONFIG"]["path"] = str(products_csv)
 
-    # Write updated config to tmp_path
     config_path = tmp_path / "config.yaml"
     with open(config_path, "w") as f:
         yaml.dump(config, f)
@@ -64,7 +61,7 @@ def impact_config(tmp_path, products_csv):
     return config_path
 
 
-class TestRealCatalogSimulatorPipeline:
+class TestMetricsApproximationPipeline:
     """Integration tests using evaluate_impact() with unified config."""
 
     def test_full_pipeline_via_evaluate_impact(self, impact_config, tmp_path):
@@ -81,15 +78,11 @@ class TestRealCatalogSimulatorPipeline:
 
         from impact_engine import evaluate_impact
 
-        # Single call to evaluate_impact() - engine handles everything
-        # Returns path to results file
         results_path = evaluate_impact(str(impact_config), str(tmp_path / "output"))
 
-        # Load results from the returned path
         with open(results_path) as f:
             results = json.load(f)
 
-        # Verify results
         assert results["model_type"] == "metrics_approximation"
         assert results["response_function"] == "linear"
         assert results["impact_estimates"]["n_products"] == 5

@@ -58,7 +58,7 @@ dependencies = [
 ]
 
 [tool.hatch.envs.default.scripts]
-test = "pytest science/impact_engine/tests/ -v"
+test = "pytest science/impact_engine/ -v"
 format = "black ."
 lint = "ruff check science/"
 docs = "cd documentation && sphinx-build -b html . _build/html"
