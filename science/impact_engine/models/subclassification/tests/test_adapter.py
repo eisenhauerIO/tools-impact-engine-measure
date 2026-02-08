@@ -351,3 +351,42 @@ class TestSubclassificationAdapterGetRequiredColumns:
         model = SubclassificationAdapter()
 
         assert model.get_required_columns() == []
+
+
+class TestSubclassificationGetFitParams:
+    """Tests for get_fit_params() method."""
+
+    def test_only_dependent_variable_passes_through(self):
+        """Verify only dependent_variable passes through."""
+        model = SubclassificationAdapter()
+        params = {
+            "dependent_variable": "revenue",
+            "treatment_column": "treated",
+            "covariate_columns": ["x1"],
+            "n_strata": 5,
+            "estimand": "att",
+            "intervention_date": "2024-01-15",
+        }
+
+        filtered = model.get_fit_params(params)
+
+        assert filtered == {"dependent_variable": "revenue"}
+
+    def test_irrelevant_params_excluded(self):
+        """Verify all non-fit params are excluded."""
+        model = SubclassificationAdapter()
+        params = {
+            "treatment_column": "treated",
+            "covariate_columns": ["x1"],
+            "n_strata": 5,
+        }
+
+        filtered = model.get_fit_params(params)
+
+        assert filtered == {}
+
+    def test_empty_params(self):
+        """Verify empty params returns empty dict."""
+        model = SubclassificationAdapter()
+
+        assert model.get_fit_params({}) == {}

@@ -358,3 +358,53 @@ class TestInterruptedTimeSeriesAdapter:
 
         assert isinstance(columns, list)
         assert "date" in columns
+
+
+class TestInterruptedTimeSeriesGetFitParams:
+    """Tests for get_fit_params() method."""
+
+    def test_accepted_params_pass_through(self):
+        """Verify only ITS-relevant params pass through."""
+        model = InterruptedTimeSeriesAdapter()
+        params = {
+            "intervention_date": "2024-01-15",
+            "dependent_variable": "revenue",
+            "order": (1, 0, 0),
+            "seasonal_order": (0, 0, 0, 0),
+            "n_strata": 5,
+            "treatment_column": "treated",
+            "formula": "y ~ x",
+        }
+
+        filtered = model.get_fit_params(params)
+
+        assert set(filtered.keys()) == {
+            "intervention_date",
+            "dependent_variable",
+            "order",
+            "seasonal_order",
+        }
+
+    def test_irrelevant_params_excluded(self):
+        """Verify config keys from other models are excluded."""
+        model = InterruptedTimeSeriesAdapter()
+        params = {
+            "intervention_date": "2024-01-15",
+            "n_strata": 5,
+            "treatment_column": "treated",
+            "covariate_columns": ["x1"],
+            "formula": "y ~ x",
+        }
+
+        filtered = model.get_fit_params(params)
+
+        assert "n_strata" not in filtered
+        assert "treatment_column" not in filtered
+        assert "covariate_columns" not in filtered
+        assert "formula" not in filtered
+
+    def test_empty_params(self):
+        """Verify empty params returns empty dict."""
+        model = InterruptedTimeSeriesAdapter()
+
+        assert model.get_fit_params({}) == {}

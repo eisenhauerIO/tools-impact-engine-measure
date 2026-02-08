@@ -113,6 +113,14 @@ class MetricsApproximationAdapter(ModelInterface):
         # No required fit-time params for metrics approximation
         pass
 
+    def get_fit_params(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Metrics approximation has no fit-time params from config.
+
+        All configuration (column names, response function, response params)
+        is stored in self.config during connect().
+        """
+        return {}
+
     def fit(self, data: pd.DataFrame, **kwargs) -> ModelResult:
         """
         Fit the metrics approximation model and return results.

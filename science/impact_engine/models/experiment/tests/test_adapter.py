@@ -189,3 +189,62 @@ class TestExperimentAdapterGetRequiredColumns:
         model = ExperimentAdapter()
 
         assert model.get_required_columns() == []
+
+
+class TestExperimentAdapterGetFitParams:
+    """Tests for get_fit_params() method."""
+
+    def test_config_keys_excluded(self):
+        """Verify known config keys are excluded from fit params."""
+        model = ExperimentAdapter()
+        params = {
+            "formula": "y ~ treatment",
+            "dependent_variable": "revenue",
+            "intervention_date": "2024-01-15",
+            "n_strata": 5,
+            "treatment_column": "treated",
+            "covariate_columns": ["x1"],
+            "cov_type": "HC3",
+            "use_t": True,
+        }
+
+        filtered = model.get_fit_params(params)
+
+        assert "formula" not in filtered
+        assert "dependent_variable" not in filtered
+        assert "intervention_date" not in filtered
+        assert "n_strata" not in filtered
+        assert "treatment_column" not in filtered
+        assert "covariate_columns" not in filtered
+
+    def test_library_kwargs_pass_through(self):
+        """Verify statsmodels kwargs pass through."""
+        model = ExperimentAdapter()
+        params = {
+            "formula": "y ~ treatment",
+            "cov_type": "HC3",
+            "use_t": True,
+        }
+
+        filtered = model.get_fit_params(params)
+
+        assert filtered == {"cov_type": "HC3", "use_t": True}
+
+    def test_empty_params(self):
+        """Verify empty params returns empty dict."""
+        model = ExperimentAdapter()
+
+        assert model.get_fit_params({}) == {}
+
+    def test_only_config_keys_returns_empty(self):
+        """Verify params with only config keys returns empty dict."""
+        model = ExperimentAdapter()
+        params = {
+            "formula": "y ~ x",
+            "dependent_variable": "revenue",
+            "RESPONSE": {"FUNCTION": "linear"},
+        }
+
+        filtered = model.get_fit_params(params)
+
+        assert filtered == {}

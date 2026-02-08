@@ -98,6 +98,12 @@ class SubclassificationAdapter(ModelInterface):
                 "Specify in MEASUREMENT.PARAMS configuration."
             )
 
+    _FIT_PARAMS = frozenset({"dependent_variable"})
+
+    def get_fit_params(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Subclassification only uses dependent_variable from fit kwargs."""
+        return {k: v for k, v in params.items() if k in self._FIT_PARAMS}
+
     def fit(self, data: pd.DataFrame, **kwargs) -> ModelResult:
         """Fit the subclassification model and return results.
 

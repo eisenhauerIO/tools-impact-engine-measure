@@ -171,6 +171,7 @@ class TestModelsManagerFitModel:
 
         mock_model = Mock(spec=ModelInterface)
         mock_model.connect.return_value = True
+        mock_model.get_fit_params.side_effect = lambda p: p
         mock_model.fit.return_value = ModelResult(model_type="mock", data={"test": True})
 
         config = complete_measurement_config()
@@ -204,6 +205,7 @@ class TestModelsManagerFitModel:
 
         mock_model = Mock(spec=ModelInterface)
         mock_model.connect.return_value = True
+        mock_model.get_fit_params.side_effect = lambda p: p
         mock_model.fit.return_value = ModelResult(model_type="mock", data={"test": True})
 
         config = complete_measurement_config()
@@ -294,6 +296,91 @@ class TestModelsFactory:
 
         with pytest.raises(ValueError, match="must implement ModelInterface"):
             MODEL_REGISTRY.register("invalid", InvalidModel)
+
+
+class TestModelsManagerParamFiltering:
+    """Tests for get_fit_params integration in fit_model."""
+
+    def test_fit_model_filters_params_via_get_fit_params(self):
+        """Verify manager calls get_fit_params and fit receives filtered result."""
+        from artifact_store import ArtifactStore
+
+        mock_model = Mock(spec=ModelInterface)
+        mock_model.connect.return_value = True
+        mock_model.get_fit_params.return_value = {"intervention_date": "2024-01-15"}
+        mock_model.fit.return_value = ModelResult(model_type="mock", data={"test": True})
+
+        config = complete_measurement_config()
+        manager = ModelsManager(config, mock_model)
+
+        data = pd.DataFrame({"date": pd.date_range("2024-01-01", periods=10), "value": range(10)})
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            storage = ArtifactStore(tmpdir)
+            manager.fit_model(data=data, storage=storage)
+
+            # get_fit_params was called with the full params dict
+            mock_model.get_fit_params.assert_called_once()
+            full_params = mock_model.get_fit_params.call_args[0][0]
+            assert "intervention_date" in full_params
+            assert "dependent_variable" in full_params
+
+            # fit received data + only the filtered params
+            call_kwargs = mock_model.fit.call_args[1]
+            assert call_kwargs["intervention_date"] == "2024-01-15"
+            assert "dependent_variable" not in call_kwargs
+
+    def test_validate_params_receives_full_params(self):
+        """Verify validation sees all params before filtering."""
+        from artifact_store import ArtifactStore
+
+        mock_model = Mock(spec=ModelInterface)
+        mock_model.connect.return_value = True
+        mock_model.get_fit_params.return_value = {}
+        mock_model.fit.return_value = ModelResult(model_type="mock", data={"test": True})
+
+        config = complete_measurement_config()
+        manager = ModelsManager(config, mock_model)
+
+        data = pd.DataFrame({"date": pd.date_range("2024-01-01", periods=10), "value": range(10)})
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            storage = ArtifactStore(tmpdir)
+            manager.fit_model(data=data, storage=storage)
+
+            # validate_params received the full unfiltered params
+            validate_params = mock_model.validate_params.call_args[0][0]
+            assert "intervention_date" in validate_params
+            assert "dependent_variable" in validate_params
+
+    def test_overrides_subject_to_filtering(self):
+        """Verify caller overrides are also filtered."""
+        from artifact_store import ArtifactStore
+
+        mock_model = Mock(spec=ModelInterface)
+        mock_model.connect.return_value = True
+        # Filter removes everything except intervention_date
+        mock_model.get_fit_params.side_effect = lambda p: {
+            k: v for k, v in p.items() if k == "intervention_date"
+        }
+        mock_model.fit.return_value = ModelResult(model_type="mock", data={"test": True})
+
+        config = complete_measurement_config()
+        manager = ModelsManager(config, mock_model)
+
+        data = pd.DataFrame({"date": pd.date_range("2024-01-01", periods=10), "value": range(10)})
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            storage = ArtifactStore(tmpdir)
+            manager.fit_model(
+                data=data,
+                storage=storage,
+                custom_param="should_be_filtered",
+            )
+
+            call_kwargs = mock_model.fit.call_args[1]
+            assert "custom_param" not in call_kwargs
+            assert call_kwargs["intervention_date"] == "2024-01-15"
 
 
 class TestModelsManagerConnectionFailure:

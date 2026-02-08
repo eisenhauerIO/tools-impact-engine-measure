@@ -29,7 +29,6 @@ class ExperimentAdapter(ModelInterface):
         """Initialize model with configuration parameters.
 
         Config is pre-validated with defaults merged via process_config().
-        All parameters are stored for pass-through to statsmodels.
         """
         formula = config.get("formula")
         if not formula or not isinstance(formula, str):
@@ -38,7 +37,7 @@ class ExperimentAdapter(ModelInterface):
                 "Specify in MEASUREMENT.PARAMS configuration."
             )
 
-        self.config = dict(config)
+        self.config = {"formula": formula}
         self.is_connected = True
         return True
 
@@ -63,11 +62,34 @@ class ExperimentAdapter(ModelInterface):
         Raises:
             ValueError: If formula is missing.
         """
-        if not params.get("formula"):
+        formula = params.get("formula")
+        if not formula or not isinstance(formula, str):
             raise ValueError(
                 "formula is required for ExperimentAdapter. "
                 "Specify in MEASUREMENT.PARAMS configuration."
             )
+
+    _CONFIG_PARAMS = frozenset(
+        {
+            "dependent_variable",
+            "intervention_date",
+            "order",
+            "seasonal_order",
+            "n_strata",
+            "estimand",
+            "treatment_column",
+            "covariate_columns",
+            "formula",
+            "metric_before_column",
+            "metric_after_column",
+            "baseline_column",
+            "RESPONSE",
+        }
+    )
+
+    def get_fit_params(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Exclude known config keys, pass library kwargs through to statsmodels."""
+        return {k: v for k, v in params.items() if k not in self._CONFIG_PARAMS}
 
     def fit(self, data: pd.DataFrame, **kwargs) -> ModelResult:
         """Fit OLS model using statsmodels formula API and return results.
@@ -86,6 +108,9 @@ class ExperimentAdapter(ModelInterface):
         """
         if not self.is_connected:
             raise ConnectionError("Model not connected. Call connect() first.")
+
+        if not self.validate_data(data):
+            raise ValueError("Data validation failed. DataFrame must not be empty.")
 
         formula = self.config["formula"]
 

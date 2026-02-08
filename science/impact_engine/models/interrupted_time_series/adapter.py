@@ -103,6 +103,19 @@ class InterruptedTimeSeriesAdapter(ModelInterface):
                 "Specify in MEASUREMENT.PARAMS configuration."
             )
 
+    _FIT_PARAMS = frozenset(
+        {
+            "intervention_date",
+            "dependent_variable",
+            "order",
+            "seasonal_order",
+        }
+    )
+
+    def get_fit_params(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """ITS accepts intervention_date, dependent_variable, order, seasonal_order."""
+        return {k: v for k, v in params.items() if k in self._FIT_PARAMS}
+
     def fit(self, data: pd.DataFrame, **kwargs) -> ModelResult:
         """
         Fit the interrupted time series model and return results.

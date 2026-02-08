@@ -69,10 +69,13 @@ class ModelsManager:
         if not storage:
             raise ValueError("Storage backend is required but not provided")
 
+        # Filter params to only those accepted by this adapter
+        fit_params = self.model.get_fit_params(params)
+
         # Fit model - all models return ModelResult (storage-agnostic)
         result: ModelResult = self.model.fit(
             data=data,
-            **params,
+            **fit_params,
         )
 
         # Persist artifacts to storage (centralized here, not in models)

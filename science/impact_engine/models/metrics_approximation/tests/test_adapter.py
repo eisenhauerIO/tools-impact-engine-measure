@@ -586,3 +586,27 @@ class TestMetricsApproximationAdapterMultiOutput:
         assert results.data["impact_estimates"]["point_estimate"] == 40.0
         assert results.data["impact_estimates"]["ci_low"] == 36.0
         assert results.data["impact_estimates"]["ci_high"] == 44.0
+
+
+class TestMetricsApproximationGetFitParams:
+    """Tests for get_fit_params() method."""
+
+    def test_returns_empty_dict(self):
+        """Verify metrics approximation returns empty dict (no fit-time params)."""
+        adapter = MetricsApproximationAdapter()
+        params = {
+            "dependent_variable": "revenue",
+            "intervention_date": "2024-01-15",
+            "metric_before_column": "quality_before",
+            "RESPONSE": {"FUNCTION": "linear"},
+        }
+
+        filtered = adapter.get_fit_params(params)
+
+        assert filtered == {}
+
+    def test_empty_params_returns_empty(self):
+        """Verify empty params also returns empty dict."""
+        adapter = MetricsApproximationAdapter()
+
+        assert adapter.get_fit_params({}) == {}

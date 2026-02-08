@@ -137,6 +137,20 @@ class ModelInterface(ABC):
         """
         pass
 
+    def get_fit_params(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Filter parameters to only those accepted by this adapter's fit().
+
+        Called by ModelsManager before fit() to prevent cross-model param pollution.
+        Default returns all params (backward compatible). Built-in adapters override.
+
+        Args:
+            params: Full params dict (config PARAMS merged with caller overrides).
+
+        Returns:
+            Filtered dict for fit().
+        """
+        return dict(params)
+
     def transform_outbound(self, data: pd.DataFrame, **kwargs) -> Dict[str, Any]:
         """Transform impact engine format to model library format.
 
