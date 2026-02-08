@@ -277,6 +277,109 @@ class TestCatalogSimulatorAdapter:
             with pytest.raises(RuntimeError, match="Failed to retrieve metrics"):
                 adapter.retrieve_business_metrics(products, "2024-01-01", "2024-01-31")
 
+    def test_transform_inbound_preserves_unknown_columns(self):
+        """Test that transform_inbound preserves columns not in MetricsSchema."""
+        adapter = CatalogSimulatorAdapter()
+
+        external_data = pd.DataFrame(
+            {
+                "product_identifier": ["prod1"],
+                "date": ["2024-01-01"],
+                "ordered_units": [5],
+                "revenue": [500.0],
+                "enriched": [True],
+                "custom_flag": ["abc"],
+            }
+        )
+
+        result = adapter.transform_inbound(external_data)
+
+        # Schema columns are present
+        assert "product_id" in result.columns
+        assert "revenue" in result.columns
+        # Extra columns survive
+        assert "enriched" in result.columns
+        assert "custom_flag" in result.columns
+        assert result["enriched"].iloc[0] == True  # noqa: E712
+        assert result["custom_flag"].iloc[0] == "abc"
+
+    def test_apply_enrichment_returns_enriched_metrics(self, tmp_path):
+        """Test that _apply_enrichment returns enriched DF with treatment indicator and quality_score."""
+        parent_job = create_job(str(tmp_path), prefix="test-parent")
+        adapter = CatalogSimulatorAdapter()
+        adapter.connect(
+            {
+                "mode": "rule",
+                "seed": 42,
+                "parent_job": parent_job,
+                "ENRICHMENT": {
+                    "FUNCTION": "product_detail_boost",
+                    "PARAMS": {
+                        "enrichment_fraction": 0.5,
+                        "enrichment_start": "2024-01-08",
+                        "quality_boost": 0.15,
+                        "seed": 42,
+                    },
+                },
+            }
+        )
+
+        metrics_df = pd.DataFrame(
+            {
+                "product_identifier": ["p1", "p2", "p3", "p4"],
+                "date": ["2024-01-08"] * 4,
+                "revenue": [100.0, 200.0, 150.0, 120.0],
+                "ordered_units": [10, 20, 15, 12],
+                "price": [10.0, 10.0, 10.0, 10.0],
+            }
+        )
+
+        # Mock the enrichment pipeline
+        enriched_df = metrics_df.copy()
+        enriched_df["enriched"] = [True, False, True, False]
+        # Boost revenue for treated products
+        enriched_df.loc[enriched_df["enriched"], "revenue"] *= 1.15
+
+        mock_simulate_pd = MagicMock(side_effect=lambda job, cfg: job)
+
+        def mock_enrich(config_path, job):
+            job.save_df("enriched", enriched_df)
+            # Save product details needed for quality_score
+            product_details = pd.DataFrame(
+                {
+                    "product_identifier": ["p1", "p2", "p3", "p4"],
+                    "quality_score": [0.7, 0.6, 0.8, 0.5],
+                }
+            )
+            job.save_df("product_details_original", product_details)
+            enriched_details = product_details.copy()
+            enriched_details["quality_score"] += 0.15
+            job.save_df("product_details_enriched", enriched_details)
+            return job
+
+        # Create simulation job (normally done by retrieve_business_metrics)
+        adapter._create_simulation_job()
+
+        with patch(
+            "online_retail_simulator.simulate.simulate_product_details",
+            mock_simulate_pd,
+        ), patch(
+            "online_retail_simulator.enrich.enrich",
+            mock_enrich,
+        ):
+            result = adapter._apply_enrichment(metrics_df)
+
+        # Should have the enriched column (treatment indicator)
+        assert "enriched" in result.columns
+        assert result["enriched"].dtype == bool
+
+        # Should have quality_score
+        assert "quality_score" in result.columns
+
+        # Treated products should have boosted revenue
+        treated = result[result["enriched"]]
+        assert all(treated["revenue"] > 100.0)
+
     def test_available_metrics_initialization(self):
         """Test that available metrics are properly initialized."""
         adapter = CatalogSimulatorAdapter()

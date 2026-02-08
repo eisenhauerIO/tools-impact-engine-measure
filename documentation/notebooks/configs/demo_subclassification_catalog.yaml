@@ -1,0 +1,8 @@
+STORAGE:
+  PATH: output/demo_subclassification
+RULE:
+  PRODUCTS:
+    FUNCTION: simulate_products_rule_based
+    PARAMS:
+      num_products: 100
+      seed: 42

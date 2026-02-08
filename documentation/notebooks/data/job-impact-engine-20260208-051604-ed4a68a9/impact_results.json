@@ -1,0 +1,27 @@
+{
+    "schema_version": "2.0",
+    "model_type": "interrupted_time_series",
+    "data": {
+        "model_params": {
+            "intervention_date": "2024-11-23",
+            "dependent_variable": "revenue"
+        },
+        "impact_estimates": {
+            "intervention_effect": 2157.4712499999996,
+            "pre_intervention_mean": 1618.1785714285713,
+            "post_intervention_mean": 2157.47125,
+            "absolute_change": 539.2926785714287,
+            "percent_change": 33.32714251031805
+        },
+        "model_summary": {
+            "n_observations": 15,
+            "pre_period_length": 7,
+            "post_period_length": 8,
+            "aic": 259.67874038869263,
+            "bic": 261.5959123775384
+        }
+    },
+    "metadata": {
+        "executed_at": "2026-02-08T13:16:04.160560+00:00"
+    }
+}

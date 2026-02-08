@@ -107,11 +107,11 @@ class CatalogSimulatorAdapter(MetricsInterface):
             )
 
     def _apply_enrichment(self, metrics_df: pd.DataFrame) -> pd.DataFrame:
-        """Add quality_score column to metrics based on enrichment configuration.
+        """Apply enrichment and return enriched metrics with quality_score.
 
-        Products before enrichment_start get original quality scores;
-        products after get enriched scores. This enables before/after comparison
-        for impact analysis.
+        Runs the enrichment pipeline (which boosts revenue for treated products
+        and adds an ``enriched`` boolean column), then overlays ``quality_score``
+        from the original/enriched product details.
         """
         from online_retail_simulator.enrich import enrich
         from online_retail_simulator.simulate import simulate_product_details
@@ -136,8 +136,12 @@ class CatalogSimulatorAdapter(MetricsInterface):
         store.write_yaml("enrichment_config.yaml", impact_config)
         config_path = store.full_path("enrichment_config.yaml")
 
-        # Apply enrichment (creates product_details_original, product_details_enriched)
+        # Apply enrichment (creates product_details_original, product_details_enriched,
+        # and enriched metrics with boosted revenue + treatment indicator)
         self.simulation_job = enrich(config_path, self.simulation_job)
+
+        # Load the enriched metrics (has boosted revenue + `enriched` column)
+        result = self.simulation_job.load_df("enriched")
 
         # Load original and enriched product details
         products_original = self.simulation_job.load_df("product_details_original")
@@ -157,8 +161,7 @@ class CatalogSimulatorAdapter(MetricsInterface):
         orig_quality = products_original.set_index("product_identifier")["quality_score"].to_dict()
         enr_quality = products_enriched.set_index("product_identifier")["quality_score"].to_dict()
 
-        # Add quality_score to metrics based on date
-        result = metrics_df.copy()
+        # Add quality_score to enriched metrics based on date
         result["date"] = pd.to_datetime(result["date"])
 
         # Detect product ID column
@@ -253,7 +256,8 @@ class CatalogSimulatorAdapter(MetricsInterface):
                 pd.to_numeric(standardized["sales_volume"], errors="coerce").fillna(0).astype(int)
             )
 
-        # Reorder columns to match schema (required + optional)
+        # Keep schema columns in order, then append extra columns
         column_order = MetricsSchema.all_columns()
-        available_columns = [col for col in column_order if col in standardized.columns]
-        return standardized[available_columns]
+        available_schema = [col for col in column_order if col in standardized.columns]
+        extra_columns = [col for col in standardized.columns if col not in column_order]
+        return standardized[available_schema + extra_columns]
