@@ -26,7 +26,16 @@
       "Bash(git checkout:*)",
       "Bash(git commit:*)",
       "Bash(grep:*)",
-      "Bash(python3 -c:*)"
+      "Bash(python3 -c:*)",
+      "Bash(git -C /home/peisenha/office/business/eisenhauer-io/tools/impact-engine-measure status)",
+      "Bash(git -C /home/peisenha/office/business/eisenhauer-io/tools/impact-engine-measure diff)",
+      "Bash(git -C /home/peisenha/office/business/eisenhauer-io/tools/impact-engine-measure add science/impact_engine/models/nearest_neighbour_matching/ science/impact_engine/models/factory.py science/impact_engine/config_defaults.yaml science/impact_engine/models/experiment/adapter.py)",
+      "Bash(git -C /home/peisenha/office/business/eisenhauer-io/tools/impact-engine-measure push -u origin add-model-nearest_neighbour_matching)",
+      "Bash(git -C /home/peisenha/office/business/eisenhauer-io/tools/impact-engine-measure checkout main)",
+      "Bash(git -C /home/peisenha/office/business/eisenhauer-io/tools/impact-engine-measure merge add-model-nearest_neighbour_matching)",
+      "Bash(git -C /home/peisenha/office/business/eisenhauer-io/tools/impact-engine-measure push origin main)",
+      "Bash(git -C /home/peisenha/office/business/eisenhauer-io/tools/impact-engine-measure branch:*)",
+      "Bash(git -C /home/peisenha/office/business/eisenhauer-io/tools/impact-engine-measure push origin --delete add-model-nearest_neighbour_matching)"
     ]
   }
 }

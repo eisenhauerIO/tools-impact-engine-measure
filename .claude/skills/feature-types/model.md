@@ -254,6 +254,10 @@ The `# noqa: E402, F401` comment is required to suppress ruff warnings.
 
 The `ExperimentAdapter` uses a denylist (`_CONFIG_PARAMS`) to exclude known config keys from other models. When adding new config params, you **must** add them to `science/impact_engine/models/experiment/adapter.py` `_CONFIG_PARAMS` frozenset. Otherwise, the new params will leak through to `statsmodels.OLS.fit()` as unrecognized kwargs.
 
+### Update `pyproject.toml` dependencies
+
+If the model's Python library (from question 2) is not already listed in the `dependencies` array in `pyproject.toml`, add it. Check the existing list before adding.
+
 ### Update `config_defaults.yaml` (if needed)
 
 If the model has default configuration parameters, add them under `MEASUREMENT.PARAMS` in `science/impact_engine/config_defaults.yaml`. Group with a comment:
@@ -281,6 +285,7 @@ Before declaring done, verify:
 - [ ] `tests/test_adapter.py` uses `merge_model_params()` for configs needing defaults
 - [ ] All local tests pass
 - [ ] Lint passes
+- [ ] `pyproject.toml` `dependencies` includes the model's Python library
 - [ ] `config_defaults.yaml` updated if the model has default parameters
 - [ ] PR created targeting `main`
 - [ ] CI is green
