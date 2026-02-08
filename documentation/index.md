@@ -17,8 +17,7 @@ api_reference
 :maxdepth: 2
 :caption: Demos
 
-notebooks/demo_basic
-notebooks/demo_enrichment_validation
-notebooks/demo_metrics_approximation
-notebooks/demo_subclassification
+models/demo_interrupted_time_series
+models/demo_metrics_approximation
+models/demo_subclassification
 ```

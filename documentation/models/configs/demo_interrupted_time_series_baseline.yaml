@@ -4,8 +4,8 @@ DATA:
     CONFIG:
       mode: rule
       seed: 42
-      path: output/demo_enrichment/catalog/products.csv
-      start_date: "2024-11-16"
+      path: output/demo_interrupted_time_series/catalog/products.csv
+      start_date: "2024-11-01"
       end_date: "2024-11-30"
   TRANSFORM:
     FUNCTION: aggregate_by_date
@@ -14,7 +14,5 @@ DATA:
 MEASUREMENT:
   MODEL: interrupted_time_series
   PARAMS:
-    intervention_date: "2024-11-23"
+    intervention_date: "2024-11-15"
     dependent_variable: revenue
-    start_date: "2024-11-16"
-    end_date: "2024-11-30"

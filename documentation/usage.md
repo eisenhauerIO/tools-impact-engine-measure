@@ -81,9 +81,9 @@ Each model has a demo notebook with a runnable end-to-end example including trut
 
 | Model | Description | Demo |
 |-------|-------------|------|
-| Interrupted Time Series | ARIMA-based pre/post intervention comparison on aggregated time series | [demo_basic](notebooks/demo_basic) |
-| Subclassification | Propensity stratification with within-stratum treatment effects | [demo_subclassification](notebooks/demo_subclassification) |
-| Metrics Approximation | Response function approximation using a library of candidate functions | [demo_metrics_approximation](notebooks/demo_metrics_approximation) |
+| Interrupted Time Series | ARIMA-based pre/post intervention comparison on aggregated time series | [demo_interrupted_time_series](models/demo_interrupted_time_series) |
+| Subclassification | Propensity stratification with within-stratum treatment effects | [demo_subclassification](models/demo_subclassification) |
+| Metrics Approximation | Response function approximation using a library of candidate functions | [demo_metrics_approximation](models/demo_metrics_approximation) |
 | Nearest Neighbour Matching | Causal matching on covariates for ATT/ATC estimation | — |
 | Experiment | Linear regression for randomized A/B tests | — |
 | Synthetic Control | Synthetic control method for aggregate intervention analysis | — |

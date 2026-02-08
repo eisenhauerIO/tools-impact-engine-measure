@@ -1,8 +1,8 @@
 STORAGE:
-  PATH: output/demo_enrichment
+  PATH: output/demo_interrupted_time_series
 RULE:
   PRODUCTS:
     FUNCTION: simulate_products_rule_based
     PARAMS:
-      num_products: 50
+      num_products: 500
       seed: 42

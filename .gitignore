@@ -10,5 +10,5 @@ _external/
 
 # Notebook outputs
 output/
-documentation/notebooks/output/
-documentation/notebooks/data/
+documentation/models/output/
+documentation/models/data/

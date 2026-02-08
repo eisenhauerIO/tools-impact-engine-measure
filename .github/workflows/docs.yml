@@ -34,7 +34,7 @@ jobs:
 
     - name: Execute notebooks
       run: |
-        hatch run python -m jupyter nbconvert --to notebook --execute --inplace documentation/notebooks/*.ipynb
+        hatch run python -m jupyter nbconvert --to notebook --execute --inplace documentation/models/*.ipynb
 
     - name: Build documentation
       run: hatch run docs

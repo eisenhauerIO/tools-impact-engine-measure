@@ -4,7 +4,7 @@ DATA:
     CONFIG:
       mode: rule
       seed: 42
-      path: output/demo_basic/catalog/products.csv
+      path: output/demo_interrupted_time_series/catalog/products.csv
       start_date: "2024-11-01"
       end_date: "2024-11-30"
   ENRICHMENT:

@@ -1,8 +1,0 @@
-STORAGE:
-  PATH: output/demo_basic
-RULE:
-  PRODUCTS:
-    FUNCTION: simulate_products_rule_based
-    PARAMS:
-      num_products: 500
-      seed: 42

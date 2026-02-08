@@ -22,7 +22,7 @@ repos:
 
       - id: execute-notebooks
         name: execute notebooks
-        entry: bash -c 'for nb in documentation/notebooks/*.ipynb; do hatch run python -m jupyter nbconvert --to notebook --execute --stdout "$nb" > /dev/null; done'
+        entry: bash -c 'for nb in documentation/models/*.ipynb; do hatch run python -m jupyter nbconvert --to notebook --execute --stdout "$nb" > /dev/null; done'
         language: system
         pass_filenames: false
         always_run: true

@@ -2,16 +2,16 @@
 
 ## Docs Structure
 
-Each page serves a distinct purpose. Model-specific details belong in notebooks, not in guides.
+Each page serves a distinct purpose. Model-specific details belong in model demos, not in guides.
 
 | Page | Purpose |
 |------|---------|
 | `README.md` | Package positioning and quick start. Also the docs landing page via `index.md`. |
 | `design.md` | Architecture, extensibility, data flow. |
-| `usage.md` | General workflow, model-agnostic. Links to notebooks for specifics. |
+| `usage.md` | General workflow, model-agnostic. Links to model demos for specifics. |
 | `configuration.md` | Parameter reference tables. |
 | `api_reference.rst` | Auto-generated from source. Do not hand-edit. |
-| Notebooks | One per model. Runnable deep dives with validation. |
+| Model demos | One per model. Runnable deep dives with validation. |
 
 ---
 
@@ -64,11 +64,11 @@ When extending or modifying one layer, ensure the same pattern applies to all th
 
 ---
 
-## Notebooks
+## Model Demos
 
 ### One notebook per model
 
-Each measurement model gets exactly one demo notebook: `notebooks/demo_{model}.ipynb`.
+Each measurement model gets exactly one demo notebook: `models/demo_{model}.ipynb`.
 
 ### Structure
 
@@ -85,18 +85,18 @@ Every notebook follows this step sequence:
 
 ### Configs
 
-- Each notebook has matching YAML configs in `notebooks/configs/`
+- Each notebook has matching YAML configs in `models/configs/`
 - Naming: `demo_{model}.yaml`, `demo_{model}_baseline.yaml`, `demo_{model}_catalog.yaml`
 - Enriched configs use `demo_{model}_enriched.yaml` when applicable
 
 ### Output
 
-- Output directory: `notebooks/output/demo_{model}/`
+- Output directory: `models/output/demo_{model}/`
 - Created via `Path("output/demo_{model}").mkdir(parents=True, exist_ok=True)`
 
 ### Shared utilities
 
-- Reusable plot functions live in `notebooks/notebook_support.py`
+- Reusable plot functions live in `models/notebook_support.py`
 - Import as `from notebook_support import plot_convergence`
 
 ### Sphinx integration

@@ -8,11 +8,11 @@ All demo notebooks use the online retail simulator for data generation.
 
 Derive these values from `MODEL_NAME`:
 
-- `SCRIPT_FILE`: `documentation/notebooks/demo_{MODEL_NAME}.py`
-- `NOTEBOOK_FILE`: `documentation/notebooks/demo_{MODEL_NAME}.ipynb`
-- `MODEL_CONFIG`: `documentation/notebooks/configs/demo_{MODEL_NAME}.yaml`
-- `CATALOG_CONFIG`: `documentation/notebooks/configs/demo_{MODEL_NAME}_catalog.yaml`
-- `OUTPUT_DIR`: `output/demo_{MODEL_NAME}` (relative to notebooks directory)
+- `SCRIPT_FILE`: `documentation/models/demo_{MODEL_NAME}.py`
+- `NOTEBOOK_FILE`: `documentation/models/demo_{MODEL_NAME}.ipynb`
+- `MODEL_CONFIG`: `documentation/models/configs/demo_{MODEL_NAME}.yaml`
+- `CATALOG_CONFIG`: `documentation/models/configs/demo_{MODEL_NAME}_catalog.yaml`
+- `OUTPUT_DIR`: `output/demo_{MODEL_NAME}` (relative to models directory)
 
 ## Requirements
 
@@ -30,9 +30,9 @@ Ask the user these questions:
 Read these files before writing any code to match exact style and patterns:
 
 ```
-documentation/notebooks/demo_subclassification.py
-documentation/notebooks/configs/demo_subclassification.yaml
-documentation/notebooks/configs/demo_subclassification_catalog.yaml
+documentation/models/demo_subclassification.py
+documentation/models/configs/demo_subclassification.yaml
+documentation/models/configs/demo_subclassification_catalog.yaml
 science/impact_engine/models/{MODEL_NAME}/adapter.py
 ```
 
@@ -40,7 +40,7 @@ science/impact_engine/models/{MODEL_NAME}/adapter.py
 
 ### 1. Create catalog config
 
-**File**: `documentation/notebooks/configs/demo_{MODEL_NAME}_catalog.yaml`
+**File**: `documentation/models/configs/demo_{MODEL_NAME}_catalog.yaml`
 
 Standard catalog config (same for all demos unless model needs special products):
 
@@ -57,7 +57,7 @@ RULE:
 
 ### 2. Create model config
 
-**File**: `documentation/notebooks/configs/demo_{MODEL_NAME}.yaml`
+**File**: `documentation/models/configs/demo_{MODEL_NAME}.yaml`
 
 All configuration lives in this YAML file. The script/notebook reads it from disk — never builds config dicts inline. Use `path: null` as a placeholder; the script injects the actual products path at runtime.
 
@@ -81,9 +81,9 @@ MEASUREMENT:
 
 ### 3. Create debug script (develop first, delete after)
 
-**File**: `documentation/notebooks/demo_{MODEL_NAME}.py`
+**File**: `documentation/models/demo_{MODEL_NAME}.py`
 
-A plain Python script with the same logic as the eventual notebook. Allows running with `hatch run python documentation/notebooks/demo_{MODEL_NAME}.py` for easy debugging (breakpoints, stack traces). Run from the `documentation/notebooks/` directory.
+A plain Python script with the same logic as the eventual notebook. Allows running with `hatch run python documentation/models/demo_{MODEL_NAME}.py` for easy debugging (breakpoints, stack traces). Run from the `documentation/models/` directory.
 
 Script structure:
 1. Create output directory, run `simulate()` with catalog config
@@ -96,7 +96,7 @@ Once it works end-to-end, convert to notebook and delete the script.
 
 ### 4. Create notebook (convert from script)
 
-**File**: `documentation/notebooks/demo_{MODEL_NAME}.ipynb`
+**File**: `documentation/models/demo_{MODEL_NAME}.ipynb`
 
 Follow this cell pattern:
 
