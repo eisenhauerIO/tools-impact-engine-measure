@@ -212,7 +212,7 @@ class MetricsApproximationAdapter(ModelInterface):
 
         # Build aggregate estimates with dynamic keys
         impact_estimates = {key: round(df[key].sum(), 2) for key in impact_keys}
-        impact_estimates["n_products"] = n_products
+        # n_products is in model_summary, not impact_estimates
 
         self.logger.info(
             f"Metrics approximation complete: {n_products} products, "
@@ -222,9 +222,14 @@ class MetricsApproximationAdapter(ModelInterface):
         return ModelResult(
             model_type="metrics_approximation",
             data={
-                "response_function": self.config["response_function"],
-                "response_params": self.config["response_params"],
+                "model_params": {
+                    "response_function": self.config["response_function"],
+                    "response_params": self.config["response_params"],
+                },
                 "impact_estimates": impact_estimates,
+                "model_summary": {
+                    "n_products": n_products,
+                },
             },
             artifacts=artifacts,
         )
@@ -303,10 +308,14 @@ class MetricsApproximationAdapter(ModelInterface):
         return ModelResult(
             model_type="metrics_approximation",
             data={
-                "response_function": self.config["response_function"],
-                "response_params": self.config["response_params"],
+                "model_params": {
+                    "response_function": self.config["response_function"],
+                    "response_params": self.config["response_params"],
+                },
                 "impact_estimates": {
                     "impact": 0.0,
+                },
+                "model_summary": {
                     "n_products": 0,
                 },
             },

@@ -196,7 +196,9 @@ class NearestNeighbourMatchingAdapter(ModelInterface):
             return ModelResult(
                 model_type="nearest_neighbour_matching",
                 data={
-                    "dependent_variable": dependent_variable,
+                    "model_params": {
+                        "dependent_variable": dependent_variable,
+                    },
                     "impact_estimates": {
                         "att": float(att),
                         "atc": float(atc),

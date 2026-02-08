@@ -167,16 +167,17 @@ class TestSubclassificationAdapterFit:
         assert result.model_type == "subclassification"
 
     def test_fit_result_data_structure(self):
-        """Test that fit returns ModelResult with correct data structure."""
+        """Test that fit returns ModelResult with standardized three-key structure."""
         model = SubclassificationAdapter()
         model.connect(_make_config())
 
         data = _make_data()
         result = model.fit(data)
 
-        assert "dependent_variable" in result.data
+        assert "model_params" in result.data
         assert "impact_estimates" in result.data
         assert "model_summary" in result.data
+        assert result.data["model_params"]["dependent_variable"] == "revenue"
 
     def test_fit_impact_estimates_structure(self):
         """Test that impact_estimates has correct keys."""

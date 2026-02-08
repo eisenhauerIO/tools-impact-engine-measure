@@ -6,7 +6,9 @@ import pytest
 
 from impact_engine.models.base import ModelResult
 from impact_engine.models.conftest import merge_model_params
-from impact_engine.models.nearest_neighbour_matching import NearestNeighbourMatchingAdapter
+from impact_engine.models.nearest_neighbour_matching import (
+    NearestNeighbourMatchingAdapter,
+)
 
 
 def _make_config(**overrides):
@@ -171,16 +173,17 @@ class TestNearestNeighbourMatchingAdapterFit:
         assert result.model_type == "nearest_neighbour_matching"
 
     def test_fit_result_data_structure(self):
-        """Test that fit returns ModelResult with correct data structure."""
+        """Test that fit returns ModelResult with standardized three-key structure."""
         model = NearestNeighbourMatchingAdapter()
         model.connect(_make_config())
 
         data = _make_data()
         result = model.fit(data)
 
-        assert "dependent_variable" in result.data
+        assert "model_params" in result.data
         assert "impact_estimates" in result.data
         assert "model_summary" in result.data
+        assert result.data["model_params"]["dependent_variable"] == "revenue"
 
     def test_fit_impact_estimates_structure(self):
         """Test that impact_estimates has correct keys."""

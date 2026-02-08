@@ -9,6 +9,7 @@ import pandas as pd
 import pytest
 
 from impact_engine.models import (
+    FitOutput,
     ModelInterface,
     ModelsManager,
     create_models_manager,
@@ -146,7 +147,7 @@ class TestModelsManagerFitModel:
     """Tests for model fitting functionality."""
 
     def test_fit_model_success(self):
-        """Test successful model fitting."""
+        """Test successful model fitting returns FitOutput."""
         from artifact_store import ArtifactStore
 
         mock_model = MockModel()
@@ -158,12 +159,14 @@ class TestModelsManagerFitModel:
 
         with tempfile.TemporaryDirectory() as tmpdir:
             storage = ArtifactStore(tmpdir)
-            result_path = manager.fit_model(
+            fit_output = manager.fit_model(
                 data=data,
                 storage=storage,
             )
 
-            assert result_path.endswith(".json")
+            assert isinstance(fit_output, FitOutput)
+            assert fit_output.results_path.endswith(".json")
+            assert fit_output.model_type == "mock"
 
     def test_fit_model_uses_config_intervention_date(self):
         """Test that fit_model uses intervention date from config."""

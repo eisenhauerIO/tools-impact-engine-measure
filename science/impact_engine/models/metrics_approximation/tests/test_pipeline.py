@@ -84,6 +84,6 @@ class TestMetricsApproximationPipeline:
             results = json.load(f)
 
         assert results["model_type"] == "metrics_approximation"
-        assert results["response_function"] == "linear"
-        assert results["impact_estimates"]["n_products"] == 5
-        assert results["impact_estimates"]["impact"] >= 0
+        assert results["data"]["model_params"]["response_function"] == "linear"
+        assert results["data"]["model_summary"]["n_products"] == 5
+        assert results["data"]["impact_estimates"]["impact"] >= 0

@@ -69,15 +69,19 @@ class TestEvaluateImpactIntegration:
             with open(result_path, "r") as f:
                 result_data = json.load(f)
 
-            # Verify model output structure
+            # Verify stable envelope structure
+            assert result_data["schema_version"] == "2.0"
             assert result_data["model_type"] == "interrupted_time_series"
-            assert result_data["intervention_date"] == "2024-01-15"
-            assert result_data["dependent_variable"] == "revenue"
-            assert "impact_estimates" in result_data
-            assert "model_summary" in result_data
+
+            # Verify standardized three-key data structure
+            data = result_data["data"]
+            assert data["model_params"]["intervention_date"] == "2024-01-15"
+            assert data["model_params"]["dependent_variable"] == "revenue"
+            assert "impact_estimates" in data
+            assert "model_summary" in data
 
             # Verify impact estimates contain required fields
-            impact_estimates = result_data["impact_estimates"]
+            impact_estimates = data["impact_estimates"]
             assert "intervention_effect" in impact_estimates
             assert "pre_intervention_mean" in impact_estimates
             assert "post_intervention_mean" in impact_estimates
@@ -240,9 +244,13 @@ class TestEvaluateImpactIntegration:
             with open(result_path, "r") as f:
                 result_data = json.load(f)
 
-            # Verify model output structure
+            # Verify stable envelope structure
+            assert result_data["schema_version"] == "2.0"
             assert result_data["model_type"] == "interrupted_time_series"
-            assert result_data["intervention_date"] == "2024-01-15"
-            assert result_data["dependent_variable"] == "revenue"
-            assert "impact_estimates" in result_data
-            assert "model_summary" in result_data
+
+            # Verify standardized data structure
+            data = result_data["data"]
+            assert data["model_params"]["intervention_date"] == "2024-01-15"
+            assert data["model_params"]["dependent_variable"] == "revenue"
+            assert "impact_estimates" in data
+            assert "model_summary" in data

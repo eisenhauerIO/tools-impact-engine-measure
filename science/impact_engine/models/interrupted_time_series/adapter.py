@@ -320,8 +320,10 @@ class InterruptedTimeSeriesAdapter(ModelInterface):
         # Prepare standardized output (model_type is in ModelResult wrapper)
         df = transformed.data
         return {
-            "intervention_date": transformed.intervention_date,
-            "dependent_variable": transformed.dependent_variable,
+            "model_params": {
+                "intervention_date": transformed.intervention_date,
+                "dependent_variable": transformed.dependent_variable,
+            },
             "impact_estimates": impact_estimates,
             "model_summary": {
                 "n_observations": int(len(df)),
@@ -370,7 +372,7 @@ class InterruptedTimeSeriesAdapter(ModelInterface):
             "pre_intervention_mean": pre_mean,
             "post_intervention_mean": post_mean,
             "absolute_change": intervention_effect,
-            "percent_change": (intervention_effect / pre_mean * 100) if pre_mean != 0 else 0.0,
+            "percent_change": ((intervention_effect / pre_mean * 100) if pre_mean != 0 else 0.0),
         }
 
     def transform_outbound(

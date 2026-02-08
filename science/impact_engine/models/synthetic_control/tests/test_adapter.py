@@ -103,7 +103,11 @@ class TestSyntheticControlAdapterConnect:
 
         with pytest.raises(ValueError, match="time_column must be a string"):
             adapter.connect(
-                {"unit_column": "unit_id", "time_column": 123, "outcome_column": "revenue"}
+                {
+                    "unit_column": "unit_id",
+                    "time_column": 123,
+                    "outcome_column": "revenue",
+                }
             )
 
     def test_connect_missing_outcome_column(self):
@@ -263,7 +267,7 @@ class TestSyntheticControlAdapterFit:
         assert result.model_type == "synthetic_control"
 
     def test_fit_result_data_structure(self):
-        """Test that fit result has all expected top-level keys."""
+        """Test that fit result has standardized three-key structure."""
         adapter = SyntheticControlAdapter()
         adapter.connect({"outcome_column": "outcome"})
 
@@ -278,10 +282,11 @@ class TestSyntheticControlAdapterFit:
             **_fast_sampler_params(),
         )
 
-        assert "treatment_time" in result.data
-        assert "treated_unit" in result.data
+        assert "model_params" in result.data
         assert "impact_estimates" in result.data
         assert "model_summary" in result.data
+        assert result.data["model_params"]["treatment_time"] == treatment_time
+        assert result.data["model_params"]["treated_unit"] == "treated"
 
     def test_fit_impact_estimates_structure(self):
         """Test that impact estimates have all expected fields."""
@@ -334,9 +339,10 @@ class TestSyntheticControlAdapterFit:
         assert summary["n_pre_periods"] == 20
         assert summary["n_post_periods"] == 10
         assert summary["n_control_units"] == 4
-        assert summary["treated_unit"] == "treated"
-        assert summary["treatment_time"] == treatment_time
         assert "sampler_stats" in summary
+        # treated_unit and treatment_time are in model_params
+        assert result.data["model_params"]["treated_unit"] == "treated"
+        assert result.data["model_params"]["treatment_time"] == treatment_time
         assert summary["sampler_stats"]["n_samples"] == 200
         assert summary["sampler_stats"]["n_chains"] == 2
 
@@ -410,7 +416,11 @@ class TestSyntheticControlAdapterGetRequiredColumns:
         """Test required columns after connect with custom names."""
         adapter = SyntheticControlAdapter()
         adapter.connect(
-            {"unit_column": "region", "time_column": "period", "outcome_column": "sales"}
+            {
+                "unit_column": "region",
+                "time_column": "period",
+                "outcome_column": "sales",
+            }
         )
 
         columns = adapter.get_required_columns()

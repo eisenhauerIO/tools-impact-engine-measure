@@ -91,15 +91,16 @@ class TestExperimentAdapterFit:
         assert result.model_type == "experiment"
 
     def test_fit_result_data_structure(self, connected_model, sample_data):
-        """Test that fit result has expected data keys."""
+        """Test that fit result has standardized three-key data structure."""
         result = connected_model.fit(sample_data)
 
-        assert "formula" in result.data
+        assert "model_params" in result.data
         assert "impact_estimates" in result.data
-        assert result.data["formula"] == "y ~ treatment + x1"
+        assert "model_summary" in result.data
+        assert result.data["model_params"]["formula"] == "y ~ treatment + x1"
 
     def test_fit_impact_estimates_structure(self, connected_model, sample_data):
-        """Test that impact_estimates has all expected fields."""
+        """Test that impact_estimates has coefficient fields (not diagnostics)."""
         result = connected_model.fit(sample_data)
         estimates = result.data["impact_estimates"]
 
@@ -108,12 +109,21 @@ class TestExperimentAdapterFit:
         assert "tvalues" in estimates
         assert "pvalues" in estimates
         assert "conf_int" in estimates
-        assert "rsquared" in estimates
-        assert "rsquared_adj" in estimates
-        assert "fvalue" in estimates
-        assert "f_pvalue" in estimates
-        assert "nobs" in estimates
-        assert "df_resid" in estimates
+        # Fit diagnostics are in model_summary, not impact_estimates
+        assert "rsquared" not in estimates
+        assert "nobs" not in estimates
+
+    def test_fit_model_summary_structure(self, connected_model, sample_data):
+        """Test that model_summary has fit diagnostics."""
+        result = connected_model.fit(sample_data)
+        summary = result.data["model_summary"]
+
+        assert "rsquared" in summary
+        assert "rsquared_adj" in summary
+        assert "fvalue" in summary
+        assert "f_pvalue" in summary
+        assert "nobs" in summary
+        assert "df_resid" in summary
 
     def test_fit_coefficients_keys(self, connected_model, sample_data):
         """Test that coefficient dicts have expected variable names."""
@@ -128,10 +138,11 @@ class TestExperimentAdapterFit:
         """Test that all values are JSON-serializable numeric types."""
         result = connected_model.fit(sample_data)
         estimates = result.data["impact_estimates"]
+        summary = result.data["model_summary"]
 
         for key in ("rsquared", "rsquared_adj", "fvalue", "f_pvalue", "df_resid"):
-            assert isinstance(estimates[key], float)
-        assert isinstance(estimates["nobs"], int)
+            assert isinstance(summary[key], float)
+        assert isinstance(summary["nobs"], int)
 
         for var_dict in (estimates["params"], estimates["bse"], estimates["tvalues"]):
             for v in var_dict.values():
@@ -152,15 +163,14 @@ class TestExperimentAdapterFit:
         result = connected_model.fit(sample_data, cov_type="HC3")
 
         assert isinstance(result, ModelResult)
-        assert result.data["impact_estimates"]["nobs"] == 100
+        assert result.data["model_summary"]["nobs"] == 100
 
-    def test_fit_model_summary_merged(self, connected_model, sample_data):
-        """Test that model-level stats are in impact_estimates (no separate model_summary)."""
+    def test_fit_model_summary_values(self, connected_model, sample_data):
+        """Test that model_summary has correct values."""
         result = connected_model.fit(sample_data)
 
-        assert "model_summary" not in result.data
-        assert result.data["impact_estimates"]["nobs"] == 100
-        assert 0.0 <= result.data["impact_estimates"]["rsquared"] <= 1.0
+        assert result.data["model_summary"]["nobs"] == 100
+        assert 0.0 <= result.data["model_summary"]["rsquared"] <= 1.0
 
 
 class TestExperimentAdapterValidateData:

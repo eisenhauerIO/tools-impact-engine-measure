@@ -6,6 +6,8 @@ from typing import Any, Dict, List
 
 import pandas as pd
 
+SCHEMA_VERSION = "2.0"
+
 
 @dataclass
 class ModelResult:
@@ -14,12 +16,18 @@ class ModelResult:
     All models return this structure, allowing the manager to handle
     storage uniformly while models remain storage-agnostic.
 
+    The ``data`` dict must use three standardized keys:
+        - model_params: Input parameters used (formula, intervention_date, etc.)
+        - impact_estimates: The treatment effect measurements
+        - model_summary: Fit diagnostics, sample sizes, configuration echo
+
     Attributes:
         model_type: Identifier for the model that produced this result.
-        data: Primary result data (serialized to JSON by the manager).
-        metadata: Optional metadata about the model run.
+        data: Primary result data with keys: model_params, impact_estimates, model_summary.
+        metadata: Metadata about the model run (populated by the manager).
         artifacts: Supplementary DataFrames to persist (e.g., per-product details).
-            Keys are format-agnostic names; the manager appends the file extension.
+            Keys are format-agnostic names; the manager prefixes with model_type
+            and appends the file extension.
     """
 
     model_type: str
@@ -28,8 +36,17 @@ class ModelResult:
     artifacts: Dict[str, pd.DataFrame] = field(default_factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
-        """Convert to dictionary for storage/serialization."""
-        return {"model_type": self.model_type, **self.data, "metadata": self.metadata}
+        """Convert to dictionary for storage/serialization.
+
+        Returns a stable envelope with schema_version, model_type, data, and metadata.
+        The ``data`` key contains the model-specific payload (nested, not spread).
+        """
+        return {
+            "schema_version": SCHEMA_VERSION,
+            "model_type": self.model_type,
+            "data": self.data,
+            "metadata": self.metadata,
+        }
 
 
 class ModelInterface(ABC):

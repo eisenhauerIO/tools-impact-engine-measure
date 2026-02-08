@@ -4,7 +4,9 @@ import pandas as pd
 import pytest
 
 from impact_engine.models.conftest import merge_model_params
-from impact_engine.models.metrics_approximation.adapter import MetricsApproximationAdapter
+from impact_engine.models.metrics_approximation.adapter import (
+    MetricsApproximationAdapter,
+)
 
 
 def create_test_data():
@@ -112,8 +114,8 @@ class TestMetricsApproximationAdapterFit:
         results = adapter.fit(data)
 
         assert results.model_type == "metrics_approximation"
-        assert results.data["response_function"] == "linear"
-        assert results.data["impact_estimates"]["n_products"] == 5
+        assert results.data["model_params"]["response_function"] == "linear"
+        assert results.data["model_summary"]["n_products"] == 5
 
         # Per-product results in artifacts
         per_product_df = results.artifacts["product_level_impacts"]
@@ -163,7 +165,7 @@ class TestMetricsApproximationAdapterFit:
         results = adapter.fit(data)
 
         assert results.data["impact_estimates"]["impact"] == 100.0
-        assert results.data["impact_estimates"]["n_products"] == 2
+        assert results.data["model_summary"]["n_products"] == 2
 
     def test_fit_not_connected_raises(self):
         """Fit without connect raises ConnectionError."""
@@ -378,7 +380,7 @@ class TestMetricsApproximationAdapterMissingData:
 
         results = adapter.fit(data)
 
-        assert results.data["impact_estimates"]["n_products"] == 2
+        assert results.data["model_summary"]["n_products"] == 2
         product_ids = list(results.artifacts["product_level_impacts"]["product_id"])
         assert "P002" not in product_ids
 
@@ -400,7 +402,7 @@ class TestMetricsApproximationAdapterMissingData:
 
         results = adapter.fit(data)
 
-        assert results.data["impact_estimates"]["n_products"] == 1
+        assert results.data["model_summary"]["n_products"] == 1
         assert results.artifacts["product_level_impacts"].iloc[0]["product_id"] == "P002"
 
     def test_fit_filters_rows_with_nan_baseline(self):
@@ -421,7 +423,7 @@ class TestMetricsApproximationAdapterMissingData:
 
         results = adapter.fit(data)
 
-        assert results.data["impact_estimates"]["n_products"] == 1
+        assert results.data["model_summary"]["n_products"] == 1
         assert results.artifacts["product_level_impacts"].iloc[0]["product_id"] == "P001"
 
     def test_fit_all_rows_filtered_returns_zero_impact(self):
@@ -442,7 +444,7 @@ class TestMetricsApproximationAdapterMissingData:
 
         results = adapter.fit(data)
 
-        assert results.data["impact_estimates"]["n_products"] == 0
+        assert results.data["model_summary"]["n_products"] == 0
         assert results.data["impact_estimates"]["impact"] == 0.0
         # No product_level_impacts artifact when all rows filtered
         assert "product_level_impacts" not in results.artifacts
@@ -457,7 +459,7 @@ class TestMetricsApproximationAdapterMissingData:
         data = create_test_data()
         results = adapter.fit(data)
 
-        assert results.data["impact_estimates"]["n_products"] == 5
+        assert results.data["model_summary"]["n_products"] == 5
 
     def test_fit_writes_filtered_products_artifact(self):
         """Filtered products are included in artifacts."""
@@ -544,7 +546,7 @@ class TestMetricsApproximationAdapterMultiOutput:
         assert results.data["impact_estimates"]["impact"] == 100.0
         assert results.data["impact_estimates"]["lower"] == 80.0
         assert results.data["impact_estimates"]["upper"] == 120.0
-        assert results.data["impact_estimates"]["n_products"] == 2
+        assert results.data["model_summary"]["n_products"] == 2
 
     def test_fit_custom_key_names(self):
         """Response function can use any key names."""

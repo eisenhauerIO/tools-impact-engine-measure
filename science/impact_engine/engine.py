@@ -2,6 +2,7 @@
 Impact analysis engine for the impact_engine package.
 """
 
+from datetime import datetime, timezone
 from typing import Optional
 
 from artifact_store import ArtifactStore
@@ -10,6 +11,7 @@ from .config import parse_config_file
 from .core import apply_transform
 from .metrics import create_metrics_manager
 from .models import create_models_manager
+from .models.base import SCHEMA_VERSION
 from .storage import create_storage_manager
 
 
@@ -55,6 +57,34 @@ def evaluate_impact(
     transformed_metrics = apply_transform(business_metrics, transform_config)
     storage_manager.write_parquet("transformed_metrics.parquet", transformed_metrics)
 
-    model_results_path = models_manager.fit_model(data=transformed_metrics, storage=storage_manager)
+    fit_output = models_manager.fit_model(data=transformed_metrics, storage=storage_manager)
 
-    return model_results_path
+    # Write manifest as the final step (R3: self-describing output)
+    pipeline_files = {
+        "config": {"path": "config.yaml", "format": "yaml"},
+        "products": {"path": "products.parquet", "format": "parquet"},
+        "business_metrics": {"path": "business_metrics.parquet", "format": "parquet"},
+        "transformed_metrics": {
+            "path": "transformed_metrics.parquet",
+            "format": "parquet",
+        },
+        "impact_results": {"path": "impact_results.json", "format": "json"},
+    }
+
+    # Add model-specific artifacts
+    for name, full_path in fit_output.artifact_paths.items():
+        filename = f"{fit_output.model_type}__{name}.parquet"
+        pipeline_files[f"{fit_output.model_type}__{name}"] = {
+            "path": filename,
+            "format": "parquet",
+        }
+
+    manifest = {
+        "schema_version": SCHEMA_VERSION,
+        "model_type": fit_output.model_type,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "files": pipeline_files,
+    }
+    storage_manager.write_json("manifest.json", manifest)
+
+    return fit_output.results_path

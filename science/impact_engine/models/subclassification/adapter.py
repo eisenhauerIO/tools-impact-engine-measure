@@ -155,7 +155,9 @@ class SubclassificationAdapter(ModelInterface):
             return ModelResult(
                 model_type="subclassification",
                 data={
-                    "dependent_variable": dependent_variable,
+                    "model_params": {
+                        "dependent_variable": dependent_variable,
+                    },
                     "impact_estimates": {
                         "treatment_effect": float(treatment_effect),
                         "n_strata": int(len(stratum_effects)),
@@ -323,7 +325,9 @@ class SubclassificationAdapter(ModelInterface):
         return ModelResult(
             model_type="subclassification",
             data={
-                "dependent_variable": self.config["dependent_variable"],
+                "model_params": {
+                    "dependent_variable": self.config["dependent_variable"],
+                },
                 "impact_estimates": {
                     "treatment_effect": 0.0,
                     "n_strata": 0,

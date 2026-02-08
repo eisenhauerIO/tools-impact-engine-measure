@@ -137,8 +137,8 @@ class TestInterruptedTimeSeriesAdapter:
         result = model._format_results(MockResults(), transformed)
 
         # _format_results returns raw dict; model_type is in ModelResult wrapper
-        assert result["intervention_date"] == "2024-01-05"
-        assert result["dependent_variable"] == "revenue"
+        assert result["model_params"]["intervention_date"] == "2024-01-05"
+        assert result["model_params"]["dependent_variable"] == "revenue"
         assert "impact_estimates" in result
         assert "model_summary" in result
 
@@ -224,12 +224,13 @@ class TestInterruptedTimeSeriesAdapter:
         result = model.fit(data=data, intervention_date="2024-01-15")
         result_data = result.to_dict()
 
-        # Verify required fields in serialized output
+        # Verify stable envelope structure
+        assert result_data["schema_version"] == "2.0"
         assert result_data["model_type"] == "interrupted_time_series"
-        assert result_data["intervention_date"] == "2024-01-15"
-        assert result_data["dependent_variable"] == "revenue"
-        assert "impact_estimates" in result_data
-        assert "model_summary" in result_data
+        assert result_data["data"]["model_params"]["intervention_date"] == "2024-01-15"
+        assert result_data["data"]["model_params"]["dependent_variable"] == "revenue"
+        assert "impact_estimates" in result_data["data"]
+        assert "model_summary" in result_data["data"]
 
     def test_fit_impact_estimates_structure(self):
         """Test that impact estimates have correct structure."""
@@ -319,12 +320,13 @@ class TestInterruptedTimeSeriesAdapter:
 
         result = model.fit(data=data, intervention_date="2024-01-15")
 
-        # Verify result is ModelResult with expected structure
+        # Verify result is ModelResult with standardized three-key structure
         assert isinstance(result, ModelResult)
-        assert "intervention_date" in result.data
-        assert "dependent_variable" in result.data
+        assert "model_params" in result.data
         assert "impact_estimates" in result.data
         assert "model_summary" in result.data
+        assert result.data["model_params"]["intervention_date"] == "2024-01-15"
+        assert result.data["model_params"]["dependent_variable"] == "revenue"
 
     def test_validate_data_success(self):
         """Test successful data validation."""

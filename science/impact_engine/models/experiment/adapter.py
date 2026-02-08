@@ -138,6 +138,9 @@ class ExperimentAdapter(ModelInterface):
                 "tvalues": {k: float(v) for k, v in results.tvalues.items()},
                 "pvalues": {k: float(v) for k, v in results.pvalues.items()},
                 "conf_int": conf_int,
+            }
+
+            model_summary = {
                 "rsquared": float(results.rsquared),
                 "rsquared_adj": float(results.rsquared_adj),
                 "fvalue": float(results.fvalue),
@@ -154,8 +157,9 @@ class ExperimentAdapter(ModelInterface):
             return ModelResult(
                 model_type="experiment",
                 data={
-                    "formula": formula,
+                    "model_params": {"formula": formula},
                     "impact_estimates": impact_estimates,
+                    "model_summary": model_summary,
                 },
             )
 

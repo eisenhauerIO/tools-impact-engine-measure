@@ -84,6 +84,8 @@ def get_model_adapter(model_type: str) -> ModelInterface:
 from .experiment import ExperimentAdapter  # noqa: E402, F401
 from .interrupted_time_series import InterruptedTimeSeriesAdapter  # noqa: E402, F401
 from .metrics_approximation import MetricsApproximationAdapter  # noqa: E402, F401
-from .nearest_neighbour_matching import NearestNeighbourMatchingAdapter  # noqa: E402, F401
+from .nearest_neighbour_matching import (  # noqa: E402
+    NearestNeighbourMatchingAdapter,  # noqa: F401
+)
 from .subclassification import SubclassificationAdapter  # noqa: E402, F401
 from .synthetic_control import SyntheticControlAdapter  # noqa: E402, F401

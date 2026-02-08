@@ -223,8 +223,6 @@ class SyntheticControlAdapter(ModelInterface):
                 "n_pre_periods": n_pre,
                 "n_post_periods": n_post,
                 "n_control_units": len(control_units),
-                "treated_unit": treated_unit,
-                "treatment_time": treatment_time,
                 "sampler_stats": {
                     "n_samples": n_samples,
                     "n_chains": n_chains,
@@ -241,8 +239,10 @@ class SyntheticControlAdapter(ModelInterface):
             return ModelResult(
                 model_type="synthetic_control",
                 data={
-                    "treatment_time": treatment_time,
-                    "treated_unit": treated_unit,
+                    "model_params": {
+                        "treatment_time": treatment_time,
+                        "treated_unit": treated_unit,
+                    },
                     "impact_estimates": impact_estimates,
                     "model_summary": model_summary,
                 },
