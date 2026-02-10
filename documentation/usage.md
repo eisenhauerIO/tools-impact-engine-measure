@@ -79,11 +79,11 @@ Some models produce **supplementary artifacts** as Parquet files (e.g., per-stra
 
 Each model has a demo notebook with a runnable end-to-end example including truth recovery validation and convergence analysis.
 
-| Model | Description | Demo |
-|-------|-------------|------|
-| Interrupted Time Series | ARIMA-based pre/post intervention comparison on aggregated time series | [demo_interrupted_time_series](models/demo_interrupted_time_series) |
-| Subclassification | Propensity stratification with within-stratum treatment effects | [demo_subclassification](models/demo_subclassification) |
-| Metrics Approximation | Response function approximation using a library of candidate functions | [demo_metrics_approximation](models/demo_metrics_approximation) |
-| Nearest Neighbour Matching | Causal matching on covariates for ATT/ATC estimation | [demo_nearest_neighbour_matching](models/demo_nearest_neighbour_matching) |
-| Experiment | Linear regression for randomized A/B tests | [demo_experiment](models/demo_experiment) |
-| Synthetic Control | Synthetic control method for aggregate intervention analysis | [demo_synthetic_control](models/demo_synthetic_control) |
+| Model | Library | Interface | Description | Demo |
+|-------|---------|-----------|-------------|------|
+| Experiment | [statsmodels](https://www.statsmodels.org/) | [`ols()`](https://www.statsmodels.org/stable/generated/statsmodels.formula.api.ols.html) | Linear regression for randomized A/B tests | [demo_experiment](models/demo_experiment) |
+| Interrupted Time Series | [statsmodels](https://www.statsmodels.org/) | [`SARIMAX()`](https://www.statsmodels.org/stable/generated/statsmodels.tsa.statespace.sarimax.SARIMAX.html) | ARIMA-based pre/post intervention comparison on aggregated time series | [demo_interrupted_time_series](models/demo_interrupted_time_series) |
+| Nearest Neighbour Matching | [causalml](https://causalml.readthedocs.io/) | [`NearestNeighborMatch`](https://causalml.readthedocs.io/en/latest/methodology.html#matching) | Causal matching on covariates for ATT/ATC estimation | [demo_nearest_neighbour_matching](models/demo_nearest_neighbour_matching) |
+| Subclassification | [pandas](https://pandas.pydata.org/) / [NumPy](https://numpy.org/) | `qcut()` + `np.average()` | Propensity stratification with within-stratum treatment effects | [demo_subclassification](models/demo_subclassification) |
+| Synthetic Control | [CausalPy](https://causalpy.readthedocs.io/) | [`SyntheticControl()`](https://causalpy.readthedocs.io/en/latest/api_reference.html) | Synthetic control method for aggregate intervention analysis | [demo_synthetic_control](models/demo_synthetic_control) |
+| Metrics Approximation | *(built-in)* | Response function registry | Response function approximation using a library of candidate functions | [demo_metrics_approximation](models/demo_metrics_approximation) |

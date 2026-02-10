@@ -8,7 +8,7 @@ Each page serves a distinct purpose. Model-specific details belong in model demo
 |------|---------|
 | `README.md` | Package positioning and quick start. Also the docs landing page via `index.md`. |
 | `design.md` | Architecture, extensibility, data flow. |
-| `usage.md` | General workflow, model-agnostic. Links to model demos for specifics. |
+| `usage.md` | General workflow, model-agnostic. Links to model demos for specifics. The Available Models table includes Library and Interface columns linking to each model's underlying package and the specific class or function it wraps. |
 | `configuration.md` | Parameter reference tables. |
 | `api_reference.rst` | Auto-generated from source. Do not hand-edit. |
 | Model demos | One per model. Runnable deep dives with validation. |
@@ -74,7 +74,8 @@ Each measurement model gets exactly one demo notebook: `models/demo_{model}.ipyn
 
 Every notebook follows this step sequence:
 
-1. **Title & Overview** — `# {Model Name} Impact Estimation`, followed by a Workflow Overview listing the steps
+1. **Library Banner** — a colored info callout identifying the underlying library and linking to the specific interface. Uses inline HTML (`<div>` with blue left border and background) so it renders in both Jupyter and Sphinx.
+2. **Title & Overview** — `# {Model Name} Impact Estimation`, followed by a Workflow Overview listing the steps
 2. **Setup** — imports
 3. **Step 1: Create Products Catalog** — generate or load products via the catalog simulator
 4. **Step 2: Configure** — model-specific configuration explanation, reference config files
