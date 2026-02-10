@@ -53,7 +53,8 @@
       "Bash(echo:*)",
       "Bash(else echo \"Skipped \\(exists\\): $name\")",
       "Bash(done)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(pip show:*)"
     ]
   }
 }
