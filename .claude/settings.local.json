@@ -54,7 +54,18 @@
       "Bash(else echo \"Skipped \\(exists\\): $name\")",
       "Bash(done)",
       "Bash(find:*)",
-      "Bash(pip show:*)"
+      "Bash(pip show:*)",
+      "WebFetch(domain:pypi.org)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:sdfordham.github.io)",
+      "Bash(hatch env prune:*)",
+      "Bash(for nb in documentation/models/*.ipynb)",
+      "Bash(do echo \"=== Testing: $nb ===\")",
+      "Bash(script -qc \"hatch run python -m jupyter nbconvert --to notebook --execute --stdout \"\"$nb\"\" > /dev/null 2>&1\" /dev/null)",
+      "Bash(script -qc \"hatch run python -m jupyter nbconvert --to notebook --execute --stdout documentation/models/demo_synthetic_control.ipynb > /dev/null 2>&1\":*)",
+      "Bash(xxd:*)",
+      "Bash(strace:*)",
+      "Bash(script -qec \"bash -c ''for nb in documentation/models/*.ipynb; do hatch run python -m jupyter nbconvert --to notebook --execute --stdout \"\"$nb\"\" > /dev/null 2>&1; done''\" /tmp/script_output.log)"
     ]
   }
 }
