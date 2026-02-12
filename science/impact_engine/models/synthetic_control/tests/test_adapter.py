@@ -51,16 +51,6 @@ def _make_panel_data(n_control=4, n_pre=20, n_post=10, treatment_effect=10.0, se
     return pd.DataFrame(rows)
 
 
-def _fast_sampler_params():
-    """Minimal sampler settings for fast tests."""
-    return {
-        "n_samples": 200,
-        "n_chains": 2,
-        "target_accept": 0.85,
-        "random_seed": 42,
-    }
-
-
 class TestSyntheticControlAdapterConnect:
     """Tests for connect() method."""
 
@@ -184,10 +174,8 @@ class TestSyntheticControlAdapterGetFitParams:
             "unit_column": "unit_id",
             "outcome_column": "outcome",
             "time_column": "date",
-            "n_samples": 2000,
-            "n_chains": 4,
-            "target_accept": 0.95,
-            "random_seed": 42,
+            "optim_method": "Nelder-Mead",
+            "optim_initial": "equal",
             # Other models' params
             "intervention_date": "2024-01-15",
             "order": [1, 0, 0],
@@ -203,10 +191,8 @@ class TestSyntheticControlAdapterGetFitParams:
             "unit_column",
             "outcome_column",
             "time_column",
-            "n_samples",
-            "n_chains",
-            "target_accept",
-            "random_seed",
+            "optim_method",
+            "optim_initial",
         }
 
     def test_irrelevant_params_excluded(self):
@@ -237,7 +223,7 @@ class TestSyntheticControlAdapterGetFitParams:
 
 
 class TestSyntheticControlAdapterFit:
-    """Tests for fit() method — real e2e through CausalPy."""
+    """Tests for fit() method — real e2e through pysyncon."""
 
     def test_fit_not_connected(self):
         """Test fitting without connection."""
@@ -260,7 +246,6 @@ class TestSyntheticControlAdapterFit:
             treatment_time=treatment_time,
             treated_unit="treated",
             outcome_column="outcome",
-            **_fast_sampler_params(),
         )
 
         assert isinstance(result, ModelResult)
@@ -279,7 +264,6 @@ class TestSyntheticControlAdapterFit:
             treatment_time=treatment_time,
             treated_unit="treated",
             outcome_column="outcome",
-            **_fast_sampler_params(),
         )
 
         assert "model_params" in result.data
@@ -301,17 +285,15 @@ class TestSyntheticControlAdapterFit:
             treatment_time=treatment_time,
             treated_unit="treated",
             outcome_column="outcome",
-            **_fast_sampler_params(),
         )
 
         estimates = result.data["impact_estimates"]
         expected_keys = {
-            "mean_effect",
-            "median_effect",
-            "hdi_lower",
-            "hdi_upper",
+            "att",
+            "se",
+            "ci_lower",
+            "ci_upper",
             "cumulative_effect",
-            "tail_probability",
         }
         assert set(estimates.keys()) == expected_keys
 
@@ -332,19 +314,18 @@ class TestSyntheticControlAdapterFit:
             treatment_time=treatment_time,
             treated_unit="treated",
             outcome_column="outcome",
-            **_fast_sampler_params(),
         )
 
         summary = result.data["model_summary"]
         assert summary["n_pre_periods"] == 20
         assert summary["n_post_periods"] == 10
         assert summary["n_control_units"] == 4
-        assert "sampler_stats" in summary
-        # treated_unit and treatment_time are in model_params
+        assert "mspe" in summary
+        assert "mae" in summary
+        assert "weights" in summary
+        assert isinstance(summary["weights"], dict)
         assert result.data["model_params"]["treated_unit"] == "treated"
         assert result.data["model_params"]["treatment_time"] == str(treatment_time)
-        assert summary["sampler_stats"]["n_samples"] == 200
-        assert summary["sampler_stats"]["n_chains"] == 2
 
     def test_fit_detects_positive_effect(self):
         """Test that a clear positive treatment effect is detected."""
@@ -359,12 +340,11 @@ class TestSyntheticControlAdapterFit:
             treatment_time=treatment_time,
             treated_unit="treated",
             outcome_column="outcome",
-            **_fast_sampler_params(),
         )
 
         estimates = result.data["impact_estimates"]
-        # With a large effect of 20, mean effect should be positive
-        assert estimates["mean_effect"] > 0
+        # With a large effect of 20, ATT should be positive
+        assert estimates["att"] > 0
 
 
 class TestSyntheticControlAdapterValidateData:

@@ -25,7 +25,3 @@ MEASUREMENT:
     outcome_column: revenue
     unit_column: product_id
     time_column: date
-    n_samples: 500
-    n_chains: 2
-    target_accept: 0.85
-    random_seed: 42

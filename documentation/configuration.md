@@ -266,10 +266,6 @@ MEASUREMENT:
 | `outcome_column` | string | Yes | - | Column with the outcome variable |
 | `unit_column` | string | No | `"unit_id"` | Column identifying units |
 | `time_column` | string | No | `"date"` | Column identifying time periods |
-| `n_samples` | int | No | `2000` | Number of posterior samples |
-| `n_chains` | int | No | `4` | Number of MCMC chains |
-| `target_accept` | float | No | `0.95` | Target acceptance rate |
-| `random_seed` | int | No | `null` | Random seed for reproducibility |
 
 ---
 

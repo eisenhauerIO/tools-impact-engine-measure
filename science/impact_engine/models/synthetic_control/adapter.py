@@ -1,4 +1,4 @@
-"""Synthetic Control Model Adapter - thin wrapper around CausalPy's SyntheticControl."""
+"""Synthetic Control Model Adapter - thin wrapper around pysyncon's Synth."""
 
 import logging
 from typing import Any, Dict, List
@@ -7,12 +7,11 @@ import pandas as pd
 
 from ..base import ModelInterface, ModelResult
 from ..factory import MODEL_REGISTRY
-from .transforms import pivot_to_wide
 
 
 @MODEL_REGISTRY.register_decorator("synthetic_control")
 class SyntheticControlAdapter(ModelInterface):
-    """Estimates causal impact using the synthetic control method via CausalPy.
+    """Estimates causal impact using the synthetic control method via pysyncon.
 
     Constraints:
     - Data must be in panel (long) format with unit, time, outcome, and treatment columns
@@ -30,7 +29,6 @@ class SyntheticControlAdapter(ModelInterface):
         """Initialize model with structural configuration parameters.
 
         Config is pre-validated with defaults merged via process_config().
-        Sampler parameters (n_samples, n_chains, etc.) flow through fit() kwargs.
         """
         unit_column = config.get("unit_column", "unit_id")
         if not isinstance(unit_column, str):
@@ -61,7 +59,7 @@ class SyntheticControlAdapter(ModelInterface):
             return False
 
         try:
-            import causalpy  # noqa: F401
+            import pysyncon  # noqa: F401
 
             return True
         except ImportError:
@@ -101,15 +99,13 @@ class SyntheticControlAdapter(ModelInterface):
             "unit_column",
             "outcome_column",
             "time_column",
-            "n_samples",
-            "n_chains",
-            "target_accept",
-            "random_seed",
+            "optim_method",
+            "optim_initial",
         }
     )
 
     def get_fit_params(self, params: Dict[str, Any]) -> Dict[str, Any]:
-        """SC accepts treatment_time, treated_unit, columns, and sampler params."""
+        """SC accepts treatment_time, treated_unit, columns, and optimizer params."""
         return {k: v for k, v in params.items() if k in self._FIT_PARAMS}
 
     def fit(self, data: pd.DataFrame, **kwargs) -> ModelResult:
@@ -123,10 +119,8 @@ class SyntheticControlAdapter(ModelInterface):
                 - outcome_column (str): Column with the outcome variable. Required.
                 - unit_column (str): Column identifying units (default from config).
                 - time_column (str): Column identifying time periods (default from config).
-                - n_samples (int): Number of posterior samples (default: 2000).
-                - n_chains (int): Number of MCMC chains (default: 4).
-                - target_accept (float): Target acceptance rate (default: 0.95).
-                - random_seed (int): Random seed for reproducibility.
+                - optim_method (str): Optimization method (default: "Nelder-Mead").
+                - optim_initial (str): Initial weight strategy (default: "equal").
 
         Returns:
             ModelResult: Standardized result container.
@@ -145,7 +139,7 @@ class SyntheticControlAdapter(ModelInterface):
             )
 
         try:
-            import causalpy as cp
+            from pysyncon import Dataprep, Synth
 
             # Read params from kwargs (already filtered by get_fit_params)
             treatment_time = kwargs["treatment_time"]
@@ -154,93 +148,83 @@ class SyntheticControlAdapter(ModelInterface):
             time_column = kwargs.get("time_column", self.config["time_column"])
             outcome_column = kwargs.get("outcome_column", self.config["outcome_column"])
 
-            # Sampler params with defaults
-            n_samples = kwargs.get("n_samples", 2000)
-            n_chains = kwargs.get("n_chains", 4)
-            target_accept = kwargs.get("target_accept", 0.95)
-            random_seed = kwargs.get("random_seed")
+            optim_method = kwargs.get("optim_method", "Nelder-Mead")
+            optim_initial = kwargs.get("optim_initial", "equal")
 
-            # Pivot long → wide
-            wide_df, treated_units, control_units = pivot_to_wide(
-                data,
-                unit_column=unit_column,
-                time_column=time_column,
-                outcome_column=outcome_column,
-            )
+            # Ensure time column is datetime for consistent comparison
+            df = data.copy()
+            df[time_column] = pd.to_datetime(df[time_column])
+            treatment_time = pd.Timestamp(treatment_time)
 
-            # CausalPy requires treatment_time to match the index dtype
-            if isinstance(wide_df.index, pd.DatetimeIndex) and not isinstance(
-                treatment_time, pd.Timestamp
-            ):
-                treatment_time = pd.Timestamp(treatment_time)
+            # Identify control units: all units except the treated unit
+            all_units = df[unit_column].unique().tolist()
+            control_units = [str(u) for u in all_units if str(u) != treated_unit]
 
-            # Build sample_kwargs for CausalPy
-            sample_kwargs = {
-                "draws": n_samples,
-                "chains": n_chains,
-                "target_accept": target_accept,
-            }
-            if random_seed is not None:
-                sample_kwargs["random_seed"] = random_seed
+            if not control_units:
+                raise ValueError("No control units found in data")
+
+            # Pre- and post-treatment time ranges
+            all_times = sorted(df[time_column].unique())
+            pre_times = [t for t in all_times if t < treatment_time]
+            post_times = [t for t in all_times if t >= treatment_time]
+            n_pre = len(pre_times)
+            n_post = len(post_times)
 
             self.logger.info(
                 f"Fitting SyntheticControl: treated={treated_unit}, "
                 f"n_control={len(control_units)}, "
-                f"samples={n_samples}, chains={n_chains}"
+                f"n_pre={n_pre}, n_post={n_post}"
             )
 
-            # Fit CausalPy model
-            result = cp.SyntheticControl(
-                wide_df,
-                treatment_time,
-                control_units=control_units,
-                treated_units=[treated_unit],
-                model=cp.pymc_models.WeightedSumFitter(
-                    sample_kwargs=sample_kwargs,
-                ),
+            # Build Dataprep — pysyncon's data description object
+            dataprep = Dataprep(
+                foo=df,
+                predictors=[outcome_column],
+                predictors_op="mean",
+                dependent=outcome_column,
+                unit_variable=unit_column,
+                time_variable=time_column,
+                treatment_identifier=treated_unit,
+                controls_identifier=control_units,
+                time_predictors_prior=pre_times,
+                time_optimize_ssr=pre_times,
             )
 
-            # Extract results via effect_summary() — CausalPy's clean API
-            # Returns EffectSummary with .table (DataFrame) having "average" and
-            # "cumulative" rows, and columns: mean, median, hdi_lower, hdi_upper,
-            # prob_positive, prob_negative, relative_hdi_lower, relative_hdi_upper
-            n_pre = int((wide_df.index < treatment_time).sum())
-            n_post = int((wide_df.index >= treatment_time).sum())
+            # Fit via optimization
+            synth = Synth()
+            synth.fit(
+                dataprep=dataprep,
+                optim_method=optim_method,
+                optim_initial=optim_initial,
+            )
 
-            effect = result.effect_summary(treated_unit=treated_unit)
-            tbl = effect.table
+            # Extract results
+            att_result = synth.att(time_period=post_times)
+            att = float(att_result["att"])
+            se = float(att_result["se"])
 
-            avg_row = tbl.loc["average"]
-            cum_row = tbl.loc["cumulative"]
-
-            # Tail probability: probability effect is negative (no real effect)
-            tail_probability = float(avg_row.get("prob_negative", avg_row.get("P(negative)", 0)))
+            weights = synth.weights(round=4)
+            mspe = float(synth.mspe())
+            mae = float(synth.mae())
 
             impact_estimates = {
-                "mean_effect": float(avg_row["mean"]),
-                "median_effect": float(avg_row["median"]),
-                "hdi_lower": float(avg_row["hdi_lower"]),
-                "hdi_upper": float(avg_row["hdi_upper"]),
-                "cumulative_effect": float(cum_row["mean"]),
-                "tail_probability": tail_probability,
+                "att": att,
+                "se": se,
+                "ci_lower": att - 1.96 * se,
+                "ci_upper": att + 1.96 * se,
+                "cumulative_effect": att * n_post,
             }
 
             model_summary = {
                 "n_pre_periods": n_pre,
                 "n_post_periods": n_post,
                 "n_control_units": len(control_units),
-                "sampler_stats": {
-                    "n_samples": n_samples,
-                    "n_chains": n_chains,
-                    "target_accept": target_accept,
-                    "random_seed": random_seed,
-                },
+                "mspe": mspe,
+                "mae": mae,
+                "weights": weights.to_dict(),
             }
 
-            self.logger.info(
-                f"SyntheticControl fit complete: "
-                f"mean_effect={impact_estimates['mean_effect']:.4f}"
-            )
+            self.logger.info(f"SyntheticControl fit complete: att={impact_estimates['att']:.4f}")
 
             return ModelResult(
                 model_type="synthetic_control",
