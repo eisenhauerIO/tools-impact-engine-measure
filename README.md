@@ -19,7 +19,7 @@ pip install impact-engine
 ## Quick Start
 
 ```python
-from impact_engine import evaluate_impact
+from impact_engine_measure import evaluate_impact
 
 # Products path is specified in `config.yaml` under DATA.PATH
 result_path = evaluate_impact(

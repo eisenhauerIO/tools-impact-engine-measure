@@ -34,7 +34,7 @@ OUTPUT:
 **3. Run the analysis.**
 
 ```python
-from impact_engine import evaluate_impact
+from impact_engine_measure import evaluate_impact
 
 results_path = evaluate_impact(
     config_path="config.yaml",

@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "impact_engine"
+name = "impact_engine_measure"
 version = "0.1.0"
 description = "A package for evaluating product impact."
 authors = [
@@ -38,7 +38,7 @@ dev = [
 allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
-packages = ["science/impact_engine"]
+packages = ["science/impact_engine_measure"]
 
 [tool.hatch.envs.default]
 dependencies = [
@@ -60,7 +60,7 @@ dependencies = [
 ]
 
 [tool.hatch.envs.default.scripts]
-test = "pytest science/impact_engine/ -v"
+test = "pytest science/impact_engine_measure/ -v"
 format = "black ."
 lint = "ruff check science/"
 docs = "cd documentation && sphinx-build -b html . _build/html"

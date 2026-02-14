@@ -1,6 +1,6 @@
 # Feature Type: Measurement Model
 
-Instructions for scaffolding a new measurement model adapter in the impact-engine-measure project. The project uses an adapter-based plugin architecture where each model is a self-contained subpackage under `science/impact_engine/models/`.
+Instructions for scaffolding a new measurement model adapter in the impact-engine-measure project. The project uses an adapter-based plugin architecture where each model is a self-contained subpackage under `science/impact_engine_measure/models/`.
 
 Adapters must be thin wrappers around the underlying library — keep custom logic minimal.
 
@@ -10,7 +10,7 @@ Derive these values from `FEATURE_NAME`:
 
 - `MODEL_NAME`: The snake_case name (e.g., `difference_in_differences`)
 - `CLASS_NAME`: PascalCase + "Adapter" suffix (e.g., `DifferenceInDifferencesAdapter`)
-- `MODEL_DIR`: `science/impact_engine/models/{MODEL_NAME}`
+- `MODEL_DIR`: `science/impact_engine_measure/models/{MODEL_NAME}`
 - `REGISTRY_KEY`: Same as `MODEL_NAME` (used in `@MODEL_REGISTRY.register_decorator("MODEL_NAME")`)
 
 ## Requirements
@@ -31,15 +31,15 @@ Ask the user these 8 questions:
 Read these files before writing any code to match exact code style and patterns:
 
 ```
-science/impact_engine/models/base.py
-science/impact_engine/models/factory.py
-science/impact_engine/models/conftest.py
-science/impact_engine/models/interrupted_time_series/adapter.py
-science/impact_engine/models/interrupted_time_series/__init__.py
-science/impact_engine/models/interrupted_time_series/transforms.py
-science/impact_engine/models/interrupted_time_series/tests/test_adapter.py
-science/impact_engine/models/metrics_approximation/adapter.py
-science/impact_engine/config_defaults.yaml
+science/impact_engine_measure/models/base.py
+science/impact_engine_measure/models/factory.py
+science/impact_engine_measure/models/conftest.py
+science/impact_engine_measure/models/interrupted_time_series/adapter.py
+science/impact_engine_measure/models/interrupted_time_series/__init__.py
+science/impact_engine_measure/models/interrupted_time_series/transforms.py
+science/impact_engine_measure/models/interrupted_time_series/tests/test_adapter.py
+science/impact_engine_measure/models/metrics_approximation/adapter.py
+science/impact_engine_measure/config_defaults.yaml
 ```
 
 ## Plan
@@ -55,13 +55,13 @@ The implementation plan should include:
 ### Create directory structure
 
 ```
-science/impact_engine/models/{MODEL_NAME}/
-science/impact_engine/models/{MODEL_NAME}/tests/
+science/impact_engine_measure/models/{MODEL_NAME}/
+science/impact_engine_measure/models/{MODEL_NAME}/tests/
 ```
 
 ### Create `adapter.py`
 
-Create `science/impact_engine/models/{MODEL_NAME}/adapter.py`.
+Create `science/impact_engine_measure/models/{MODEL_NAME}/adapter.py`.
 
 #### File structure (in this order):
 1. Module docstring describing the model
@@ -152,7 +152,7 @@ class {CLASS_NAME}(ModelInterface):
 
 ### Create `__init__.py`
 
-Create `science/impact_engine/models/{MODEL_NAME}/__init__.py`:
+Create `science/impact_engine_measure/models/{MODEL_NAME}/__init__.py`:
 
 ```python
 """{Human-readable model name} for {brief purpose}.
@@ -172,18 +172,18 @@ If `transforms.py` is created, also export the transform function(s).
 
 ### Create `transforms.py` (only if needed)
 
-Only create this if the user indicated custom transforms are needed. Follow the pattern from `science/impact_engine/models/interrupted_time_series/transforms.py`.
+Only create this if the user indicated custom transforms are needed. Follow the pattern from `science/impact_engine_measure/models/interrupted_time_series/transforms.py`.
 
 ### Create `tests/__init__.py`
 
-Create `science/impact_engine/models/{MODEL_NAME}/tests/__init__.py`:
+Create `science/impact_engine_measure/models/{MODEL_NAME}/tests/__init__.py`:
 ```python
 """Tests for {model name in human-readable form} model."""
 ```
 
 ### Create `tests/test_adapter.py`
 
-Create `science/impact_engine/models/{MODEL_NAME}/tests/test_adapter.py`.
+Create `science/impact_engine_measure/models/{MODEL_NAME}/tests/test_adapter.py`.
 
 #### Required test classes:
 
@@ -193,8 +193,8 @@ Create `science/impact_engine/models/{MODEL_NAME}/tests/test_adapter.py`.
 import pandas as pd
 import pytest
 
-from impact_engine.models.conftest import merge_model_params
-from impact_engine.models.{MODEL_NAME} import {CLASS_NAME}
+from impact_engine_measure.models.conftest import merge_model_params
+from impact_engine_measure.models.{MODEL_NAME} import {CLASS_NAME}
 
 
 class Test{CLASS_NAME}Connect:
@@ -233,14 +233,14 @@ class Test{CLASS_NAME}GetRequiredColumns:
 
 #### Test patterns:
 - **No mocking the underlying library.** Fit tests must be real end-to-end: create synthetic data, call the actual library, and verify results. This is the primary value of adapter tests — proving the integration works.
-- Use `merge_model_params()` from `impact_engine.models.conftest` for configs needing defaults
+- Use `merge_model_params()` from `impact_engine_measure.models.conftest` for configs needing defaults
 - Use `pytest.raises(ExceptionType, match="pattern")` for error tests
 - Create test data inline as `pd.DataFrame` (no external fixture files)
 - Assert `isinstance(result, ModelResult)` and `result.model_type == "{MODEL_NAME}"`
 
 ### Update `factory.py`
 
-Edit `science/impact_engine/models/factory.py` to add the import trigger at the bottom, maintaining alphabetical order:
+Edit `science/impact_engine_measure/models/factory.py` to add the import trigger at the bottom, maintaining alphabetical order:
 
 ```python
 from .interrupted_time_series import InterruptedTimeSeriesAdapter  # noqa: E402, F401
@@ -252,7 +252,7 @@ The `# noqa: E402, F401` comment is required to suppress ruff warnings.
 
 ### Update `ExperimentAdapter` denylist
 
-The `ExperimentAdapter` uses a denylist (`_CONFIG_PARAMS`) to exclude known config keys from other models. When adding new config params, you **must** add them to `science/impact_engine/models/experiment/adapter.py` `_CONFIG_PARAMS` frozenset. Otherwise, the new params will leak through to `statsmodels.OLS.fit()` as unrecognized kwargs.
+The `ExperimentAdapter` uses a denylist (`_CONFIG_PARAMS`) to exclude known config keys from other models. When adding new config params, you **must** add them to `science/impact_engine_measure/models/experiment/adapter.py` `_CONFIG_PARAMS` frozenset. Otherwise, the new params will leak through to `statsmodels.OLS.fit()` as unrecognized kwargs.
 
 ### Update `pyproject.toml` dependencies
 
@@ -260,7 +260,7 @@ If the model's Python library (from question 2) is not already listed in the `de
 
 ### Update `config_defaults.yaml` (if needed)
 
-If the model has default configuration parameters, add them under `MEASUREMENT.PARAMS` in `science/impact_engine/config_defaults.yaml`. Group with a comment:
+If the model has default configuration parameters, add them under `MEASUREMENT.PARAMS` in `science/impact_engine_measure/config_defaults.yaml`. Group with a comment:
 
 ```yaml
     # {Human-readable model name} params

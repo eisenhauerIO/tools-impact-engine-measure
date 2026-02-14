@@ -6,7 +6,7 @@ This section provides auto-generated API documentation from the Impact Engine so
 Core Module
 -----------
 
-.. automodule:: impact_engine
+.. automodule:: impact_engine_measure
    :members:
    :undoc-members:
    :show-inheritance:
@@ -14,7 +14,7 @@ Core Module
 Engine
 ------
 
-.. automodule:: impact_engine.engine
+.. automodule:: impact_engine_measure.engine
    :members:
    :undoc-members:
    :show-inheritance:
@@ -25,7 +25,7 @@ Metrics Layer
 Manager
 ^^^^^^^
 
-.. automodule:: impact_engine.metrics.manager
+.. automodule:: impact_engine_measure.metrics.manager
    :members:
    :undoc-members:
    :show-inheritance:
@@ -33,7 +33,7 @@ Manager
 Base Interface
 ^^^^^^^^^^^^^^
 
-.. automodule:: impact_engine.metrics.base
+.. automodule:: impact_engine_measure.metrics.base
    :members:
    :undoc-members:
    :show-inheritance:
@@ -41,7 +41,7 @@ Base Interface
 Catalog Simulator Adapter
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: impact_engine.metrics.catalog_simulator.adapter
+.. automodule:: impact_engine_measure.metrics.catalog_simulator.adapter
    :members:
    :undoc-members:
    :show-inheritance:
@@ -49,7 +49,7 @@ Catalog Simulator Adapter
 File Adapter
 ^^^^^^^^^^^^
 
-.. automodule:: impact_engine.metrics.file.adapter
+.. automodule:: impact_engine_measure.metrics.file.adapter
    :members:
    :undoc-members:
    :show-inheritance:
@@ -60,7 +60,7 @@ Models Layer
 Manager
 ^^^^^^^
 
-.. automodule:: impact_engine.models.manager
+.. automodule:: impact_engine_measure.models.manager
    :members:
    :undoc-members:
    :show-inheritance:
@@ -68,7 +68,7 @@ Manager
 Base Interface
 ^^^^^^^^^^^^^^
 
-.. automodule:: impact_engine.models.base
+.. automodule:: impact_engine_measure.models.base
    :members:
    :undoc-members:
    :show-inheritance:
@@ -76,7 +76,7 @@ Base Interface
 Interrupted Time Series Adapter
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: impact_engine.models.interrupted_time_series.adapter
+.. automodule:: impact_engine_measure.models.interrupted_time_series.adapter
    :members:
    :undoc-members:
    :show-inheritance:
@@ -84,7 +84,7 @@ Interrupted Time Series Adapter
 Experiment Adapter
 ^^^^^^^^^^^^^^^^^^
 
-.. automodule:: impact_engine.models.experiment.adapter
+.. automodule:: impact_engine_measure.models.experiment.adapter
    :members:
    :undoc-members:
    :show-inheritance:
@@ -92,7 +92,7 @@ Experiment Adapter
 Metrics Approximation Adapter
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: impact_engine.models.metrics_approximation.adapter
+.. automodule:: impact_engine_measure.models.metrics_approximation.adapter
    :members:
    :undoc-members:
    :show-inheritance:
@@ -100,7 +100,7 @@ Metrics Approximation Adapter
 Nearest Neighbour Matching Adapter
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: impact_engine.models.nearest_neighbour_matching.adapter
+.. automodule:: impact_engine_measure.models.nearest_neighbour_matching.adapter
    :members:
    :undoc-members:
    :show-inheritance:
@@ -108,7 +108,7 @@ Nearest Neighbour Matching Adapter
 Subclassification Adapter
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: impact_engine.models.subclassification.adapter
+.. automodule:: impact_engine_measure.models.subclassification.adapter
    :members:
    :undoc-members:
    :show-inheritance:
@@ -116,7 +116,7 @@ Subclassification Adapter
 Synthetic Control Adapter
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: impact_engine.models.synthetic_control.adapter
+.. automodule:: impact_engine_measure.models.synthetic_control.adapter
    :members:
    :undoc-members:
    :show-inheritance:
@@ -127,7 +127,7 @@ Storage Layer
 Manager
 ^^^^^^^
 
-.. automodule:: impact_engine.storage.manager
+.. automodule:: impact_engine_measure.storage.manager
    :members:
    :undoc-members:
    :show-inheritance:
@@ -135,7 +135,7 @@ Manager
 Base Interface
 ^^^^^^^^^^^^^^
 
-.. automodule:: impact_engine.storage.base
+.. automodule:: impact_engine_measure.storage.base
    :members:
    :undoc-members:
    :show-inheritance:
@@ -143,7 +143,7 @@ Base Interface
 Artifact Store Adapter
 ^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: impact_engine.storage.artifact_store_adapter
+.. automodule:: impact_engine_measure.storage.artifact_store_adapter
    :members:
    :undoc-members:
    :show-inheritance:
