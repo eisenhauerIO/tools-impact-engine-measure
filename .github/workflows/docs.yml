@@ -20,12 +20,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.11'
-    
+
     - name: Install Pandoc
       run: sudo apt-get update && sudo apt-get install -y pandoc
 
@@ -34,20 +34,20 @@ jobs:
 
     - name: Execute notebooks
       run: |
-        hatch run python -m jupyter nbconvert --to notebook --execute --inplace documentation/models/*.ipynb
+        hatch run python -m jupyter nbconvert --to notebook --execute --inplace docs/source/models/*.ipynb
 
     - name: Build documentation
-      run: hatch run docs
-    
+      run: hatch run docs:build
+
     - name: Setup Pages
       uses: actions/configure-pages@v4
       if: github.ref == 'refs/heads/main'
-    
+
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3
       if: github.ref == 'refs/heads/main'
       with:
-        path: documentation/_build/html
+        path: docs/build/html
 
   deploy:
     if: github.ref == 'refs/heads/main'

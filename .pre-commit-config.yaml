@@ -1,15 +1,27 @@
 repos:
+  - repo: https://github.com/kynan/nbstripout
+    rev: 0.8.1
+    hooks:
+      - id: nbstripout
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-added-large-files
+        args: ['--maxkb=500']
+      - id: check-merge-conflict
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.8.4
     hooks:
       - id: ruff
         args: [--fix]
+        types_or: [python, jupyter]
       - id: ruff-format
-
-  - repo: https://github.com/kynan/nbstripout
-    rev: 0.8.1
-    hooks:
-      - id: nbstripout
+        types_or: [python, jupyter]
 
   - repo: local
     hooks:
@@ -22,7 +34,7 @@ repos:
 
       - id: execute-notebooks
         name: execute notebooks
-        entry: bash -c 'for nb in documentation/models/*.ipynb; do hatch run python -m jupyter nbconvert --to notebook --execute --stdout "$nb" > /dev/null 2>&1; done'
+        entry: bash -c 'for nb in docs/source/models/*.ipynb; do hatch run docs:python -m jupyter nbconvert --to notebook --execute --stdout "$nb" > /dev/null 2>&1; done'
         language: system
         pass_filenames: false
         always_run: true

@@ -11,7 +11,7 @@ authors = [
 ]
 license = { text = "MIT" }
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 dependencies = [
   "pandas",
   "pyyaml",
@@ -28,8 +28,6 @@ Homepage = "https://github.com/eisenhauerIO/tools-impact-engine"
 [project.optional-dependencies]
 dev = [
   "pytest",
-  "pytest-cov",
-  "black",
   "ruff",
   "pre-commit"
 ]
@@ -44,8 +42,16 @@ packages = ["impact_engine_measure"]
 dependencies = [
   "pytest",
   "ruff",
-  "black",
   "pre-commit",
+]
+
+[tool.hatch.envs.default.scripts]
+test = "pytest tests/ -v"
+lint = "ruff check ."
+format = "ruff format ."
+
+[tool.hatch.envs.docs]
+dependencies = [
   "sphinx>=7.0.0",
   "sphinx-rtd-theme>=1.3.0",
   "myst-parser>=2.0.0",
@@ -59,17 +65,25 @@ dependencies = [
   "nbconvert",
 ]
 
-[tool.hatch.envs.default.scripts]
-test = "pytest impact_engine_measure/ -v"
-format = "black ."
-lint = "ruff check impact_engine_measure/"
-docs = "cd documentation && sphinx-build -b html . _build/html"
+[tool.hatch.envs.docs.scripts]
+build = "sphinx-build -b html docs/source docs/build/html"
 
 [tool.ruff]
-line-length = 100
-target-version = "py38"
+extend-exclude = ["_external", "docs/build"]
+line-length = 120
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I"]
-ignore = ["E501"]
+select = ["D", "E", "F", "I"]
 
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
+[tool.ruff.lint.per-file-ignores]
+"*.ipynb" = ["D", "E", "F", "I"]
+"tests/**" = ["D"]
+"**/tests/**" = ["D"]
+"impact_engine_measure/**" = ["D"]
+
+[tool.pytest.ini_options]
+addopts = "-v"
+testpaths = ["tests"]

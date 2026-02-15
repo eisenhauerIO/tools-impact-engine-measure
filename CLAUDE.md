@@ -2,10 +2,10 @@
 
 Always use the hatch environment for running tests, linting, and other dev tasks:
 - Run tests: `hatch run test`
-- Format: `hatch run format`
+- Format: `hatch run format` (ruff format)
 - Lint: `hatch run lint`
 
-Never use bare `pytest`, `black`, or `ruff` directly — always go through `hatch run`.
+Never use bare `pytest` or `ruff` directly — always go through `hatch run`.
 
 ## Design Philosophy
 
