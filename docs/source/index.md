@@ -6,6 +6,7 @@
 :maxdepth: 2
 :caption: Guides
 
+installation
 design
 usage
 configuration

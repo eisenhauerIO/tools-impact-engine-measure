@@ -32,9 +32,10 @@ result_path = evaluate_impact(
 
 | Guide | Description |
 |-------|-------------|
-| [Usage](documentation/usage.md) | Getting started with basic workflow |
-| [Configuration](documentation/configuration.md) | All configuration options |
-| [Design](documentation/design.md) | System design & architecture |
+| [Installation](docs/source/installation.md) | Install and set up for development |
+| [Design](docs/source/design.md) | System design and architecture |
+| [Usage](docs/source/usage.md) | Getting started with basic workflow |
+| [Configuration](docs/source/configuration.md) | All configuration options |
 
 ## License
 
