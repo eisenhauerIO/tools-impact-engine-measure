@@ -13,7 +13,7 @@
 ## Installation
 
 ```bash
-pip install impact-engine
+pip install git+https://github.com/eisenhauerIO/tools-impact-engine-measure.git
 ```
 
 ## Quick Start
@@ -33,10 +33,6 @@ result_path = evaluate_impact(
 | Guide | Description |
 |-------|-------------|
 | [Installation](docs/source/installation.md) | Install and set up for development |
-| [Design](docs/source/design.md) | System design and architecture |
 | [Usage](docs/source/usage.md) | Getting started with basic workflow |
 | [Configuration](docs/source/configuration.md) | All configuration options |
-
-## License
-
-MIT
+| [Design](docs/source/design.md) | System design and architecture |
