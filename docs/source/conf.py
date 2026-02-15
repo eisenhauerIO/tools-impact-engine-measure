@@ -7,8 +7,8 @@ sys.path.insert(0, os.path.abspath("../.."))
 
 # -- Project information -----------------------------------------------------
 project = "Impact Engine"
-copyright = "2024, Impact Engine Team"
-author = "Impact Engine Team"
+copyright = "2024, eisenhauer.io"
+author = "eisenhauer.io"
 release = "1.0.0"
 
 # -- General configuration ---------------------------------------------------

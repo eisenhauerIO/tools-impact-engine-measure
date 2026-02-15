@@ -13,7 +13,7 @@ from .metrics import (
 from .models import MODEL_REGISTRY, ModelInterface, ModelsManager, create_models_manager
 
 __version__ = "0.1.0"
-__author__ = "Impact Engine Team"
+__author__ = "eisenhauer.io"
 
 
 __all__ = [
