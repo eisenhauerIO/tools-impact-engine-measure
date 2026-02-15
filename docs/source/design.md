@@ -73,3 +73,5 @@ The config maps directly to the four stages. **Load** uses `DATA.SOURCE.TYPE` to
 The codebase enforces quality through automated tooling. [GitHub Actions](https://github.com/features/actions) runs tests and linting on every push. [Ruff](https://docs.astral.sh/ruff/) handles fast linting and formatting. [pre-commit](https://pre-commit.com/) hooks catch issues locally, and type hints throughout enable static analysis.
 
 The architecture facilitates testing through **dependency injection**. Each manager receives its adapter through the constructor rather than creating it internally, so [unit tests](../impact_engine_measure/tests/) can inject mock implementations that satisfy the interface contract. This means tests run fast and deterministically without requiring external systems. The same pattern applies across all three layers—metrics, models, and storage—making the entire codebase testable in isolation.
+
+For complete configuration schema and parameter documentation, see the [Configuration Guide](configuration.md).
