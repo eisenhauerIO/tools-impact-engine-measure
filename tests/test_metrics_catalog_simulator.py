@@ -358,15 +358,17 @@ class TestCatalogSimulatorAdapter:
         # Create simulation job (normally done by retrieve_business_metrics)
         adapter._create_simulation_job()
 
+        import sys
+
+        import online_retail_simulator.enrich  # noqa: F401
+        import online_retail_simulator.simulate  # noqa: F401
+
+        sim_mod = sys.modules["online_retail_simulator.simulate"]
+        enrich_mod = sys.modules["online_retail_simulator.enrich"]
+
         with (
-            patch(
-                "online_retail_simulator.simulate.simulate_product_details",
-                mock_simulate_pd,
-            ),
-            patch(
-                "online_retail_simulator.enrich.enrich",
-                mock_enrich,
-            ),
+            patch.object(sim_mod, "simulate_product_details", mock_simulate_pd),
+            patch.object(enrich_mod, "enrich", mock_enrich),
         ):
             result = adapter._apply_enrichment(metrics_df)
 
