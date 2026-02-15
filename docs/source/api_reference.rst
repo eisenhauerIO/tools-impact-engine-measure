@@ -1,5 +1,5 @@
-API Reference
-=============
+API
+===
 
 This section provides auto-generated API documentation from the Impact Engine source code.
 

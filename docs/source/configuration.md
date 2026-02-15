@@ -1,4 +1,4 @@
-# Configuration Reference
+# Configuration
 
 This document describes all configuration options for Impact Engine.
 
