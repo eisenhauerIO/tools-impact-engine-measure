@@ -10,13 +10,11 @@
 
 **Impact Engine** is adapter-based. Each measurement model is a ***thin wrapper around an established statistical library***—not a reimplementation. The engine is extensible in three dimensions: data sources, measurement models, and storage backends all plug in independently through a common interface and decorator-based registry. Custom adapters can live in private repositories. A single YAML configuration file selects all adapters, and the output contract (`impact_results.json` + `manifest.json`) is ***standardized across models***, making results integrable into downstream workflows.
 
-## Installation
+## Quick Start
 
 ```bash
 pip install git+https://github.com/eisenhauerIO/tools-impact-engine-measure.git
 ```
-
-## Quick Start
 
 ```python
 from impact_engine_measure import evaluate_impact
