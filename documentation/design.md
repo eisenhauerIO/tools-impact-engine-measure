@@ -20,15 +20,15 @@ The **plugin architecture** exists for a practical reason. Business settings oft
 
 Two patterns make this work.
 
-**Adapter pattern**. Each extension point implements a common interface defined in [MetricsInterface](../science/impact_engine_measure/metrics/base.py), [ModelInterface](../science/impact_engine_measure/models/base.py), and [StorageInterface](../science/impact_engine_measure/storage/base.py). The core engine calls interface methods without knowing which specific adapter is behind them. This keeps the core decoupled from implementation details. To add a new adapter, implement the relevant interface and register with its registry ([metrics](../science/impact_engine_measure/metrics/factory.py), [models](../science/impact_engine_measure/models/factory.py), or [storage](../science/impact_engine_measure/storage/factory.py)). All three use decorator-based self-registration, so there's no central file to modify.
+**Adapter pattern**. Each extension point implements a common interface defined in [MetricsInterface](../impact_engine_measure/metrics/base.py), [ModelInterface](../impact_engine_measure/models/base.py), and [StorageInterface](../impact_engine_measure/storage/base.py). The core engine calls interface methods without knowing which specific adapter is behind them. This keeps the core decoupled from implementation details. To add a new adapter, implement the relevant interface and register with its registry ([metrics](../impact_engine_measure/metrics/factory.py), [models](../impact_engine_measure/models/factory.py), or [storage](../impact_engine_measure/storage/factory.py)). All three use decorator-based self-registration, so there's no central file to modify.
 
-**Data contracts**. The [Schema system](../science/impact_engine_measure/core/contracts.py) maps external column names to the engine's standard schema. Each data source defines its mappings once in a single place. The contract handles translation automatically, and the rest of the system works unchanged.
+**Data contracts**. The [Schema system](../impact_engine_measure/core/contracts.py) maps external column names to the engine's standard schema. Each data source defines its mappings once in a single place. The contract handles translation automatically, and the rest of the system works unchanged.
 
 ---
 
 ## Data Flow
 
-The system is **configuration-driven**. A single config file selects which adapters to use, and data flows through four stages orchestrated by [engine.py](../science/impact_engine_measure/engine.py).
+The system is **configuration-driven**. A single config file selects which adapters to use, and data flows through four stages orchestrated by [engine.py](../impact_engine_measure/engine.py).
 
 <p align="center">
   <img src="_static/diagrams/architecture.svg" alt="Data Flow">
@@ -72,4 +72,4 @@ The config maps directly to the four stages. **Load** uses `DATA.SOURCE.TYPE` to
 
 The codebase enforces quality through automated tooling. [GitHub Actions](https://github.com/features/actions) runs tests and linting on every push. [Ruff](https://docs.astral.sh/ruff/) handles fast linting and formatting. [pre-commit](https://pre-commit.com/) hooks catch issues locally, and type hints throughout enable static analysis.
 
-The architecture facilitates testing through **dependency injection**. Each manager receives its adapter through the constructor rather than creating it internally, so [unit tests](../science/impact_engine_measure/tests/) can inject mock implementations that satisfy the interface contract. This means tests run fast and deterministically without requiring external systems. The same pattern applies across all three layers—metrics, models, and storage—making the entire codebase testable in isolation.
+The architecture facilitates testing through **dependency injection**. Each manager receives its adapter through the constructor rather than creating it internally, so [unit tests](../impact_engine_measure/tests/) can inject mock implementations that satisfy the interface contract. This means tests run fast and deterministically without requiring external systems. The same pattern applies across all three layers—metrics, models, and storage—making the entire codebase testable in isolation.

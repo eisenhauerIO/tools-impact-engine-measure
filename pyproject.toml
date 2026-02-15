@@ -38,7 +38,7 @@ dev = [
 allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
-packages = ["science/impact_engine_measure"]
+packages = ["impact_engine_measure"]
 
 [tool.hatch.envs.default]
 dependencies = [
@@ -60,9 +60,9 @@ dependencies = [
 ]
 
 [tool.hatch.envs.default.scripts]
-test = "pytest science/impact_engine_measure/ -v"
+test = "pytest impact_engine_measure/ -v"
 format = "black ."
-lint = "ruff check science/"
+lint = "ruff check impact_engine_measure/"
 docs = "cd documentation && sphinx-build -b html . _build/html"
 
 [tool.ruff]

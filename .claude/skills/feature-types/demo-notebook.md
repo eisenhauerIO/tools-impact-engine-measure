@@ -33,7 +33,7 @@ Read these files before writing any code to match exact style and patterns:
 documentation/models/demo_subclassification.py
 documentation/models/configs/demo_subclassification.yaml
 documentation/models/configs/demo_subclassification_catalog.yaml
-science/impact_engine_measure/models/{MODEL_NAME}/adapter.py
+impact_engine_measure/models/{MODEL_NAME}/adapter.py
 ```
 
 ## Implementation
