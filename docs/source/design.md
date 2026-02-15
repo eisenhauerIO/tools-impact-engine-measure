@@ -1,4 +1,4 @@
-# Impact Engine Design
+# Software Design
 
 *Last updated: January 2026*
 

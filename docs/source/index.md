@@ -7,9 +7,9 @@
 :caption: Guides
 
 installation
-design
 usage
 configuration
+design
 api_reference
 ```
 
