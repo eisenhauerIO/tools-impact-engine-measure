@@ -125,6 +125,18 @@ DATA:
 | `FUNCTION` | string | No | `"passthrough"` | Transform function name |
 | `PARAMS` | object | No | `{}` | Function-specific parameters |
 
+#### Available Transforms
+
+Each model typically pairs with a specific transform. The engine selects the transform by name from a registry.
+
+| Transform | Used With | Description | Key Parameters |
+|-----------|-----------|-------------|----------------|
+| `passthrough` | Any | No-op default. Passes data through unchanged. | None |
+| `aggregate_by_date` | Interrupted Time Series | Sums all numeric columns by date, producing one row per date. | `metric`: column to validate exists (default `"revenue"`) |
+| `prepare_for_synthetic_control` | Synthetic Control | Adds a `treatment` column derived from enrichment status and date. | `enrichment_start`: date when enrichment began (auto-injected from ENRICHMENT.PARAMS) |
+| `aggregate_for_approximation` | Metrics Approximation | Aggregates baseline metric per product into cross-sectional format. | `baseline_metric`: column to aggregate (default `"revenue"`) |
+| `prepare_simulator_for_approximation` | Metrics Approximation (simulator source) | Converts simulator time-series into before/after quality scores and baseline sales per product. | `enrichment_start`: date split point (required), `baseline_metric`: column to aggregate (default `"revenue"`) |
+
 ## MEASUREMENT Section
 
 Configures the statistical model for impact analysis.
@@ -268,6 +280,8 @@ MEASUREMENT:
 | `outcome_column` | string | Yes | - | Column with the outcome variable |
 | `unit_column` | string | No | `"unit_id"` | Column identifying units |
 | `time_column` | string | No | `"date"` | Column identifying time periods |
+| `optim_method` | string | No | `"Nelder-Mead"` | Optimization method passed to pysyncon |
+| `optim_initial` | string | No | `"equal"` | Initial weight strategy for optimization |
 
 ---
 

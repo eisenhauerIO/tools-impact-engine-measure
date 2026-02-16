@@ -19,7 +19,7 @@ pip install git+https://github.com/eisenhauerIO/tools-impact-engine-measure.git
 ```python
 from impact_engine_measure import evaluate_impact
 
-# Products path is specified in `config.yaml` under DATA.PATH
+# Products path is specified in `config.yaml` under DATA.SOURCE.CONFIG.path
 result_path = evaluate_impact(
     config_path="config.yaml",
     storage_url="./results"

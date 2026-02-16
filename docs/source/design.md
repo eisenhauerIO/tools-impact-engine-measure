@@ -1,6 +1,6 @@
 # Design
 
-*Last updated: January 2026*
+*Last updated: February 2026*
 
 ## Overview
 
@@ -40,7 +40,7 @@ Each stage is handled by a dedicated manager that delegates to the configured ad
 DATA:
   # ── Load ────────────────────────────────────────────────────
   SOURCE:
-    TYPE: simulator                     # metrics adapter
+    type: simulator                     # metrics adapter
     CONFIG:
       path: data/products.csv
       start_date: '2024-01-01'
