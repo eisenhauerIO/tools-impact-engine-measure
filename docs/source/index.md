@@ -23,4 +23,5 @@ models/demo_subclassification
 models/demo_experiment
 models/demo_nearest_neighbour_matching
 models/demo_synthetic_control
+models/demo_model_selection
 ```
