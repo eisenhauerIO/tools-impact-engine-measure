@@ -34,18 +34,11 @@ class ConfigBridge:
         Returns:
             Catalog-simulator compatible configuration
 
-        Example input (impact-engine format):
+        Example input (flat dict built by adapter, not full user config):
             DATA:
-              TYPE: simulator
-              MODE: rule
-              SEED: 42
-              START_DATE: "2024-01-01"
-              END_DATE: "2024-01-31"
-              ENRICHMENT:
-                FUNCTION: quantity_boost
-                PARAMS:
-                  effect_size: 0.3
-                  enrichment_start: "2024-01-15"
+              start_date: "2024-01-01"
+              end_date: "2024-01-31"
+              seed: 42
 
         Example output (catalog-simulator format):
             RULE:

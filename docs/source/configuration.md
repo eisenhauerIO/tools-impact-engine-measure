@@ -91,19 +91,19 @@ DATA:
       path: data/products.csv
       start_date: "2024-11-01"
       end_date: "2024-12-15"
-      ENRICHMENT:
-        FUNCTION: quantity_boost
-        PARAMS:
-          effect_size: 0.3
-          enrichment_fraction: 1.0
-          enrichment_start: "2024-11-23"
-          seed: 42
+  ENRICHMENT:
+    FUNCTION: product_detail_boost
+    PARAMS:
+      quality_boost: 0.15
+      enrichment_fraction: 1.0
+      enrichment_start: "2024-11-23"
+      seed: 42
 ```
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `ENRICHMENT.FUNCTION` | string | Yes | Enrichment function: `"quantity_boost"` |
-| `ENRICHMENT.PARAMS.effect_size` | float | Yes | Magnitude of the intervention effect (e.g., 0.3 = 30% boost) |
+| `ENRICHMENT.FUNCTION` | string | Yes | Enrichment function: `"product_detail_boost"` |
+| `ENRICHMENT.PARAMS.quality_boost` | float | Yes | Magnitude of the quality score boost (e.g., 0.15) |
 | `ENRICHMENT.PARAMS.enrichment_fraction` | float | No | Fraction of products to enrich (0.0-1.0, default 1.0) |
 | `ENRICHMENT.PARAMS.enrichment_start` | string | Yes | Date when enrichment begins (YYYY-MM-DD) |
 | `ENRICHMENT.PARAMS.seed` | int | No | Random seed for reproducibility |
