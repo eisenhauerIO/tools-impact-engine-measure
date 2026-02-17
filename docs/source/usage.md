@@ -34,15 +34,16 @@ OUTPUT:
 **3. Run the analysis.**
 
 ```python
-from impact_engine_measure import evaluate_impact
+from impact_engine_measure import evaluate_impact, load_results
 
-results_path = evaluate_impact(
+job_info = evaluate_impact(
     config_path="config.yaml",
     storage_url="./results"
 )
+results = load_results(job_info)
 ```
 
-The engine loads products, retrieves metrics, applies transformations, fits the model, and writes results. The return value is the path to `impact_results.json`.
+The engine loads products, retrieves metrics, applies transformations, fits the model, and writes results. `evaluate_impact` returns a `JobInfo` object; pass it to `load_results()` to get a typed `MeasureJobResult` with all artifacts loaded.
 
 ---
 

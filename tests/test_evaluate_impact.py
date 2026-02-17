@@ -7,7 +7,7 @@ import tempfile
 import pandas as pd
 import pytest
 
-from impact_engine_measure import evaluate_impact
+from impact_engine_measure import evaluate_impact, load_results
 
 
 class TestEvaluateImpactIntegration:
@@ -58,23 +58,18 @@ class TestEvaluateImpactIntegration:
             with open(config_path, "w") as f:
                 json.dump(config, f)
 
-            # Call evaluate_impact with modeling integration
-            result_path = evaluate_impact(config_path=config_path, storage_url=tmpdir)
+            # Call evaluate_impact and load results
+            job_info = evaluate_impact(config_path=config_path, storage_url=tmpdir)
+            assert "job-impact-engine-" in job_info.job_id
 
-            # Verify result path format (now includes job ID)
-            assert result_path.endswith(".json")
-            assert "job-impact-engine-" in result_path  # Job ID prefix
-
-            # Load result data directly from the returned path
-            with open(result_path, "r") as f:
-                result_data = json.load(f)
+            result = load_results(job_info)
 
             # Verify stable envelope structure
-            assert result_data["schema_version"] == "2.0"
-            assert result_data["model_type"] == "interrupted_time_series"
+            assert result.impact_results["schema_version"] == "2.0"
+            assert result.model_type == "interrupted_time_series"
 
             # Verify standardized three-key data structure
-            data = result_data["data"]
+            data = result.impact_results["data"]
             assert data["model_params"]["intervention_date"] == "2024-01-15"
             assert data["model_params"]["dependent_variable"] == "revenue"
             assert "impact_estimates" in data
@@ -135,8 +130,8 @@ class TestEvaluateImpactIntegration:
             with pytest.raises(ValueError, match="intervention_date"):
                 evaluate_impact(config_path=config_path, storage_url=tmpdir)
 
-    def test_evaluate_impact_returns_model_results_path(self):
-        """Test that evaluate_impact returns path to model results, not CSV."""
+    def test_evaluate_impact_returns_job_info(self):
+        """Test that evaluate_impact returns a JobInfo object."""
         with tempfile.TemporaryDirectory() as tmpdir:
             # Create products CSV file
             products_df = pd.DataFrame(
@@ -180,14 +175,17 @@ class TestEvaluateImpactIntegration:
             with open(config_path, "w") as f:
                 json.dump(config, f)
 
-            result_path = evaluate_impact(config_path=config_path, storage_url=tmpdir)
+            job_info = evaluate_impact(config_path=config_path, storage_url=tmpdir)
 
-            # Verify result is a JSON file (model results), not CSV
-            assert result_path.endswith(".json")
-            assert not result_path.endswith(".csv")
+            # Verify JobInfo attributes
+            from artifact_store import JobInfo
 
-            # Verify it's the impact_results.json file from the model
-            assert "impact_results.json" in result_path
+            assert isinstance(job_info, JobInfo)
+            assert "job-impact-engine-" in job_info.job_id
+
+            # Verify results are loadable
+            result = load_results(job_info)
+            assert result.model_type == "interrupted_time_series"
 
     def test_evaluate_impact_with_multiple_products(self):
         """Test that evaluate_impact works with multiple products."""
@@ -234,22 +232,17 @@ class TestEvaluateImpactIntegration:
             with open(config_path, "w") as f:
                 json.dump(config, f)
 
-            result_path = evaluate_impact(config_path=config_path, storage_url=tmpdir)
+            job_info = evaluate_impact(config_path=config_path, storage_url=tmpdir)
+            assert "job-impact-engine-" in job_info.job_id
 
-            # Verify result path format (now includes job ID)
-            assert result_path.endswith(".json")
-            assert "job-impact-engine-" in result_path  # Job ID prefix
-
-            # Load result data directly from the returned path
-            with open(result_path, "r") as f:
-                result_data = json.load(f)
+            result = load_results(job_info)
 
             # Verify stable envelope structure
-            assert result_data["schema_version"] == "2.0"
-            assert result_data["model_type"] == "interrupted_time_series"
+            assert result.impact_results["schema_version"] == "2.0"
+            assert result.model_type == "interrupted_time_series"
 
             # Verify standardized data structure
-            data = result_data["data"]
+            data = result.impact_results["data"]
             assert data["model_params"]["intervention_date"] == "2024-01-15"
             assert data["model_params"]["dependent_variable"] == "revenue"
             assert "impact_estimates" in data

@@ -74,16 +74,13 @@ class TestMetricsApproximationPipeline:
         - Transform extracts quality_before/quality_after
         - MetricsApproximationAdapter computes impact
         """
-        import json
+        from impact_engine_measure import evaluate_impact, load_results
 
-        from impact_engine_measure import evaluate_impact
+        job_info = evaluate_impact(str(impact_config), str(tmp_path / "output"))
+        result = load_results(job_info)
 
-        results_path = evaluate_impact(str(impact_config), str(tmp_path / "output"))
-
-        with open(results_path) as f:
-            results = json.load(f)
-
-        assert results["model_type"] == "metrics_approximation"
-        assert results["data"]["model_params"]["response_function"] == "linear"
-        assert results["data"]["model_summary"]["n_products"] == 5
-        assert results["data"]["impact_estimates"]["impact"] >= 0
+        assert result.model_type == "metrics_approximation"
+        data = result.impact_results["data"]
+        assert data["model_params"]["response_function"] == "linear"
+        assert data["model_summary"]["n_products"] == 5
+        assert data["impact_estimates"]["impact"] >= 0

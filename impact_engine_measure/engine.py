@@ -5,7 +5,7 @@ Impact analysis engine for the impact_engine_measure package.
 from datetime import datetime, timezone
 from typing import Optional
 
-from artifact_store import ArtifactStore
+from artifact_store import ArtifactStore, JobInfo
 
 from .config import parse_config_file
 from .core import apply_transform
@@ -19,7 +19,7 @@ def evaluate_impact(
     config_path: str,
     storage_url: str = "./data",
     job_id: Optional[str] = None,
-) -> str:
+) -> JobInfo:
     """
     Evaluate impact using business metrics retrieved through the metrics layer
     and models layer for statistical analysis.
@@ -32,7 +32,8 @@ def evaluate_impact(
             If not provided, a unique ID will be auto-generated.
 
     Returns:
-        str: URL to the saved model results (within the job directory)
+        JobInfo: Job object for the completed run. Use ``load_results(job_info)``
+            to load all artifacts into a typed ``MeasureJobResult``.
     """
     config = parse_config_file(config_path)
     source_config = config["DATA"]["SOURCE"]["CONFIG"]
@@ -87,4 +88,4 @@ def evaluate_impact(
     }
     storage_manager.write_json("manifest.json", manifest)
 
-    return fit_output.results_path
+    return storage_manager.get_job()
