@@ -3,6 +3,7 @@
 
 # Sphinx documentation
 docs/_build/
+docs/build/
 documentation/_build/
 
 # External dependencies
