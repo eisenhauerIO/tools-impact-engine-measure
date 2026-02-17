@@ -11,6 +11,7 @@ from .metrics import (
     create_metrics_manager,
 )
 from .models import MODEL_REGISTRY, ModelInterface, ModelsManager, create_models_manager
+from .results import MeasureJobResult, load_results
 
 __version__ = "0.1.0"
 __author__ = "eisenhauer.io"
@@ -18,6 +19,8 @@ __author__ = "eisenhauer.io"
 
 __all__ = [
     "evaluate_impact",
+    "load_results",
+    "MeasureJobResult",
     "MetricsInterface",
     "MetricsManager",
     "METRICS_REGISTRY",

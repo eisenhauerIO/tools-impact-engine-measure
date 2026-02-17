@@ -19,6 +19,14 @@ Engine
    :undoc-members:
    :show-inheritance:
 
+Results
+-------
+
+.. automodule:: impact_engine_measure.results
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Metrics Layer
 -------------
 
