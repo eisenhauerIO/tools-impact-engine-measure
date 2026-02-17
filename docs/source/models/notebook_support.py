@@ -5,6 +5,37 @@ from typing import Dict, List
 import matplotlib.pyplot as plt
 
 
+def extract_treatment_effect(results: Dict[str, object]) -> float:
+    """Extract the treatment effect estimate from model results regardless of model type.
+
+    Each model stores its primary effect estimate under a different key:
+    - experiment: coefficient on the treatment indicator in ``params``
+    - nearest_neighbour_matching: ``att``
+    - all others (e.g. subclassification): ``treatment_effect``
+
+    Parameters
+    ----------
+    results : dict
+        The ``impact_results`` dict returned by ``load_results().impact_results``,
+        containing ``model_type`` and ``data.impact_estimates``.
+
+    Returns
+    -------
+    float
+        The scalar treatment effect estimate.
+    """
+    estimates = results["data"]["impact_estimates"]
+    model_type = results["model_type"]
+    if model_type == "experiment":
+        return estimates["params"].get(
+            "enriched[T.True]", estimates["params"].get("enriched", 0)
+        )
+    elif model_type == "nearest_neighbour_matching":
+        return estimates["att"]
+    else:
+        return estimates["treatment_effect"]
+
+
 def plot_convergence(
     sample_sizes: List[int],
     estimates: List[float],
