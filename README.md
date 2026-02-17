@@ -12,7 +12,7 @@ Change your causal inference method and you're rewriting data connectors, updati
 
 **Impact Engine** manages the ***full measurement pipeline***, not just the estimator. A single YAML config defines your data source, estimation method, storage backend, and output destination — swap any component by changing one line. Custom adapters plug in proprietary data sources and storage without touching the core engine, and every run produces a ***self-describing result bundle*** so downstream teams can consume results without knowing or caring whether the methodology changed last week.
 
-Under the hood it wraps statsmodels, causalml, and pysyncon today, with an extension point for any estimator. Improve your methods continuously, make them available to every team from one place.
+Under the hood it wraps [statsmodels](https://www.statsmodels.org/), [causalml](https://causalml.readthedocs.io/), and [pysyncon](https://sdfordham.github.io/pysyncon/) today, with an extension point for any estimator. Improve your methods continuously, make them available to every team from one place.
 
 ## Quick Start
 
@@ -30,6 +30,6 @@ results_path = evaluate_impact(config_path="config.yaml")
 
 | Guide | Description |
 |-------|-------------|
-| [Usage](docs/source/usage.md) | Getting started with basic workflow |
-| [Configuration](docs/source/configuration.md) | All configuration options |
-| [Design](docs/source/design.md) | System design and architecture |
+| [Usage](https://eisenhauerio.github.io/tools-impact-engine-measure/usage.html) | Getting started with basic workflow |
+| [Configuration](https://eisenhauerio.github.io/tools-impact-engine-measure/configuration.html) | All configuration options |
+| [Design](https://eisenhauerio.github.io/tools-impact-engine-measure/design.html) | System design and architecture |

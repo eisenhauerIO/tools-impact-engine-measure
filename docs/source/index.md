@@ -17,6 +17,7 @@ api_reference
 :maxdepth: 2
 :caption: Demos
 
+models/overview
 models/demo_interrupted_time_series
 models/demo_metrics_approximation
 models/demo_subclassification

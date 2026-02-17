@@ -11,6 +11,7 @@ Each page serves a distinct purpose. Model-specific details belong in model demo
 | `usage.md` | General workflow, model-agnostic. Links to model demos for specifics. The Available Models table includes Library and Interface columns linking to each model's underlying package and the specific class or function it wraps. |
 | `configuration.md` | Parameter reference tables. |
 | `api_reference.rst` | Auto-generated from source. Do not hand-edit. |
+| `models/overview.md` | Model decision guide. When to use which estimator. |
 | Model demos | One per model. Runnable deep dives with validation. |
 
 ---
