@@ -6,3 +6,11 @@ RULE:
     PARAMS:
       num_products: 5000
       seed: 42
+  METRICS:
+    FUNCTION: simulate_metrics_rule_based
+    PARAMS:
+      date_start: "2024-01-08"
+      date_end: "2024-01-08"
+      seed: 42
+PRODUCT_DETAILS:
+  FUNCTION: simulate_product_details_mock
