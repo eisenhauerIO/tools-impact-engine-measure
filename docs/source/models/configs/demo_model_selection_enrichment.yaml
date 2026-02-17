@@ -1,7 +1,0 @@
-IMPACT:
-  FUNCTION: product_detail_boost
-  PARAMS:
-    enrichment_fraction: 0.5
-    enrichment_start: "2024-01-08"
-    quality_boost: 0.15
-    seed: 42
