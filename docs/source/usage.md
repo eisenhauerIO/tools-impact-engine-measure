@@ -2,7 +2,7 @@
 
 ## Workflow
 
-Every analysis follows the same three steps regardless of which measurement model is used.
+Impact Engine follows the same three steps regardless of which measurement model is used.
 
 **1. Prepare a product catalog.** Provide a CSV with product characteristics (`product_identifier`, `category`, `price`). In demo notebooks, the catalog simulator generates this automatically.
 

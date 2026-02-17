@@ -66,7 +66,7 @@ class ModelsManager:
         """Fit model using configuration parameters.
 
         All PARAMS from config are forwarded as kwargs to validate_params() and fit().
-        Callers can override any config param via **overrides.
+        Callers can override any config param via ``**overrides``.
 
         Args:
             data: DataFrame containing data for model fitting.

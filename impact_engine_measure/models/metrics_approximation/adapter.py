@@ -22,18 +22,19 @@ def _normalize_result(result):
 
 @MODEL_REGISTRY.register_decorator("metrics_approximation")
 class MetricsApproximationAdapter(ModelInterface):
-    """
-    Adapter for metrics-based impact approximation that implements ModelInterface.
+    """Adapter for metrics-based impact approximation that implements ModelInterface.
 
     This model takes enriched products with before/after metric values and baseline
     outcomes, then applies a response function to approximate the treatment impact.
 
     Input DataFrame must contain:
-        - metric_before_column: Pre-intervention metric value
-        - metric_after_column: Post-intervention metric value
-        - baseline_column: Baseline sales/revenue
 
-    Configuration:
+    - metric_before_column: Pre-intervention metric value
+    - metric_after_column: Post-intervention metric value
+    - baseline_column: Baseline sales/revenue
+
+    Configuration::
+
         MEASUREMENT:
             MODEL: "metrics_approximation"
             METRIC_BEFORE_COLUMN: "quality_before"
@@ -146,9 +147,7 @@ class MetricsApproximationAdapter(ModelInterface):
             raise ConnectionError("Model not connected. Call connect() first.")
 
         if not self.validate_data(data):
-            raise ValueError(
-                f"Data validation failed. Required columns: {self.get_required_columns()}"
-            )
+            raise ValueError(f"Data validation failed. Required columns: {self.get_required_columns()}")
 
         # Get column names from config
         metric_before_col = self.config["metric_before_column"]
@@ -215,8 +214,7 @@ class MetricsApproximationAdapter(ModelInterface):
         # n_products is in model_summary, not impact_estimates
 
         self.logger.info(
-            f"Metrics approximation complete: {n_products} products, "
-            f"impact_estimates={impact_estimates}"
+            f"Metrics approximation complete: {n_products} products, " f"impact_estimates={impact_estimates}"
         )
 
         return ModelResult(

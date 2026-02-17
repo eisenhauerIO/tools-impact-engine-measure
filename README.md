@@ -12,7 +12,7 @@ Change your causal inference method and you're rewriting data connectors, updati
 
 **Impact Engine** manages the ***full measurement pipeline***, not just the estimator. A single YAML config defines your data source, estimation method, storage backend, and output destination — swap any component by changing one line. Custom adapters plug in proprietary data sources and storage without touching the core engine, and every run produces a ***self-describing result bundle*** so downstream teams can consume results without knowing or caring whether the methodology changed last week.
 
-Under the hood it wraps [statsmodels](https://www.statsmodels.org/), [causalml](https://causalml.readthedocs.io/), and [pysyncon](https://sdfordham.github.io/pysyncon/) today, with an extension point for any estimator. Improve your methods continuously, make them available to every team from one place.
+Under the hood it wraps [statsmodels](https://www.statsmodels.org/), [causalml](https://causalml.readthedocs.io/), and [pysyncon](https://github.com/sdfordham/pysyncon) today, with an extension point for any estimator. Improve your methods continuously, make them available to every team from one place.
 
 ## Quick Start
 

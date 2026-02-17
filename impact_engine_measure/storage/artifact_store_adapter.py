@@ -28,11 +28,12 @@ class ArtifactStoreAdapter(StorageInterface):
         """Initialize storage with configuration.
 
         Args:
-            config: Dictionary containing:
+            config: Dictionary containing
+
                 - storage_url: Path or URL (e.g., "./data", "s3://bucket/prefix")
                 - prefix: Optional job prefix (default: "job-impact-engine")
                 - job_id: Optional job ID for resuming existing jobs or custom IDs.
-                    If not provided, a unique ID will be auto-generated.
+                  If not provided, a unique ID will be auto-generated.
 
         Returns:
             bool: True if initialization successful, False otherwise.

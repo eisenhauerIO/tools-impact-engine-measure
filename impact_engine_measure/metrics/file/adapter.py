@@ -22,7 +22,8 @@ class FileAdapter(MetricsInterface):
     Supports CSV and Parquet file formats, including partitioned Parquet directories.
     The file is expected to contain pre-processed data ready for impact analysis.
 
-    Configuration:
+    Configuration::
+
         DATA:
             SOURCE:
                 type: file
@@ -96,9 +97,7 @@ class FileAdapter(MetricsInterface):
         self.logger.info(f"Loaded {len(self.data)} rows from {path}")
         return self.data
 
-    def retrieve_business_metrics(
-        self, products: pd.DataFrame, start_date: str, end_date: str
-    ) -> pd.DataFrame:
+    def retrieve_business_metrics(self, products: pd.DataFrame, start_date: str, end_date: str) -> pd.DataFrame:
         """Retrieve business metrics from the loaded file.
 
         For file-based sources, the data is already loaded. This method
@@ -127,9 +126,7 @@ class FileAdapter(MetricsInterface):
             start = pd.to_datetime(start_date)
             end = pd.to_datetime(end_date)
             result = result[(result[date_col] >= start) & (result[date_col] <= end)]
-            self.logger.info(
-                f"Filtered to {len(result)} rows for date range {start_date} to {end_date}"
-            )
+            self.logger.info(f"Filtered to {len(result)} rows for date range {start_date} to {end_date}")
 
         # Filter by products if provided and product_id column exists
         if products is not None and len(products) > 0:
@@ -152,9 +149,7 @@ class FileAdapter(MetricsInterface):
 
         return self.store.exists(self.filename) and self.data is not None
 
-    def transform_outbound(
-        self, products: pd.DataFrame, start_date: str, end_date: str
-    ) -> Dict[str, Any]:
+    def transform_outbound(self, products: pd.DataFrame, start_date: str, end_date: str) -> Dict[str, Any]:
         """Transform impact engine format to file adapter format.
 
         For file-based sources, this is a pass-through since the file

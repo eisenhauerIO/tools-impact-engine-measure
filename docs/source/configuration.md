@@ -2,11 +2,11 @@
 
 Impact Engine uses YAML configuration files to control all aspects of data sourcing, measurement, and output. This guide documents the **actual configuration schema** as implemented in the code.
 
-> **See Also**: For practical examples, see the [Model demo notebooks](models/demo_interrupted_time_series.ipynb).
+> **See Also.** For practical examples, see the [Model demo notebooks](models/demo_interrupted_time_series.ipynb).
 
 ## Configuration Structure
 
-Impact Engine uses YAML configuration files with three main sections:
+The engine uses YAML configuration files with three main sections.
 
 ```yaml
 DATA:
@@ -329,6 +329,6 @@ OUTPUT:
 
 ## Next Steps
 
-- **Examples**: See the [Model demo notebooks](models/demo_interrupted_time_series.ipynb) for practical examples
-- **API**: See [API Reference](api_reference.rst) for function documentation
-- **Design**: See [Design](design.md) for system internals
+- **Examples.** See the [Model demo notebooks](models/demo_interrupted_time_series.ipynb) for practical examples
+- **API.** See [API Reference](api_reference.rst) for function documentation
+- **Design.** See [Design](design.md) for system internals

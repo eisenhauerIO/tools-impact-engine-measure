@@ -3,14 +3,6 @@ API
 
 This section provides auto-generated API documentation from the Impact Engine source code.
 
-Core Module
------------
-
-.. automodule:: impact_engine_measure
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 Engine
 ------
 
@@ -24,7 +16,6 @@ Results
 
 .. automodule:: impact_engine_measure.results
    :members:
-   :undoc-members:
    :show-inheritance:
 
 Metrics Layer
@@ -70,7 +61,6 @@ Manager
 
 .. automodule:: impact_engine_measure.models.manager
    :members:
-   :undoc-members:
    :show-inheritance:
 
 Base Interface
@@ -78,7 +68,6 @@ Base Interface
 
 .. automodule:: impact_engine_measure.models.base
    :members:
-   :undoc-members:
    :show-inheritance:
 
 Interrupted Time Series Adapter

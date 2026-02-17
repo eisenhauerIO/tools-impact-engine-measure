@@ -31,12 +31,18 @@ All documentation pages follow the tone set by `design.md`.
 
 | Category | Format | Examples |
 |----------|--------|----------|
-| Functions/methods | backticks | `connect()`, `retrieve_business_metrics()` |
+| Product name | title case first mention, "the engine" after | "Impact Engine measures...", then "the engine loads..." |
+| External libraries (first mention) | linked | `[statsmodels](https://www.statsmodels.org/)` |
+| External libraries (subsequent) | plain text, lowercase | statsmodels |
+| Library classes/functions | backticks, linked when useful | `` [`ols()`](url) `` |
+| Functions/methods | backticks with parens | `connect()`, `retrieve_business_metrics()` |
 | Variables/column names | backticks | `product_id`, `artifact_store` |
 | Config keys/values | backticks | `storage_url`, `date_range` |
 | File names (no link) | backticks | `engine.py`, `config.yaml` |
+| Adapter/class names | backticks | `SubclassificationAdapter`, `MetricsManager` |
 | Classes/interfaces (with source) | markdown link | [MetricsManager](path), [MetricsInterface](path) |
 | Files (with source) | markdown link | [engine.py](path) |
+| Statistical acronyms | plain text, all caps | ATT, ATE, OLS, SARIMAX |
 | Design patterns | bold | **adapter pattern**, **data contracts** |
 | Key architectural concepts | bold | **plugin architecture**, **schema transformations** |
 | Tools/services | plain text | GitHub Actions, S3 |
@@ -47,6 +53,8 @@ All documentation pages follow the tone set by `design.md`.
 3. Use bold sparingly for design patterns and key concepts being introduced or emphasized
 4. Keep tool and format names in plain text for readability
 5. Write in narrative prose with complete sentences. Avoid semicolons and colons.
+6. Always title-case "Impact Engine" on first mention per page. Use "the engine" as shorthand after.
+7. Link external library names on first mention per page. Use plain text after.
 
 ---
 
