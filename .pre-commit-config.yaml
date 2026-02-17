@@ -31,10 +31,3 @@ repos:
         language: system
         pass_filenames: false
         always_run: true
-
-      - id: execute-notebooks
-        name: execute notebooks
-        entry: bash -c 'for nb in docs/source/models/*.ipynb; do hatch run docs:python -m jupyter nbconvert --to notebook --execute --stdout "$nb" > /dev/null 2>&1; done'
-        language: system
-        pass_filenames: false
-        always_run: true

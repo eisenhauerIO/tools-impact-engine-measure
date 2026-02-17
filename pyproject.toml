@@ -41,12 +41,15 @@ packages = ["impact_engine_measure"]
 [tool.hatch.envs.default]
 dependencies = [
   "pytest",
+  "nbmake",
   "ruff",
   "pre-commit",
+  "matplotlib",
+  "ipykernel",
 ]
 
 [tool.hatch.envs.default.scripts]
-test = "pytest tests/ -v"
+test = "pytest -v"
 lint = "ruff check ."
 format = "ruff format ."
 
@@ -85,5 +88,5 @@ convention = "numpy"
 "impact_engine_measure/**" = ["D"]
 
 [tool.pytest.ini_options]
-addopts = "-v"
-testpaths = ["tests"]
+addopts = "-v --nbmake"
+testpaths = ["tests", "docs/source/models"]
