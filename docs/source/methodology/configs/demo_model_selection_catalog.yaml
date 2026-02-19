@@ -4,7 +4,7 @@ RULE:
   PRODUCTS:
     FUNCTION: simulate_products_rule_based
     PARAMS:
-      num_products: 20000
+      num_products: 1000
       seed: 42
   METRICS:
     FUNCTION: simulate_metrics_rule_based

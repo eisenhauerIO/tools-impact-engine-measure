@@ -50,7 +50,6 @@ dependencies = [
 
 [tool.hatch.envs.default.scripts]
 test = "pytest -v"
-test-ci = "IE_DEMO_N_REPS=2 IE_DEMO_NUM_PRODUCTS=500 pytest -v"
 lint = "ruff check ."
 format = "ruff format ."
 
@@ -71,7 +70,6 @@ dependencies = [
 
 [tool.hatch.envs.docs.scripts]
 build = "sphinx-build -b html docs/source docs/build/html"
-build-ci = "IE_DEMO_N_REPS=2 IE_DEMO_NUM_PRODUCTS=500 sphinx-build -b html docs/source docs/build/html"
 
 [tool.ruff]
 extend-exclude = ["_external", "docs/build"]
@@ -91,4 +89,4 @@ convention = "numpy"
 
 [tool.pytest.ini_options]
 addopts = "-v --nbmake"
-testpaths = ["tests", "docs/source/models"]
+testpaths = ["tests", "docs/source/methods", "docs/source/methodology"]

@@ -33,7 +33,7 @@ jobs:
       run: pip install hatch
 
     - name: Build documentation
-      run: hatch run docs:build-ci
+      run: hatch run docs:build
 
     - name: Setup Pages
       uses: actions/configure-pages@v4
