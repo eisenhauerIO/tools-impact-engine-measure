@@ -30,7 +30,6 @@ methods/demo_synthetic_control
 :maxdepth: 2
 :caption: Methodology
 
-methodology/overview
 methodology/demo_aa_testing
 methodology/demo_parameter_sensitivity
 ```
