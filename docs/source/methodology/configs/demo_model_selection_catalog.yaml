@@ -13,5 +13,3 @@ RULE:
       date_end: "2024-01-08"
       seed: 42
       sale_prob: 1.0
-PRODUCT_DETAILS:
-  FUNCTION: simulate_product_details_mock
