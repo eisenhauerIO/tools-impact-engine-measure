@@ -241,8 +241,7 @@ def _validate_parameters(config: Dict[str, Any]) -> List[str]:
             start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
         except ValueError:
             errors.append(
-                f"Invalid date format for DATA.SOURCE.CONFIG.start_date: '{start_date_str}'. "
-                f"Expected YYYY-MM-DD"
+                f"Invalid date format for DATA.SOURCE.CONFIG.start_date: '{start_date_str}'. " f"Expected YYYY-MM-DD"
             )
 
     if end_date_str:
@@ -250,14 +249,12 @@ def _validate_parameters(config: Dict[str, Any]) -> List[str]:
             end_date = datetime.strptime(end_date_str, "%Y-%m-%d")
         except ValueError:
             errors.append(
-                f"Invalid date format for DATA.SOURCE.CONFIG.end_date: '{end_date_str}'. "
-                f"Expected YYYY-MM-DD"
+                f"Invalid date format for DATA.SOURCE.CONFIG.end_date: '{end_date_str}'. " f"Expected YYYY-MM-DD"
             )
 
     if start_date and end_date and start_date > end_date:
         errors.append(
-            f"DATA.SOURCE.CONFIG.start_date ({start_date_str}) must be before or equal to "
-            f"end_date ({end_date_str})"
+            f"DATA.SOURCE.CONFIG.start_date ({start_date_str}) must be before or equal to " f"end_date ({end_date_str})"
         )
 
     return errors
@@ -300,16 +297,12 @@ def process_config(config_path: str) -> Dict[str, Any]:
     # Stage 4: Structure validation
     structure_errors = _validate_structure(merged_config)
     if structure_errors:
-        raise ConfigValidationError(
-            "Configuration structure errors:\n  - " + "\n  - ".join(structure_errors)
-        )
+        raise ConfigValidationError("Configuration structure errors:\n  - " + "\n  - ".join(structure_errors))
 
     # Stage 5: Parameter validation
     param_errors = _validate_parameters(merged_config)
     if param_errors:
-        raise ConfigValidationError(
-            "Configuration parameter errors:\n  - " + "\n  - ".join(param_errors)
-        )
+        raise ConfigValidationError("Configuration parameter errors:\n  - " + "\n  - ".join(param_errors))
 
     # Stage 6: Inject enrichment_start into TRANSFORM.PARAMS if ENRICHMENT is configured
     # This makes enrichment configuration explicit and predictable
@@ -317,8 +310,6 @@ def process_config(config_path: str) -> Dict[str, Any]:
     if enrichment:
         params = enrichment.get("PARAMS", {})
         if "enrichment_start" in params:
-            merged_config["DATA"]["TRANSFORM"]["PARAMS"]["enrichment_start"] = params[
-                "enrichment_start"
-            ]
+            merged_config["DATA"]["TRANSFORM"]["PARAMS"]["enrichment_start"] = params["enrichment_start"]
 
     return merged_config

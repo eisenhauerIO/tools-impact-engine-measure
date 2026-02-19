@@ -1,8 +1,0 @@
-backend: Agg
-figure.figsize: 8, 5
-font.size: 12
-lines.linewidth: 2
-axes.spines.right: False
-axes.spines.top: False
-legend.frameon: False
-savefig.dpi: 150

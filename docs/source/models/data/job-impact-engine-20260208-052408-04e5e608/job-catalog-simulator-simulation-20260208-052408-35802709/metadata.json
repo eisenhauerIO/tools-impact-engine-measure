@@ -1,8 +1,0 @@
-{
-    "job_id": "job-catalog-simulator-simulation-20260208-052408-35802709",
-    "storage_path": "./data/job-impact-engine-20260208-052408-04e5e608",
-    "config_path": "/home/peisenha/office/business/eisenhauer-io/tools/impact-engine-measure/documentation/notebooks/data/job-impact-engine-20260208-052408-04e5e608/job-catalog-simulator-simulation-20260208-052408-35802709/simulator_config.yaml",
-    "num_products": 100,
-    "num_metrics": 3000,
-    "timestamp": "2026-02-08T05:24:08.977254"
-}

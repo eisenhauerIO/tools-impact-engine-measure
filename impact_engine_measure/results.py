@@ -78,9 +78,7 @@ def load_results(job_info: JobInfo) -> MeasureJobResult:
     store = job_info.get_store()
 
     if not store.exists("manifest.json"):
-        raise FileNotFoundError(
-            f"manifest.json not found in job directory: {store.full_path('manifest.json')}"
-        )
+        raise FileNotFoundError(f"manifest.json not found in job directory: {store.full_path('manifest.json')}")
 
     manifest = store.read_json("manifest.json")
     _validate_manifest_version(manifest)

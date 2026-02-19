@@ -6,23 +6,31 @@
 :maxdepth: 2
 :caption: Guides
 
-usage
-configuration
-design
-api_reference
+guides/usage
+guides/configuration
+guides/design
+guides/api_reference
 ```
 
 ```{toctree}
 :hidden:
 :maxdepth: 2
-:caption: Demos
+:caption: Methods
 
-models/overview
-models/demo_interrupted_time_series
-models/demo_metrics_approximation
-models/demo_subclassification
-models/demo_experiment
-models/demo_nearest_neighbour_matching
-models/demo_synthetic_control
-models/demo_model_selection
+methods/demo_interrupted_time_series
+methods/demo_metrics_approximation
+methods/demo_subclassification
+methods/demo_experiment
+methods/demo_nearest_neighbour_matching
+methods/demo_synthetic_control
+```
+
+```{toctree}
+:hidden:
+:maxdepth: 2
+:caption: Methodology
+
+methodology/overview
+methodology/demo_aa_testing
+methodology/demo_parameter_sensitivity
 ```

@@ -65,8 +65,7 @@ class ExperimentAdapter(ModelInterface):
         formula = params.get("formula")
         if not formula or not isinstance(formula, str):
             raise ValueError(
-                "formula is required for ExperimentAdapter. "
-                "Specify in MEASUREMENT.PARAMS configuration."
+                "formula is required for ExperimentAdapter. " "Specify in MEASUREMENT.PARAMS configuration."
             )
 
     _CONFIG_PARAMS = frozenset(
@@ -128,8 +127,7 @@ class ExperimentAdapter(ModelInterface):
             # Extract confidence intervals as a nested dict
             conf_int_df = results.conf_int()
             conf_int = {
-                var: [float(conf_int_df.loc[var, 0]), float(conf_int_df.loc[var, 1])]
-                for var in conf_int_df.index
+                var: [float(conf_int_df.loc[var, 0]), float(conf_int_df.loc[var, 1])] for var in conf_int_df.index
             }
 
             impact_estimates = {

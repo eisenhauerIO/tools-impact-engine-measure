@@ -27,9 +27,7 @@ class MetricsInterface(ABC):
         pass
 
     @abstractmethod
-    def retrieve_business_metrics(
-        self, products: pd.DataFrame, start_date: str, end_date: str
-    ) -> pd.DataFrame:
+    def retrieve_business_metrics(self, products: pd.DataFrame, start_date: str, end_date: str) -> pd.DataFrame:
         """Retrieve business metrics for specified products and time range.
 
         Args:
@@ -52,9 +50,7 @@ class MetricsInterface(ABC):
         """
         return True
 
-    def transform_outbound(
-        self, products: pd.DataFrame, start_date: str, end_date: str
-    ) -> Dict[str, Any]:
+    def transform_outbound(self, products: pd.DataFrame, start_date: str, end_date: str) -> Dict[str, Any]:
         """Transform impact engine format to external system format.
 
         Default implementation is pass-through.

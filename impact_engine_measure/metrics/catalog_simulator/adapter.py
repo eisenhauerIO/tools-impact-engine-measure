@@ -53,9 +53,7 @@ class CatalogSimulatorAdapter(MetricsInterface):
         self.is_connected = True
         return True
 
-    def retrieve_business_metrics(
-        self, products: pd.DataFrame, start_date: str, end_date: str
-    ) -> pd.DataFrame:
+    def retrieve_business_metrics(self, products: pd.DataFrame, start_date: str, end_date: str) -> pd.DataFrame:
         """Retrieve business metrics using catalog simulator's job-aware API."""
         if not self.is_connected:
             raise ConnectionError("Not connected to simulator. Call connect() first.")
@@ -97,14 +95,10 @@ class CatalogSimulatorAdapter(MetricsInterface):
         """Create a job for simulation artifacts. Uses nested job if parent provided."""
         if self.parent_job is not None:
             # Create nested job inside parent job directory
-            self.simulation_job = create_job(
-                self.parent_job.full_path, prefix="job-catalog-simulator-simulation"
-            )
+            self.simulation_job = create_job(self.parent_job.full_path, prefix="job-catalog-simulator-simulation")
         else:
             # Create standalone job using configured storage path
-            self.simulation_job = create_job(
-                self.config["storage_path"], prefix="job-catalog-simulator-simulation"
-            )
+            self.simulation_job = create_job(self.config["storage_path"], prefix="job-catalog-simulator-simulation")
 
     def _apply_enrichment(self, metrics_df: pd.DataFrame) -> pd.DataFrame:
         """Apply enrichment and return enriched metrics with quality_score.
@@ -190,9 +184,7 @@ class CatalogSimulatorAdapter(MetricsInterface):
         except ImportError:
             return False
 
-    def transform_outbound(
-        self, products: pd.DataFrame, start_date: str, end_date: str
-    ) -> Dict[str, Any]:
+    def transform_outbound(self, products: pd.DataFrame, start_date: str, end_date: str) -> Dict[str, Any]:
         """Transform impact engine format to catalog simulator format using contracts."""
         product_characteristics = products.copy()
 
@@ -210,9 +202,7 @@ class CatalogSimulatorAdapter(MetricsInterface):
                 product_characteristics["product_id"] = product_characteristics.index.astype(str)
 
         # Use contract to transform product_id → product_identifier
-        product_characteristics = ProductSchema.to_external(
-            product_characteristics, "catalog_simulator"
-        )
+        product_characteristics = ProductSchema.to_external(product_characteristics, "catalog_simulator")
 
         # Use config bridge to build simulator config
         ie_config = {
@@ -222,9 +212,7 @@ class CatalogSimulatorAdapter(MetricsInterface):
                 "seed": self.config["seed"],
             }
         }
-        cs_config = ConfigBridge.to_catalog_simulator(
-            ie_config, num_products=len(product_characteristics)
-        )
+        cs_config = ConfigBridge.to_catalog_simulator(ie_config, num_products=len(product_characteristics))
 
         return {
             "product_characteristics": product_characteristics,

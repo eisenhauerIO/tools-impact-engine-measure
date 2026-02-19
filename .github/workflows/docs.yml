@@ -32,12 +32,8 @@ jobs:
     - name: Install hatch
       run: pip install hatch
 
-    - name: Execute notebooks
-      run: |
-        hatch run docs:python -m jupyter nbconvert --to notebook --execute --inplace docs/source/models/*.ipynb
-
     - name: Build documentation
-      run: hatch run docs:build
+      run: hatch run docs:build-ci
 
     - name: Setup Pages
       uses: actions/configure-pages@v4

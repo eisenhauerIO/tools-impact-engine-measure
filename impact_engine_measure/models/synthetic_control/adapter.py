@@ -41,8 +41,7 @@ class SyntheticControlAdapter(ModelInterface):
         outcome_column = config.get("outcome_column")
         if not outcome_column or not isinstance(outcome_column, str):
             raise ValueError(
-                "outcome_column is required and must be a string. "
-                "Specify in MEASUREMENT.PARAMS configuration."
+                "outcome_column is required and must be a string. " "Specify in MEASUREMENT.PARAMS configuration."
             )
 
         self.config = {
@@ -83,8 +82,7 @@ class SyntheticControlAdapter(ModelInterface):
             )
         if not params.get("treated_unit"):
             raise ValueError(
-                "treated_unit is required for SyntheticControlAdapter. "
-                "Specify in MEASUREMENT.PARAMS configuration."
+                "treated_unit is required for SyntheticControlAdapter. " "Specify in MEASUREMENT.PARAMS configuration."
             )
         if not params.get("outcome_column"):
             raise ValueError(
@@ -134,9 +132,7 @@ class SyntheticControlAdapter(ModelInterface):
             raise ConnectionError("Model not connected. Call connect() first.")
 
         if not self.validate_data(data):
-            raise ValueError(
-                f"Data validation failed. Required columns: {self.get_required_columns()}"
-            )
+            raise ValueError(f"Data validation failed. Required columns: {self.get_required_columns()}")
 
         try:
             from pysyncon import Dataprep, Synth

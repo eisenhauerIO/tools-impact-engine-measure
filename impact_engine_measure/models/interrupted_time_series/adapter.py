@@ -149,25 +149,16 @@ class InterruptedTimeSeriesAdapter(ModelInterface):
         try:
             # Validate input data
             if not self.validate_data(data):
-                raise ValueError(
-                    f"Data validation failed. Required columns: {self.get_required_columns()}"
-                )
+                raise ValueError(f"Data validation failed. Required columns: {self.get_required_columns()}")
 
             # Prepare model input (stateless transformation)
             # Remove extracted params from kwargs to avoid duplicate arguments
-            model_kwargs = {
-                k: v
-                for k, v in kwargs.items()
-                if k not in ("intervention_date", "dependent_variable")
-            }
-            transformed = self._prepare_model_input(
-                data, intervention_date, dependent_variable, **model_kwargs
-            )
+            model_kwargs = {k: v for k, v in kwargs.items() if k not in ("intervention_date", "dependent_variable")}
+            transformed = self._prepare_model_input(data, intervention_date, dependent_variable, **model_kwargs)
 
             # Fit SARIMAX model
             self.logger.info(
-                f"Fitting SARIMAX model with order={transformed.order}, "
-                f"seasonal_order={transformed.seasonal_order}"
+                f"Fitting SARIMAX model with order={transformed.order}, " f"seasonal_order={transformed.seasonal_order}"
             )
 
             model = SARIMAX(
@@ -313,9 +304,7 @@ class InterruptedTimeSeriesAdapter(ModelInterface):
             raise ValueError("Expected SARIMAX results object with params attribute")
 
         # Calculate impact estimates
-        impact_estimates = self._calculate_impact_estimates(
-            transformed.data, transformed.y, model_results
-        )
+        impact_estimates = self._calculate_impact_estimates(transformed.data, transformed.y, model_results)
 
         # Prepare standardized output (model_type is in ModelResult wrapper)
         df = transformed.data
@@ -334,9 +323,7 @@ class InterruptedTimeSeriesAdapter(ModelInterface):
             },
         }
 
-    def _calculate_impact_estimates(
-        self, df: pd.DataFrame, y: np.ndarray, model_results: Any
-    ) -> dict:
+    def _calculate_impact_estimates(self, df: pd.DataFrame, y: np.ndarray, model_results: Any) -> dict:
         """
         Calculate impact estimates from the fitted model.
 
@@ -375,18 +362,14 @@ class InterruptedTimeSeriesAdapter(ModelInterface):
             "percent_change": ((intervention_effect / pre_mean * 100) if pre_mean != 0 else 0.0),
         }
 
-    def transform_outbound(
-        self, data: pd.DataFrame, intervention_date: str, **kwargs
-    ) -> Dict[str, Any]:
+    def transform_outbound(self, data: pd.DataFrame, intervention_date: str, **kwargs) -> Dict[str, Any]:
         """Transform impact engine format to SARIMAX model format.
 
         Note: This method is kept for interface compliance but internally
         uses _prepare_model_input for the actual transformation.
         """
         dependent_variable = kwargs.get("dependent_variable", self.config["dependent_variable"])
-        transformed = self._prepare_model_input(
-            data, intervention_date, dependent_variable, **kwargs
-        )
+        transformed = self._prepare_model_input(data, intervention_date, dependent_variable, **kwargs)
         return {
             "y": transformed.y,
             "exog": transformed.exog,

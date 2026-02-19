@@ -65,7 +65,14 @@
       "Bash(script -qc \"hatch run python -m jupyter nbconvert --to notebook --execute --stdout documentation/models/demo_synthetic_control.ipynb > /dev/null 2>&1\":*)",
       "Bash(xxd:*)",
       "Bash(strace:*)",
-      "Bash(script -qec \"bash -c ''for nb in documentation/models/*.ipynb; do hatch run python -m jupyter nbconvert --to notebook --execute --stdout \"\"$nb\"\" > /dev/null 2>&1; done''\" /tmp/script_output.log)"
+      "Bash(script -qec \"bash -c ''for nb in documentation/models/*.ipynb; do hatch run python -m jupyter nbconvert --to notebook --execute --stdout \"\"$nb\"\" > /dev/null 2>&1; done''\" /tmp/script_output.log)",
+      "Bash(IE_DEMO_NUM_PRODUCTS=500 IE_DEMO_N_REPS=2 hatch run docs:python:*)",
+      "Bash(git -C /home/peisenha/office/business/eisenhauer-io/tools/impact-engine-measure ls-files docs/source/models/data/)",
+      "Bash(xargs:*)",
+      "Bash(git -C /home/peisenha/office/business/eisenhauer-io/tools/impact-engine-measure ls-files:*)",
+      "Bash(git -C /home/peisenha/office/business/eisenhauer-io/tools/impact-engine-measure rm:*)",
+      "Bash(git -C /home/peisenha/office/business/eisenhauer-io/tools/impact-engine-measure add docs/source/methods/notebook_support.py docs/source/methods/matplotlibrc docs/source/methodology/notebook_support.py docs/source/methodology/matplotlibrc)",
+      "Bash(ln:*)"
     ]
   }
 }
