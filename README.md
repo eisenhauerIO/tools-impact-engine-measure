@@ -1,4 +1,4 @@
-# Impact Engine
+# Impact Engine — Measure
 
 [![CI](https://github.com/eisenhauerIO/tools-impact-engine-measure/actions/workflows/ci.yaml/badge.svg)](https://github.com/eisenhauerIO/tools-impact-engine-measure/actions/workflows/ci.yaml)
 [![Docs](https://github.com/eisenhauerIO/tools-impact-engine-measure/actions/workflows/docs.yml/badge.svg?branch=main)](https://github.com/eisenhauerIO/tools-impact-engine-measure/actions/workflows/docs.yml)
@@ -33,3 +33,12 @@ results_path = evaluate_impact(config_path="config.yaml")
 | [Usage](https://eisenhauerio.github.io/tools-impact-engine-measure/usage.html) | Getting started with basic workflow |
 | [Configuration](https://eisenhauerio.github.io/tools-impact-engine-measure/configuration.html) | All configuration options |
 | [Design](https://eisenhauerio.github.io/tools-impact-engine-measure/design.html) | System design and architecture |
+
+## Development
+
+```bash
+hatch run test        # Run tests
+hatch run lint        # Run linter
+hatch run format      # Format code
+hatch run docs:build  # Build documentation
+```
