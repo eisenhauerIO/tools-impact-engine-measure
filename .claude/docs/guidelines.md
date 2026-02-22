@@ -6,7 +6,6 @@ Each page serves a distinct purpose. Model-specific details belong in model demo
 
 | Page | Purpose |
 |------|---------|
-| `README.md` | Package positioning and quick start. Also the docs landing page via `index.md`. |
 | `design.md` | Architecture, extensibility, data flow. |
 | `usage.md` | General workflow, model-agnostic. Links to model demos for specifics. The Available Models table includes Library and Interface columns linking to each model's underlying package and the specific class or function it wraps. |
 | `configuration.md` | Parameter reference tables. |
