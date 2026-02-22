@@ -30,9 +30,9 @@ results_path = evaluate_impact(config_path="config.yaml")
 
 | Guide | Description |
 |-------|-------------|
-| [Usage](https://eisenhauerio.github.io/tools-impact-engine-measure/usage.html) | Getting started with basic workflow |
-| [Configuration](https://eisenhauerio.github.io/tools-impact-engine-measure/configuration.html) | All configuration options |
-| [Design](https://eisenhauerio.github.io/tools-impact-engine-measure/design.html) | System design and architecture |
+| [Usage](https://eisenhauerio.github.io/tools-impact-engine-measure/guides/usage.html) | Getting started with basic workflow |
+| [Configuration](https://eisenhauerio.github.io/tools-impact-engine-measure/guides/configuration.html) | All configuration options |
+| [API Reference](https://eisenhauerio.github.io/tools-impact-engine-measure/guides/api_reference.html) | Auto-generated class and function documentation |
 
 ## Development
 

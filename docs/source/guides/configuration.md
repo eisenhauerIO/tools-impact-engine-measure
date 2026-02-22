@@ -331,4 +331,3 @@ OUTPUT:
 
 - **Examples.** See the [Model demo notebooks](models/demo_interrupted_time_series.ipynb) for practical examples
 - **API.** See [API Reference](api_reference.rst) for function documentation
-- **Design.** See [Design](design.md) for system internals

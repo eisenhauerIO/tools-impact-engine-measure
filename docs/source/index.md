@@ -8,7 +8,6 @@
 
 guides/usage
 guides/configuration
-guides/design
 guides/api_reference
 ```
 
