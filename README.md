@@ -14,4 +14,4 @@ Change your causal inference method and you're rewriting data connectors, updati
 
 Under the hood it wraps [statsmodels](https://www.statsmodels.org/), [causalml](https://causalml.readthedocs.io/), and [pysyncon](https://github.com/sdfordham/pysyncon) today, with an extension point for any estimator. Improve your methods continuously, make them available to every team from one place.
 
-[Documentation](https://eisenhauerio.github.io/tools-impact-engine-measure/)
+Visit our [documentation](https://eisenhauerio.github.io/tools-impact-engine-measure/) for details.
