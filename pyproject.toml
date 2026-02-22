@@ -50,7 +50,7 @@ dependencies = [
 
 [tool.hatch.envs.default.scripts]
 test = "pytest -v"
-lint = "ruff check ."
+lint = "ruff check . && ruff format --check ."
 format = "ruff format ."
 
 [tool.hatch.envs.docs]
