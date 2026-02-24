@@ -241,20 +241,18 @@ def _validate_parameters(config: Dict[str, Any]) -> List[str]:
             start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
         except ValueError:
             errors.append(
-                f"Invalid date format for DATA.SOURCE.CONFIG.start_date: '{start_date_str}'. " f"Expected YYYY-MM-DD"
+                f"Invalid date format for DATA.SOURCE.CONFIG.start_date: '{start_date_str}'. Expected YYYY-MM-DD"
             )
 
     if end_date_str:
         try:
             end_date = datetime.strptime(end_date_str, "%Y-%m-%d")
         except ValueError:
-            errors.append(
-                f"Invalid date format for DATA.SOURCE.CONFIG.end_date: '{end_date_str}'. " f"Expected YYYY-MM-DD"
-            )
+            errors.append(f"Invalid date format for DATA.SOURCE.CONFIG.end_date: '{end_date_str}'. Expected YYYY-MM-DD")
 
     if start_date and end_date and start_date > end_date:
         errors.append(
-            f"DATA.SOURCE.CONFIG.start_date ({start_date_str}) must be before or equal to " f"end_date ({end_date_str})"
+            f"DATA.SOURCE.CONFIG.start_date ({start_date_str}) must be before or equal to end_date ({end_date_str})"
         )
 
     return errors

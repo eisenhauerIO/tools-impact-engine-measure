@@ -41,7 +41,7 @@ class SyntheticControlAdapter(ModelInterface):
         outcome_column = config.get("outcome_column")
         if not outcome_column or not isinstance(outcome_column, str):
             raise ValueError(
-                "outcome_column is required and must be a string. " "Specify in MEASUREMENT.PARAMS configuration."
+                "outcome_column is required and must be a string. Specify in MEASUREMENT.PARAMS configuration."
             )
 
         self.config = {
@@ -77,17 +77,15 @@ class SyntheticControlAdapter(ModelInterface):
         """
         if params.get("treatment_time") is None:
             raise ValueError(
-                "treatment_time is required for SyntheticControlAdapter. "
-                "Specify in MEASUREMENT.PARAMS configuration."
+                "treatment_time is required for SyntheticControlAdapter. Specify in MEASUREMENT.PARAMS configuration."
             )
         if not params.get("treated_unit"):
             raise ValueError(
-                "treated_unit is required for SyntheticControlAdapter. " "Specify in MEASUREMENT.PARAMS configuration."
+                "treated_unit is required for SyntheticControlAdapter. Specify in MEASUREMENT.PARAMS configuration."
             )
         if not params.get("outcome_column"):
             raise ValueError(
-                "outcome_column is required for SyntheticControlAdapter. "
-                "Specify in MEASUREMENT.PARAMS configuration."
+                "outcome_column is required for SyntheticControlAdapter. Specify in MEASUREMENT.PARAMS configuration."
             )
 
     _FIT_PARAMS = frozenset(

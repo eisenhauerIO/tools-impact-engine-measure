@@ -139,7 +139,7 @@ class NearestNeighbourMatchingAdapter(ModelInterface):
         dependent_variable = kwargs.get("dependent_variable", self.config["dependent_variable"])
 
         if not self.validate_data(data):
-            raise ValueError(f"Data validation failed. Required columns: " f"{self.get_required_columns()}")
+            raise ValueError(f"Data validation failed. Required columns: {self.get_required_columns()}")
 
         try:
             treatment_col = self.config["treatment_column"]

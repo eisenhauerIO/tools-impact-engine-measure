@@ -64,9 +64,7 @@ class ExperimentAdapter(ModelInterface):
         """
         formula = params.get("formula")
         if not formula or not isinstance(formula, str):
-            raise ValueError(
-                "formula is required for ExperimentAdapter. " "Specify in MEASUREMENT.PARAMS configuration."
-            )
+            raise ValueError("formula is required for ExperimentAdapter. Specify in MEASUREMENT.PARAMS configuration.")
 
     _CONFIG_PARAMS = frozenset(
         {

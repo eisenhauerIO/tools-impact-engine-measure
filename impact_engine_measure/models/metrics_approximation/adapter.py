@@ -213,9 +213,7 @@ class MetricsApproximationAdapter(ModelInterface):
         impact_estimates = {key: round(df[key].sum(), 2) for key in impact_keys}
         # n_products is in model_summary, not impact_estimates
 
-        self.logger.info(
-            f"Metrics approximation complete: {n_products} products, " f"impact_estimates={impact_estimates}"
-        )
+        self.logger.info(f"Metrics approximation complete: {n_products} products, impact_estimates={impact_estimates}")
 
         return ModelResult(
             model_type="metrics_approximation",

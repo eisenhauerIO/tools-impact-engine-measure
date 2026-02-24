@@ -158,7 +158,7 @@ class InterruptedTimeSeriesAdapter(ModelInterface):
 
             # Fit SARIMAX model
             self.logger.info(
-                f"Fitting SARIMAX model with order={transformed.order}, " f"seasonal_order={transformed.seasonal_order}"
+                f"Fitting SARIMAX model with order={transformed.order}, seasonal_order={transformed.seasonal_order}"
             )
 
             model = SARIMAX(
@@ -256,8 +256,7 @@ class InterruptedTimeSeriesAdapter(ModelInterface):
         # Check if dependent variable exists
         if dependent_variable not in data.columns:
             raise ValueError(
-                f"Dependent variable '{dependent_variable}' not found in data. "
-                f"Available columns: {list(data.columns)}"
+                f"Dependent variable '{dependent_variable}' not found in data. Available columns: {list(data.columns)}"
             )
 
         # Prepare data

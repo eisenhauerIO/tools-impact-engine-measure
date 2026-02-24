@@ -125,7 +125,7 @@ class SubclassificationAdapter(ModelInterface):
         dependent_variable = kwargs.get("dependent_variable", self.config["dependent_variable"])
 
         if not self.validate_data(data):
-            raise ValueError(f"Data validation failed. Required columns: " f"{self.get_required_columns()}")
+            raise ValueError(f"Data validation failed. Required columns: {self.get_required_columns()}")
 
         try:
             # 1. Stratify observations on covariates
@@ -136,9 +136,7 @@ class SubclassificationAdapter(ModelInterface):
 
             # 3. Handle all-strata-dropped edge case
             if stratum_effects.empty:
-                self.logger.warning(
-                    "All strata dropped due to lack of common support. " "Returning zero-effect result."
-                )
+                self.logger.warning("All strata dropped due to lack of common support. Returning zero-effect result.")
                 return self._empty_result()
 
             # 4. Aggregate stratum effects into overall estimate

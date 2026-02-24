@@ -67,7 +67,7 @@ def prepare_simulator_for_approximation(data: pd.DataFrame, params: Dict[str, An
     id_column = TransformSchema.get_column(df, "product_id")
     if not id_column:
         raise ValueError(
-            f"Data must contain product_id or alias (product_identifier). " f"Available columns: {list(df.columns)}"
+            f"Data must contain product_id or alias (product_identifier). Available columns: {list(df.columns)}"
         )
 
     # Validate required columns after normalization
@@ -75,7 +75,7 @@ def prepare_simulator_for_approximation(data: pd.DataFrame, params: Dict[str, An
     missing_cols = [col for col in required_cols if col not in df.columns]
     if missing_cols:
         raise ValueError(
-            f"Data must contain columns: {missing_cols}. " f"Available after normalization: {list(df.columns)}"
+            f"Data must contain columns: {missing_cols}. Available after normalization: {list(df.columns)}"
         )
 
     # Ensure date column is datetime (df is already a copy from from_external)
