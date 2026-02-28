@@ -64,8 +64,6 @@ class TestEvaluateImpactIntegration:
 
             result = load_results(job_info)
 
-            # Verify stable envelope structure
-            assert result.impact_results["schema_version"] == "2.0"
             assert result.model_type == "interrupted_time_series"
 
             # Verify standardized three-key data structure
@@ -237,8 +235,6 @@ class TestEvaluateImpactIntegration:
 
             result = load_results(job_info)
 
-            # Verify stable envelope structure
-            assert result.impact_results["schema_version"] == "2.0"
             assert result.model_type == "interrupted_time_series"
 
             # Verify standardized data structure

@@ -6,8 +6,6 @@ from typing import Any, Dict
 import pandas as pd
 from artifact_store import JobInfo
 
-from .models.base import SCHEMA_VERSION
-
 # Fixed pipeline files that every run produces.
 _PIPELINE_KEYS = frozenset(
     {
@@ -32,12 +30,10 @@ class MeasureJobResult:
 
     Attributes:
         job_id: Unique identifier for the job.
-        schema_version: Schema version from the manifest.
         model_type: Model identifier (e.g. ``"interrupted_time_series"``).
         created_at: ISO-8601 timestamp of job creation.
         config: The YAML configuration used for this run.
-        impact_results: The ``impact_results.json`` envelope (schema_version,
-            model_type, data, metadata).
+        impact_results: The ``impact_results.json`` envelope (model_type, data, metadata).
         products: Product catalog DataFrame.
         business_metrics: Raw business metrics DataFrame.
         transformed_metrics: Transformed metrics DataFrame.
@@ -46,7 +42,6 @@ class MeasureJobResult:
     """
 
     job_id: str
-    schema_version: str
     model_type: str
     created_at: str
     config: Dict[str, Any]
@@ -81,7 +76,6 @@ def load_results(job_info: JobInfo) -> MeasureJobResult:
         raise FileNotFoundError(f"manifest.json not found in job directory: {store.full_path('manifest.json')}")
 
     manifest = store.read_json("manifest.json")
-    _validate_manifest_version(manifest)
 
     files = manifest["files"]
     model_type = manifest["model_type"]
@@ -103,7 +97,6 @@ def load_results(job_info: JobInfo) -> MeasureJobResult:
 
     return MeasureJobResult(
         job_id=job_info.job_id,
-        schema_version=manifest["schema_version"],
         model_type=model_type,
         created_at=manifest["created_at"],
         config=config,
@@ -113,18 +106,6 @@ def load_results(job_info: JobInfo) -> MeasureJobResult:
         transformed_metrics=transformed_metrics,
         model_artifacts=model_artifacts,
     )
-
-
-def _validate_manifest_version(manifest: Dict[str, Any]) -> None:
-    """Raise if the manifest's major schema version is incompatible."""
-    manifest_version = manifest.get("schema_version", "")
-    expected_major = SCHEMA_VERSION.split(".")[0]
-    actual_major = manifest_version.split(".")[0] if manifest_version else ""
-    if actual_major != expected_major:
-        raise ValueError(
-            f"Incompatible schema version: manifest has '{manifest_version}', "
-            f"expected major version '{expected_major}' (current: {SCHEMA_VERSION})"
-        )
 
 
 def _load_file(store, file_info: Dict[str, str]) -> Any:

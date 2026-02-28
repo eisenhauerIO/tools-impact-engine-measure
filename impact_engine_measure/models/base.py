@@ -6,8 +6,6 @@ from typing import Any, Dict, List
 
 import pandas as pd
 
-SCHEMA_VERSION = "2.0"
-
 
 @dataclass
 class ModelResult:
@@ -38,11 +36,10 @@ class ModelResult:
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for storage/serialization.
 
-        Returns a stable envelope with schema_version, model_type, data, and metadata.
+        Returns an envelope with model_type, data, and metadata.
         The ``data`` key contains the model-specific payload (nested, not spread).
         """
         return {
-            "schema_version": SCHEMA_VERSION,
             "model_type": self.model_type,
             "data": self.data,
             "metadata": self.metadata,

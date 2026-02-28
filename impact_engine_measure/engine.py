@@ -11,7 +11,6 @@ from .config import parse_config_file
 from .core import apply_transform
 from .metrics import create_metrics_manager
 from .models import create_models_manager
-from .models.base import SCHEMA_VERSION
 from .storage import create_storage_manager
 
 
@@ -81,7 +80,6 @@ def evaluate_impact(
         }
 
     manifest = {
-        "schema_version": SCHEMA_VERSION,
         "model_type": fit_output.model_type,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "files": pipeline_files,

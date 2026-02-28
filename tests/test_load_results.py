@@ -8,7 +8,6 @@ import pytest
 from artifact_store import create_job
 
 from impact_engine_measure import MeasureJobResult, evaluate_impact, load_results
-from impact_engine_measure.models.base import SCHEMA_VERSION
 
 
 class TestLoadResultsRoundTrip:
@@ -62,7 +61,6 @@ class TestLoadResultsRoundTrip:
 
             assert isinstance(result, MeasureJobResult)
             assert result.job_id == job_info.job_id
-            assert result.schema_version == SCHEMA_VERSION
             assert result.model_type == "interrupted_time_series"
             assert result.created_at  # non-empty
 
@@ -70,7 +68,6 @@ class TestLoadResultsRoundTrip:
             assert result.config["DATA"]["TRANSFORM"]["FUNCTION"] == "aggregate_by_date"
 
             # Impact results envelope
-            assert result.impact_results["schema_version"] == SCHEMA_VERSION
             assert "impact_estimates" in result.impact_results["data"]
 
             # DataFrames loaded
@@ -101,7 +98,6 @@ class TestLoadResultsSynthetic:
         store.write_json(
             "impact_results.json",
             {
-                "schema_version": SCHEMA_VERSION,
                 "model_type": "test_model",
                 "data": {"model_params": {}, "impact_estimates": {}, "model_summary": {}},
                 "metadata": {},
@@ -111,7 +107,6 @@ class TestLoadResultsSynthetic:
         store.write_parquet("test_model__detail.parquet", artifact)
 
         manifest = {
-            "schema_version": SCHEMA_VERSION,
             "model_type": "test_model",
             "created_at": "2024-01-01T00:00:00+00:00",
             "files": {
@@ -137,7 +132,6 @@ class TestLoadResultsSynthetic:
         result = load_results(synthetic_job)
 
         assert result.job_id == synthetic_job.job_id
-        assert result.schema_version == SCHEMA_VERSION
         assert result.model_type == "test_model"
         assert result.created_at == "2024-01-01T00:00:00+00:00"
         assert isinstance(result.config, dict)
@@ -161,19 +155,4 @@ class TestLoadResultsErrors:
     def test_missing_manifest(self, tmp_path):
         job = create_job(str(tmp_path), prefix="test-job", job_id="no-manifest")
         with pytest.raises(FileNotFoundError, match="manifest.json"):
-            load_results(job)
-
-    def test_incompatible_schema_version(self, tmp_path):
-        job = create_job(str(tmp_path), prefix="test-job", job_id="bad-version")
-        store = job.get_store()
-        store.write_json(
-            "manifest.json",
-            {
-                "schema_version": "99.0",
-                "model_type": "test",
-                "created_at": "",
-                "files": {},
-            },
-        )
-        with pytest.raises(ValueError, match="Incompatible schema version"):
             load_results(job)

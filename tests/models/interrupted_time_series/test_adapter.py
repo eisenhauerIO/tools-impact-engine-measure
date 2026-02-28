@@ -224,8 +224,6 @@ class TestInterruptedTimeSeriesAdapter:
         result = model.fit(data=data, intervention_date="2024-01-15")
         result_data = result.to_dict()
 
-        # Verify stable envelope structure
-        assert result_data["schema_version"] == "2.0"
         assert result_data["model_type"] == "interrupted_time_series"
         assert result_data["data"]["model_params"]["intervention_date"] == "2024-01-15"
         assert result_data["data"]["model_params"]["dependent_variable"] == "revenue"
