@@ -15,8 +15,6 @@ Each measurement model adapter should be as thin a wrapper as possible around th
 
 ### Model Output
 
-All output files include a `schema_version` field (currently `"2.0"`) to enable forward-compatible parsing by consumers.
-
 **JSON Envelope (`impact_results.json`).** Every model returns a `ModelResult`; the manager persists it via `storage.write_json("impact_results.json", result.to_dict())`. The serialized JSON has a stable envelope with three standardized keys inside `data`:
 
 - **`model_params`**: Input parameters used for this run. Model-specific.
