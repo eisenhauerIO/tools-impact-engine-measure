@@ -9,7 +9,7 @@ from .transforms import (
     get_transform,
     register_transform,
 )
-from .validation import ConfigValidationError, deep_merge, get_defaults, process_config
+from .validation import ConfigValidationError, deep_merge, get_defaults, load_config, process_config
 
 __all__ = [
     "ConfigBridge",
@@ -24,6 +24,7 @@ __all__ = [
     "deep_merge",
     "get_defaults",
     "get_transform",
+    "load_config",
     "process_config",
     "register_transform",
 ]

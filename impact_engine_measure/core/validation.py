@@ -26,7 +26,7 @@ from typing import Any, Dict, List, Optional, Set
 import yaml
 
 
-class ConfigValidationError(Exception):
+class ConfigValidationError(ValueError):
     """Exception raised for configuration validation errors."""
 
     def __init__(self, message: str, path: Optional[str] = None):
@@ -259,6 +259,45 @@ def _validate_parameters(config: Dict[str, Any]) -> List[str]:
 
 
 # --- Main Entry Point ---
+
+
+def load_config(source: str | Path | Dict[str, Any] | None = None) -> Dict[str, Any]:
+    """Canonical entry point. Accepts file path, dict, or None (returns defaults).
+
+    Parameters
+    ----------
+    source : str | Path | dict | None
+        YAML/JSON file path, pre-parsed dict, or ``None`` for pure defaults.
+        When a dict is supplied, file-loading stages are skipped.
+
+    Returns
+    -------
+    dict
+        Fully validated and merged configuration.
+
+    Raises
+    ------
+    ConfigValidationError
+        If validation fails. Note: ``None`` source returns default values but
+        required fields (``path``, ``start_date``, etc.) will still fail validation.
+    """
+    if source is None or isinstance(source, dict):
+        user_config: Dict[str, Any] = source or {}
+        defaults = get_defaults()
+        merged = deep_merge(defaults, user_config)
+        structure_errors = _validate_structure(merged)
+        if structure_errors:
+            raise ConfigValidationError("Configuration structure errors:\n  - " + "\n  - ".join(structure_errors))
+        param_errors = _validate_parameters(merged)
+        if param_errors:
+            raise ConfigValidationError("Configuration parameter errors:\n  - " + "\n  - ".join(param_errors))
+        enrichment = merged["DATA"].get("ENRICHMENT")
+        if enrichment:
+            params = enrichment.get("PARAMS", {})
+            if "enrichment_start" in params:
+                merged["DATA"]["TRANSFORM"]["PARAMS"]["enrichment_start"] = params["enrichment_start"]
+        return merged
+    return process_config(str(source))
 
 
 def process_config(config_path: str) -> Dict[str, Any]:
