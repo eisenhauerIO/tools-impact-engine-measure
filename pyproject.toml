@@ -85,7 +85,7 @@ convention = "numpy"
 "*.ipynb" = ["D", "E", "F", "I"]
 "tests/**" = ["D"]
 "**/tests/**" = ["D"]
-"impact_engine_measure/**" = ["D"]
+"impact_engine_measure/**" = ["D"]  # TODO: remove after docstring cleanup
 
 [tool.pytest.ini_options]
 addopts = "-v --nbmake"
