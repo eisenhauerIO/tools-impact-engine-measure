@@ -11,6 +11,7 @@ from .metrics import (
     create_metrics_manager,
 )
 from .models import MODEL_REGISTRY, ModelInterface, ModelsManager, create_models_manager
+from .normalize import normalize_result
 from .results import MeasureJobResult, load_results
 
 __version__ = "0.1.0"
@@ -31,5 +32,6 @@ __all__ = [
     "create_models_manager",
     "ConfigurationParser",
     "ConfigurationError",
+    "normalize_result",
     "parse_config_file",
 ]

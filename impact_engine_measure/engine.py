@@ -1,8 +1,8 @@
-"""
-Impact analysis engine for the impact_engine_measure package.
-"""
+"""Impact analysis engine for the impact_engine_measure package."""
 
+import json
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Optional
 
 from artifact_store import ArtifactStore, JobInfo
@@ -11,6 +11,7 @@ from .config import parse_config_file
 from .core import apply_transform
 from .metrics import create_metrics_manager
 from .models import create_models_manager
+from .normalize import MEASURE_RESULT_FILENAME, normalize_result
 from .storage import create_storage_manager
 
 
@@ -59,6 +60,12 @@ def measure_impact(
 
     fit_output = models_manager.fit_model(data=transformed_metrics, storage=storage_manager)
 
+    # Write normalized estimates so downstream consumers read a flat dict
+    # instead of parsing model-specific schemas.
+    impact_results = json.loads(Path(fit_output.results_path).read_text(encoding="utf-8"))
+    measure_result = normalize_result(impact_results)
+    storage_manager.write_json(MEASURE_RESULT_FILENAME, measure_result)
+
     # Write manifest as the final step (R3: self-describing output)
     pipeline_files = {
         "config": {"path": "config.yaml", "format": "yaml"},
@@ -69,6 +76,7 @@ def measure_impact(
             "format": "parquet",
         },
         "impact_results": {"path": "impact_results.json", "format": "json"},
+        "measure_result": {"path": MEASURE_RESULT_FILENAME, "format": "json"},
     }
 
     # Add model-specific artifacts
