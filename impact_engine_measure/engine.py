@@ -14,7 +14,7 @@ from .models import create_models_manager
 from .storage import create_storage_manager
 
 
-def evaluate_impact(
+def measure_impact(
     config_path: str,
     storage_url: str = "./data",
     job_id: Optional[str] = None,

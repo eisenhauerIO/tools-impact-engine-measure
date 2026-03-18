@@ -7,11 +7,11 @@ import pandas as pd
 import pytest
 from artifact_store import create_job
 
-from impact_engine_measure import MeasureJobResult, evaluate_impact, load_results
+from impact_engine_measure import MeasureJobResult, load_results, measure_impact
 
 
 class TestLoadResultsRoundTrip:
-    """Round-trip: evaluate_impact() -> load_results()."""
+    """Round-trip: measure_impact() -> load_results()."""
 
     def test_round_trip(self):
         """Run a full pipeline then load results back; verify all fields."""
@@ -56,7 +56,7 @@ class TestLoadResultsRoundTrip:
             with open(config_path, "w") as f:
                 json.dump(config, f)
 
-            job_info = evaluate_impact(config_path=config_path, storage_url=tmpdir)
+            job_info = measure_impact(config_path=config_path, storage_url=tmpdir)
             result = load_results(job_info)
 
             assert isinstance(result, MeasureJobResult)

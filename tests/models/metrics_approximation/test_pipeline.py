@@ -1,9 +1,9 @@
-"""Integration test for metrics_approximation through evaluate_impact().
+"""Integration test for metrics_approximation through measure_impact().
 
 Tests the typical end-to-end usage pattern:
 1. User provides products.csv
 2. User provides config.yaml with DATA.ENRICHMENT section
-3. User calls evaluate_impact(config.yaml)
+3. User calls measure_impact(config.yaml)
 4. Engine handles everything internally (adapter, enrichment, transform, model)
 """
 
@@ -62,11 +62,11 @@ def impact_config(tmp_path, products_csv):
 
 
 class TestMetricsApproximationPipeline:
-    """Integration tests using evaluate_impact() with unified config."""
+    """Integration tests using measure_impact() with unified config."""
 
-    def test_full_pipeline_via_evaluate_impact(self, impact_config, tmp_path):
+    def test_full_pipeline_via_measure_impact(self, impact_config, tmp_path):
         """
-        End-to-end test using evaluate_impact() with a single unified config.
+        End-to-end test using measure_impact() with a single unified config.
 
         This is the typical usage pattern - single call does everything:
         - Engine creates CatalogSimulatorAdapter
@@ -74,9 +74,9 @@ class TestMetricsApproximationPipeline:
         - Transform extracts quality_before/quality_after
         - MetricsApproximationAdapter computes impact
         """
-        from impact_engine_measure import evaluate_impact, load_results
+        from impact_engine_measure import load_results, measure_impact
 
-        job_info = evaluate_impact(str(impact_config), str(tmp_path / "output"))
+        job_info = measure_impact(str(impact_config), str(tmp_path / "output"))
         result = load_results(job_info)
 
         assert result.model_type == "metrics_approximation"

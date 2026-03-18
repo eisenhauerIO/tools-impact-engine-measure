@@ -1,4 +1,4 @@
-"""Tests for evaluate_impact function with modeling layer integration."""
+"""Tests for measure_impact function with modeling layer integration."""
 
 import json
 import os
@@ -7,14 +7,14 @@ import tempfile
 import pandas as pd
 import pytest
 
-from impact_engine_measure import evaluate_impact, load_results
+from impact_engine_measure import load_results, measure_impact
 
 
 class TestEvaluateImpactIntegration:
-    """Tests for evaluate_impact function with modeling layer integration."""
+    """Tests for measure_impact function with modeling layer integration."""
 
-    def test_evaluate_impact_with_modeling_integration(self):
-        """Test that evaluate_impact integrates data and modeling layers."""
+    def test_measure_impact_with_modeling_integration(self):
+        """Test that measure_impact integrates data and modeling layers."""
         with tempfile.TemporaryDirectory() as tmpdir:
             # Create products CSV file
             products_df = pd.DataFrame(
@@ -58,8 +58,8 @@ class TestEvaluateImpactIntegration:
             with open(config_path, "w") as f:
                 json.dump(config, f)
 
-            # Call evaluate_impact and load results
-            job_info = evaluate_impact(config_path=config_path, storage_url=tmpdir)
+            # Call measure_impact and load results
+            job_info = measure_impact(config_path=config_path, storage_url=tmpdir)
             assert "job-impact-engine-" in job_info.job_id
 
             result = load_results(job_info)
@@ -79,8 +79,8 @@ class TestEvaluateImpactIntegration:
             assert "pre_intervention_mean" in impact_estimates
             assert "post_intervention_mean" in impact_estimates
 
-    def test_evaluate_impact_missing_intervention_date(self):
-        """Test that evaluate_impact raises error when intervention_date is missing."""
+    def test_measure_impact_missing_intervention_date(self):
+        """Test that measure_impact raises error when intervention_date is missing."""
         with tempfile.TemporaryDirectory() as tmpdir:
             # Create products CSV file
             products_df = pd.DataFrame(
@@ -126,10 +126,10 @@ class TestEvaluateImpactIntegration:
 
             # Should raise ValueError for missing intervention_date (validated by model)
             with pytest.raises(ValueError, match="intervention_date"):
-                evaluate_impact(config_path=config_path, storage_url=tmpdir)
+                measure_impact(config_path=config_path, storage_url=tmpdir)
 
-    def test_evaluate_impact_returns_job_info(self):
-        """Test that evaluate_impact returns a JobInfo object."""
+    def test_measure_impact_returns_job_info(self):
+        """Test that measure_impact returns a JobInfo object."""
         with tempfile.TemporaryDirectory() as tmpdir:
             # Create products CSV file
             products_df = pd.DataFrame(
@@ -173,7 +173,7 @@ class TestEvaluateImpactIntegration:
             with open(config_path, "w") as f:
                 json.dump(config, f)
 
-            job_info = evaluate_impact(config_path=config_path, storage_url=tmpdir)
+            job_info = measure_impact(config_path=config_path, storage_url=tmpdir)
 
             # Verify JobInfo attributes
             from artifact_store import JobInfo
@@ -185,8 +185,8 @@ class TestEvaluateImpactIntegration:
             result = load_results(job_info)
             assert result.model_type == "interrupted_time_series"
 
-    def test_evaluate_impact_with_multiple_products(self):
-        """Test that evaluate_impact works with multiple products."""
+    def test_measure_impact_with_multiple_products(self):
+        """Test that measure_impact works with multiple products."""
         with tempfile.TemporaryDirectory() as tmpdir:
             # Create products CSV file with multiple products
             products_df = pd.DataFrame(
@@ -230,7 +230,7 @@ class TestEvaluateImpactIntegration:
             with open(config_path, "w") as f:
                 json.dump(config, f)
 
-            job_info = evaluate_impact(config_path=config_path, storage_url=tmpdir)
+            job_info = measure_impact(config_path=config_path, storage_url=tmpdir)
             assert "job-impact-engine-" in job_info.job_id
 
             result = load_results(job_info)

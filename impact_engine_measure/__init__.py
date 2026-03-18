@@ -3,7 +3,7 @@ Impact Engine - A tool for measuring causal impact of product interventions.
 """
 
 from .config import ConfigurationError, ConfigurationParser, parse_config_file
-from .engine import evaluate_impact
+from .engine import measure_impact
 from .metrics import (
     METRICS_REGISTRY,
     MetricsInterface,
@@ -18,7 +18,7 @@ __author__ = "eisenhauer.io"
 
 
 __all__ = [
-    "evaluate_impact",
+    "measure_impact",
     "load_results",
     "MeasureJobResult",
     "MetricsInterface",
