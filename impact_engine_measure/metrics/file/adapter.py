@@ -48,18 +48,25 @@ class FileAdapter(MetricsInterface):
     def connect(self, config: Dict[str, Any]) -> bool:
         """Initialize adapter with configuration parameters.
 
-        Args:
-            config: Dictionary containing (lowercase keys, merged via process_config):
-                - path: Path to the data file (required)
-                - date_column: Column name for dates (optional)
-                - product_id_column: Column name for product IDs (optional, default: product_id)
+        Parameters
+        ----------
+        config : dict
+            Dictionary containing (lowercase keys, merged via process_config):
+            - path: Path to the data file (required)
+            - date_column: Column name for dates (optional)
+            - product_id_column: Column name for product IDs (optional, default: product_id)
 
-        Returns:
-            bool: True if initialization successful
+        Returns
+        -------
+        bool
+            True if initialization successful.
 
-        Raises:
-            ValueError: If required configuration is missing
-            FileNotFoundError: If the specified file doesn't exist
+        Raises
+        ------
+        ValueError
+            If required configuration is missing.
+        FileNotFoundError
+            If the specified file doesn't exist.
         """
         path = config.get("path")
         if not path:
@@ -86,11 +93,15 @@ class FileAdapter(MetricsInterface):
     def _load_data(self) -> pd.DataFrame:
         """Load data from file (CSV or Parquet).
 
-        Returns:
-            DataFrame with loaded data
+        Returns
+        -------
+        pd.DataFrame
+            DataFrame with loaded data.
 
-        Raises:
-            ValueError: If file format is not supported
+        Raises
+        ------
+        ValueError
+            If file format is not supported.
         """
         path = self.config["path"]
         self.data = self.store.read_data(self.filename)
@@ -103,16 +114,24 @@ class FileAdapter(MetricsInterface):
         For file-based sources, the data is already loaded. This method
         optionally filters by date range and product IDs if configured.
 
-        Args:
-            products: DataFrame with product identifiers (can be empty for file sources)
-            start_date: Start date in YYYY-MM-DD format (used if DATE_COLUMN configured)
-            end_date: End date in YYYY-MM-DD format (used if DATE_COLUMN configured)
+        Parameters
+        ----------
+        products : pd.DataFrame
+            DataFrame with product identifiers (can be empty for file sources).
+        start_date : str
+            Start date in YYYY-MM-DD format (used if DATE_COLUMN configured).
+        end_date : str
+            End date in YYYY-MM-DD format (used if DATE_COLUMN configured).
 
-        Returns:
-            DataFrame with business metrics
+        Returns
+        -------
+        pd.DataFrame
+            DataFrame with business metrics.
 
-        Raises:
-            ConnectionError: If adapter not connected
+        Raises
+        ------
+        ConnectionError
+            If adapter not connected.
         """
         if not self.is_connected:
             raise ConnectionError("Not connected to file source. Call connect() first.")
@@ -141,8 +160,10 @@ class FileAdapter(MetricsInterface):
     def validate_connection(self) -> bool:
         """Validate that the file source is accessible.
 
-        Returns:
-            bool: True if file exists and data is loaded
+        Returns
+        -------
+        bool
+            True if file exists and data is loaded.
         """
         if not self.is_connected or self.config is None or self.store is None:
             return False
@@ -155,13 +176,19 @@ class FileAdapter(MetricsInterface):
         For file-based sources, this is a pass-through since the file
         already contains the data in the expected format.
 
-        Args:
-            products: DataFrame with product identifiers
-            start_date: Start date
-            end_date: End date
+        Parameters
+        ----------
+        products : pd.DataFrame
+            DataFrame with product identifiers.
+        start_date : str
+            Start date.
+        end_date : str
+            End date.
 
-        Returns:
-            Dictionary with query parameters
+        Returns
+        -------
+        dict
+            Dictionary with query parameters.
         """
         return {
             "products": products,
@@ -175,11 +202,15 @@ class FileAdapter(MetricsInterface):
         For file-based sources, this adds metadata fields and ensures
         proper column naming.
 
-        Args:
-            external_data: DataFrame read from file
+        Parameters
+        ----------
+        external_data : Any
+            DataFrame read from file.
 
-        Returns:
-            DataFrame with standardized format
+        Returns
+        -------
+        pd.DataFrame
+            DataFrame with standardized format.
         """
         if not isinstance(external_data, pd.DataFrame):
             raise ValueError("Expected pandas DataFrame from file source")

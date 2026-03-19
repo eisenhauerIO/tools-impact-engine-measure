@@ -92,11 +92,15 @@ class NearestNeighbourMatchingAdapter(ModelInterface):
     def validate_params(self, params: Dict[str, Any]) -> None:
         """Validate nearest-neighbour-matching-specific parameters.
 
-        Args:
-            params: Parameters dict forwarded from config.
+        Parameters
+        ----------
+        params : dict
+            Parameters dict forwarded from config.
 
-        Raises:
-            ValueError: If required parameters are missing.
+        Raises
+        ------
+        ValueError
+            If required parameters are missing.
         """
         if not params.get("treatment_column"):
             raise ValueError(
@@ -121,17 +125,26 @@ class NearestNeighbourMatchingAdapter(ModelInterface):
         Performs two matching passes (ATT and ATC) and computes ATE as the
         weighted combination.
 
-        Args:
-            data: DataFrame with treatment indicator, covariates, and outcome.
-            **kwargs: Filtered MEASUREMENT.PARAMS forwarded by the manager.
+        Parameters
+        ----------
+        data : pd.DataFrame
+            DataFrame with treatment indicator, covariates, and outcome.
+        **kwargs
+            Filtered MEASUREMENT.PARAMS forwarded by the manager.
 
-        Returns:
-            ModelResult: Standardized result container.
+        Returns
+        -------
+        ModelResult
+            Standardized result container.
 
-        Raises:
-            ConnectionError: If model not connected.
-            ValueError: If data validation fails.
-            RuntimeError: If model fitting fails.
+        Raises
+        ------
+        ConnectionError
+            If model not connected.
+        ValueError
+            If data validation fails.
+        RuntimeError
+            If model fitting fails.
         """
         if not self.is_connected:
             raise ConnectionError("Model not connected. Call connect() first.")
@@ -231,11 +244,15 @@ class NearestNeighbourMatchingAdapter(ModelInterface):
     def validate_data(self, data: pd.DataFrame) -> bool:
         """Validate input data meets model requirements.
 
-        Args:
-            data: DataFrame to validate.
+        Parameters
+        ----------
+        data : pd.DataFrame
+            DataFrame to validate.
 
-        Returns:
-            bool: True if data is valid, False otherwise.
+        Returns
+        -------
+        bool
+            True if data is valid, False otherwise.
         """
         if data is None or data.empty:
             self.logger.warning("Data is empty")
@@ -252,8 +269,10 @@ class NearestNeighbourMatchingAdapter(ModelInterface):
     def get_required_columns(self) -> List[str]:
         """Get required column names.
 
-        Returns:
-            List[str]: Column names that must be present in input data.
+        Returns
+        -------
+        list of str
+            Column names that must be present in input data.
         """
         if not self.config:
             return []
@@ -267,12 +286,18 @@ class NearestNeighbourMatchingAdapter(ModelInterface):
 
         Uses the pooled SE formula: sqrt(var_t/n_t + var_c/n_c).
 
-        Args:
-            matched: Matched DataFrame from NearestNeighborMatch.match().
-            treatment_col: Name of the treatment indicator column.
-            outcome_col: Name of the outcome column.
+        Parameters
+        ----------
+        matched : pd.DataFrame
+            Matched DataFrame from NearestNeighborMatch.match().
+        treatment_col : str
+            Name of the treatment indicator column.
+        outcome_col : str
+            Name of the outcome column.
 
-        Returns:
+        Returns
+        -------
+        float
             Standard error of the mean difference.
         """
         treated = matched.loc[matched[treatment_col] == 1, outcome_col]

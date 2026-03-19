@@ -28,7 +28,8 @@ _FORMAT_READERS = {
 class MeasureJobResult:
     """Typed container for all artifacts produced by a single pipeline run.
 
-    Attributes:
+    Attributes
+    ----------
         job_id: Unique identifier for the job.
         model_type: Model identifier (e.g. ``"interrupted_time_series"``).
         created_at: ISO-8601 timestamp of job creation.
@@ -60,15 +61,22 @@ def load_results(job_info: JobInfo) -> MeasureJobResult:
     fixed pipeline set) are collected into ``model_artifacts`` with the
     ``{model_type}__`` prefix stripped from their keys.
 
-    Args:
-        job_info: ``JobInfo`` returned by :func:`evaluate_impact`.
+    Parameters
+    ----------
+    job_info : JobInfo
+        ``JobInfo`` returned by :func:`evaluate_impact`.
 
-    Returns:
-        MeasureJobResult: Typed container with every artifact.
+    Returns
+    -------
+    MeasureJobResult
+        Typed container with every artifact.
 
-    Raises:
-        FileNotFoundError: If the job directory or manifest is missing.
-        ValueError: If the manifest's major schema version is incompatible.
+    Raises
+    ------
+    FileNotFoundError
+        If the job directory or manifest is missing.
+    ValueError
+        If the manifest's major schema version is incompatible.
     """
     store = job_info.get_store()
 

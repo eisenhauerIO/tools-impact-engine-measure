@@ -81,11 +81,15 @@ class SubclassificationAdapter(ModelInterface):
     def validate_params(self, params: Dict[str, Any]) -> None:
         """Validate subclassification-specific parameters.
 
-        Args:
-            params: Parameters dict forwarded from config.
+        Parameters
+        ----------
+        params : dict
+            Parameters dict forwarded from config.
 
-        Raises:
-            ValueError: If required parameters are missing.
+        Raises
+        ------
+        ValueError
+            If required parameters are missing.
         """
         if not params.get("treatment_column"):
             raise ValueError(
@@ -107,17 +111,26 @@ class SubclassificationAdapter(ModelInterface):
     def fit(self, data: pd.DataFrame, **kwargs) -> ModelResult:
         """Fit the subclassification model and return results.
 
-        Args:
-            data: DataFrame with treatment indicator, covariates, and outcome.
-            **kwargs: All MEASUREMENT.PARAMS forwarded by the manager.
+        Parameters
+        ----------
+        data : pd.DataFrame
+            DataFrame with treatment indicator, covariates, and outcome.
+        **kwargs
+            All MEASUREMENT.PARAMS forwarded by the manager.
 
-        Returns:
-            ModelResult: Standardized result container.
+        Returns
+        -------
+        ModelResult
+            Standardized result container.
 
-        Raises:
-            ConnectionError: If model not connected.
-            ValueError: If data validation fails.
-            RuntimeError: If model fitting fails.
+        Raises
+        ------
+        ConnectionError
+            If model not connected.
+        ValueError
+            If data validation fails.
+        RuntimeError
+            If model fitting fails.
         """
         if not self.is_connected:
             raise ConnectionError("Model not connected. Call connect() first.")
@@ -175,11 +188,15 @@ class SubclassificationAdapter(ModelInterface):
     def validate_data(self, data: pd.DataFrame) -> bool:
         """Validate input data meets model requirements.
 
-        Args:
-            data: DataFrame to validate.
+        Parameters
+        ----------
+        data : pd.DataFrame
+            DataFrame to validate.
 
-        Returns:
-            bool: True if data is valid, False otherwise.
+        Returns
+        -------
+        bool
+            True if data is valid, False otherwise.
         """
         if data is None or data.empty:
             self.logger.warning("Data is empty")
@@ -196,8 +213,10 @@ class SubclassificationAdapter(ModelInterface):
     def get_required_columns(self) -> List[str]:
         """Get required column names.
 
-        Returns:
-            List[str]: Column names that must be present in input data.
+        Returns
+        -------
+        list of str
+            Column names that must be present in input data.
         """
         if not self.config:
             return []
@@ -211,10 +230,14 @@ class SubclassificationAdapter(ModelInterface):
         Uses pd.qcut on each covariate, then creates a composite stratum label
         by concatenating per-covariate bin indices.
 
-        Args:
-            data: DataFrame with covariate columns.
+        Parameters
+        ----------
+        data : pd.DataFrame
+            DataFrame with covariate columns.
 
-        Returns:
+        Returns
+        -------
+        tuple
             Tuple of (DataFrame with '_stratum' column, number of unique strata).
         """
         df = data.copy()
@@ -251,11 +274,16 @@ class SubclassificationAdapter(ModelInterface):
         Drops strata without both treated and control observations (common
         support violation) and logs a warning.
 
-        Args:
-            data: DataFrame with '_stratum' column and treatment indicator.
-            dependent_variable: Outcome column name.
+        Parameters
+        ----------
+        data : pd.DataFrame
+            DataFrame with '_stratum' column and treatment indicator.
+        dependent_variable : str
+            Outcome column name.
 
-        Returns:
+        Returns
+        -------
+        pd.DataFrame
             DataFrame with columns: stratum, n_treated, n_control,
             mean_treated, mean_control, effect.
         """
@@ -297,10 +325,14 @@ class SubclassificationAdapter(ModelInterface):
         - ATT: weight by n_treated in each stratum
         - ATE: weight by total observations (n_treated + n_control) in each stratum
 
-        Args:
-            stratum_effects: DataFrame from _compute_stratum_effects().
+        Parameters
+        ----------
+        stratum_effects : pd.DataFrame
+            DataFrame from _compute_stratum_effects().
 
-        Returns:
+        Returns
+        -------
+        float
             Weighted average treatment effect.
         """
         estimand = self.config["estimand"]

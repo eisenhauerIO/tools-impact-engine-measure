@@ -26,9 +26,12 @@ class Registry(Generic[T]):
     def __init__(self, base_class: Type[T], name: str):
         """Initialize the registry.
 
-        Args:
-            base_class: The base class/protocol that registered items must implement.
-            name: Human-readable name for error messages (e.g., "model", "metrics adapter").
+        Parameters
+        ----------
+        base_class : Type[T]
+            The base class/protocol that registered items must implement.
+        name : str
+            Human-readable name for error messages (e.g., "model", "metrics adapter").
         """
         self._registry: Dict[str, Type[T]] = {}
         self._base = base_class
@@ -37,12 +40,17 @@ class Registry(Generic[T]):
     def register(self, key: str, cls: Type[T]) -> None:
         """Register a class under the given key.
 
-        Args:
-            key: The identifier to register the class under.
-            cls: The class to register (must be a subclass of base_class).
+        Parameters
+        ----------
+        key : str
+            The identifier to register the class under.
+        cls : Type[T]
+            The class to register (must be a subclass of base_class).
 
-        Raises:
-            ValueError: If cls is not a subclass of base_class.
+        Raises
+        ------
+        ValueError
+            If cls is not a subclass of base_class.
         """
         if not issubclass(cls, self._base):
             raise ValueError(f"{cls.__name__} must implement {self._base.__name__}")
@@ -51,14 +59,20 @@ class Registry(Generic[T]):
     def get(self, key: str) -> T:
         """Get an instance of the registered class.
 
-        Args:
-            key: The identifier to look up.
+        Parameters
+        ----------
+        key : str
+            The identifier to look up.
 
-        Returns:
+        Returns
+        -------
+        T
             A new instance of the registered class.
 
-        Raises:
-            ValueError: If the key is not registered.
+        Raises
+        ------
+        ValueError
+            If the key is not registered.
         """
         if key not in self._registry:
             available = list(self._registry.keys())
@@ -103,8 +117,10 @@ class FunctionRegistry(Generic[F]):
     def __init__(self, name: str):
         """Initialize the registry.
 
-        Args:
-            name: Human-readable name for error messages (e.g., "transform").
+        Parameters
+        ----------
+        name : str
+            Human-readable name for error messages (e.g., "transform").
         """
         self._registry: Dict[str, F] = {}
         self._name = name
@@ -112,12 +128,17 @@ class FunctionRegistry(Generic[F]):
     def register(self, key: str, func: F) -> None:
         """Register a function under the given key.
 
-        Args:
-            key: The identifier to register the function under.
-            func: The callable to register.
+        Parameters
+        ----------
+        key : str
+            The identifier to register the function under.
+        func : F
+            The callable to register.
 
-        Raises:
-            ValueError: If func is not callable.
+        Raises
+        ------
+        ValueError
+            If func is not callable.
         """
         if not callable(func):
             raise ValueError(f"{self._name} must be callable, got {type(func)}")
@@ -126,14 +147,20 @@ class FunctionRegistry(Generic[F]):
     def get(self, key: str) -> F:
         """Get a registered function by key.
 
-        Args:
-            key: The identifier to look up.
+        Parameters
+        ----------
+        key : str
+            The identifier to look up.
 
-        Returns:
+        Returns
+        -------
+        F
             The registered callable.
 
-        Raises:
-            ValueError: If the key is not registered.
+        Raises
+        ------
+        ValueError
+            If the key is not registered.
         """
         if key not in self._registry:
             available = list(self._registry.keys())

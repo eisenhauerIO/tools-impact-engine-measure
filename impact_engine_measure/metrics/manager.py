@@ -34,11 +34,16 @@ class MetricsManager:
     ):
         """Initialize the MetricsManager with injected metrics source.
 
-        Args:
-            source_config: SOURCE.CONFIG configuration block (pre-validated, with defaults merged).
-            metrics_source: The metrics implementation to use for data retrieval.
-            source_type: The type of metrics source (e.g., "simulator", "file").
-            parent_job: Optional parent job for artifact management.
+        Parameters
+        ----------
+        source_config : dict
+            SOURCE.CONFIG configuration block (pre-validated, with defaults merged).
+        metrics_source : MetricsInterface
+            The metrics implementation to use for data retrieval.
+        source_type : str
+            The type of metrics source (e.g., "simulator", "file").
+        parent_job : JobInfo, optional
+            Optional parent job for artifact management.
         """
         self.source_config = source_config
         self.metrics_source = metrics_source

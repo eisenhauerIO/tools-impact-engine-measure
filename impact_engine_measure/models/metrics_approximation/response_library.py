@@ -11,16 +11,22 @@ def linear_response(delta_metric: float, baseline_outcome: float, **kwargs) -> f
 
     Formula: impact = coefficient * delta_metric * baseline_outcome
 
-    Args:
-        delta_metric: Change in metric (metric_after - metric_before)
-        baseline_outcome: Baseline sales/revenue before intervention
-        **kwargs: Additional parameters:
-            - coefficient (float): Scaling factor (default: 1.0)
-                A coefficient of 0.5 means a 1-unit metric increase
-                results in a 50% increase in baseline outcome.
+    Parameters
+    ----------
+    delta_metric : float
+        Change in metric (metric_after - metric_before).
+    baseline_outcome : float
+        Baseline sales/revenue before intervention.
+    **kwargs
+        Additional parameters:
+        - coefficient (float): Scaling factor (default: 1.0)
+          A coefficient of 0.5 means a 1-unit metric increase
+          results in a 50% increase in baseline outcome.
 
-    Returns:
-        float: Approximated impact on outcome
+    Returns
+    -------
+    float
+        Approximated impact on outcome.
 
     Example:
         >>> linear_response(0.4, 100, coefficient=0.5)

@@ -1,6 +1,4 @@
-"""
-Models Manager for coordinating model operations.
-"""
+"""Models manager for coordinating model operations."""
 
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -18,7 +16,8 @@ class FitOutput:
     Provides programmatic access to the results path and all artifact paths,
     so callers do not need to reconstruct file paths from model internals.
 
-    Attributes:
+    Attributes
+    ----------
         results_path: Full path/URL to impact_results.json.
         artifact_paths: Mapping of artifact name to full path/URL.
         model_type: The model type that produced this output.
@@ -45,9 +44,12 @@ class ModelsManager:
     ):
         """Initialize the ModelsManager with injected model.
 
-        Args:
-            measurement_config: MEASUREMENT configuration block (pre-validated, with defaults merged).
-            model: The model implementation to use for fitting.
+        Parameters
+        ----------
+        measurement_config : dict
+            MEASUREMENT configuration block (pre-validated, with defaults merged).
+        model : ModelInterface
+            The model implementation to use for fitting.
         """
         self.measurement_config = measurement_config
         self.model = model
@@ -68,13 +70,19 @@ class ModelsManager:
         All PARAMS from config are forwarded as kwargs to validate_params() and fit().
         Callers can override any config param via ``**overrides``.
 
-        Args:
-            data: DataFrame containing data for model fitting.
-            storage: Storage backend for artifacts.
-            **overrides: Override any MEASUREMENT.PARAMS value (e.g., intervention_date,
-                dependent_variable).
+        Parameters
+        ----------
+        data : pd.DataFrame
+            DataFrame containing data for model fitting.
+        storage : StorageManager
+            Storage backend for artifacts.
+        **overrides
+            Override any MEASUREMENT.PARAMS value (e.g., intervention_date,
+            dependent_variable).
 
-        Returns:
+        Returns
+        -------
+        FitOutput
             FitOutput with paths to all persisted files.
         """
         params = dict(self.measurement_config["PARAMS"])

@@ -27,16 +27,20 @@ class ArtifactStoreAdapter(StorageInterface):
     def connect(self, config: Dict[str, Any]) -> bool:
         """Initialize storage with configuration.
 
-        Args:
-            config: Dictionary containing
+        Parameters
+        ----------
+        config : dict
+            Dictionary containing:
 
-                - storage_url: Path or URL (e.g., "./data", "s3://bucket/prefix")
-                - prefix: Optional job prefix (default: "job-impact-engine")
-                - job_id: Optional job ID for resuming existing jobs or custom IDs.
-                  If not provided, a unique ID will be auto-generated.
+            - storage_url: Path or URL (e.g., "./data", "s3://bucket/prefix")
+            - prefix: Optional job prefix (default: "job-impact-engine")
+            - job_id: Optional job ID for resuming existing jobs or custom IDs.
+              If not provided, a unique ID will be auto-generated.
 
-        Returns:
-            bool: True if initialization successful, False otherwise.
+        Returns
+        -------
+        bool
+            True if initialization successful, False otherwise.
         """
         storage_url = config.get("storage_url", "./data")
         prefix = config.get("prefix", "job-impact-engine")

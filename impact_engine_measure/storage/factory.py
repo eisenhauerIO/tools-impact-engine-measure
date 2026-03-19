@@ -31,20 +31,28 @@ def create_storage_manager(
     1. Selects the appropriate storage adapter based on storage_type
     2. Creates and returns a configured StorageManager
 
-    Args:
-        storage_url: Path or URL for storage (e.g., "./data", "s3://bucket/prefix").
-        storage_type: Type of storage adapter to use (default: "artifact_store").
-        prefix: Job prefix for organizing artifacts (default: "job-impact-engine").
-        job_id: Optional job ID for resuming existing jobs or using custom IDs.
-            If not provided, a unique ID will be auto-generated.
+    Parameters
+    ----------
+    storage_url : str
+        Path or URL for storage (e.g., "./data", "s3://bucket/prefix").
+    storage_type : str
+        Type of storage adapter to use (default: "artifact_store").
+    prefix : str
+        Job prefix for organizing artifacts (default: "job-impact-engine").
+    job_id : str, optional
+        Job ID for resuming existing jobs or using custom IDs.
+        If not provided, a unique ID will be auto-generated.
 
-    Returns:
-        StorageManager: Configured manager with the appropriate adapter.
+    Returns
+    -------
+    StorageManager
+        Configured manager with the appropriate adapter.
 
-    Raises:
-        ValueError: If the configured storage type is not supported.
+    Raises
+    ------
+    ValueError
+        If the configured storage type is not supported.
     """
-
     storage_config = {
         "storage_url": storage_url,
         "prefix": prefix,
@@ -60,15 +68,22 @@ def create_storage_manager_from_config(
 ) -> "StorageManager":
     """Create a StorageManager from a configuration dict.
 
-    Args:
-        storage_config: Storage configuration with storage_url and optional prefix.
-        storage_type: Type of storage adapter to use.
+    Parameters
+    ----------
+    storage_config : dict
+        Storage configuration with storage_url and optional prefix.
+    storage_type : str
+        Type of storage adapter to use.
 
-    Returns:
-        StorageManager: Configured manager with the appropriate adapter.
+    Returns
+    -------
+    StorageManager
+        Configured manager with the appropriate adapter.
 
-    Raises:
-        ValueError: If the configured storage type is not supported.
+    Raises
+    ------
+    ValueError
+        If the configured storage type is not supported.
     """
     from .manager import StorageManager
 
@@ -83,14 +98,20 @@ def create_storage_manager_from_config(
 def get_storage_adapter(storage_type: str) -> StorageInterface:
     """Get an instance of the storage adapter for the given type.
 
-    Args:
-        storage_type: The type of storage (e.g., "artifact_store").
+    Parameters
+    ----------
+    storage_type : str
+        The type of storage (e.g., "artifact_store").
 
-    Returns:
-        StorageInterface: An instance of the appropriate adapter.
+    Returns
+    -------
+    StorageInterface
+        An instance of the appropriate adapter.
 
-    Raises:
-        ValueError: If the storage type is not supported.
+    Raises
+    ------
+    ValueError
+        If the storage type is not supported.
     """
     return STORAGE_REGISTRY.get(storage_type)
 

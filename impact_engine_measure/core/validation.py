@@ -42,7 +42,9 @@ class ConfigValidationError(ValueError):
 def get_defaults() -> Dict[str, Any]:
     """Load and cache config_defaults.yaml.
 
-    Returns:
+    Returns
+    -------
+    dict
         Dict containing all default values.
     """
     defaults_path = Path(__file__).parent.parent / "config_defaults.yaml"
@@ -56,7 +58,9 @@ def get_defaults() -> Dict[str, Any]:
 def get_known_functions() -> Dict[str, Set[str]]:
     """Extract known function names from defaults for each section.
 
-    Returns:
+    Returns
+    -------
+    dict
         Dict mapping section names to sets of known function names.
         Example: {"TRANSFORM": {"passthrough", "aggregate_by_date"}}
     """
@@ -82,11 +86,16 @@ def get_known_functions() -> Dict[str, Set[str]]:
 def deep_merge(base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]:
     """Deep merge two dictionaries, with override taking precedence.
 
-    Args:
-        base: Base dictionary (typically defaults).
-        override: Override dictionary (typically user config).
+    Parameters
+    ----------
+    base : dict
+        Base dictionary (typically defaults).
+    override : dict
+        Override dictionary (typically user config).
 
-    Returns:
+    Returns
+    -------
+    dict
         Merged dictionary.
     """
     result = copy.deepcopy(base)
@@ -106,14 +115,20 @@ def deep_merge(base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]
 def _validate_file(config_path: str) -> str:
     """Stage 1: Validate file exists and is readable.
 
-    Args:
-        config_path: Path to configuration file.
+    Parameters
+    ----------
+    config_path : str
+        Path to configuration file.
 
-    Returns:
+    Returns
+    -------
+    str
         Absolute path to file.
 
-    Raises:
-        ConfigValidationError: If file doesn't exist.
+    Raises
+    ------
+    ConfigValidationError
+        If file doesn't exist.
     """
     path = Path(config_path)
 
@@ -129,14 +144,20 @@ def _validate_file(config_path: str) -> str:
 def _validate_format(config_path: str) -> Dict[str, Any]:
     """Stage 2: Parse file and validate it's proper YAML/JSON.
 
-    Args:
-        config_path: Path to configuration file.
+    Parameters
+    ----------
+    config_path : str
+        Path to configuration file.
 
-    Returns:
+    Returns
+    -------
+    dict
         Parsed configuration dictionary.
 
-    Raises:
-        ConfigValidationError: If file can't be parsed.
+    Raises
+    ------
+    ConfigValidationError
+        If file can't be parsed.
     """
     path = Path(config_path)
 
@@ -160,10 +181,14 @@ def _validate_format(config_path: str) -> Dict[str, Any]:
 def _validate_structure(config: Dict[str, Any]) -> List[str]:
     """Stage 3: Validate required top-level structure.
 
-    Args:
-        config: Configuration dictionary to validate.
+    Parameters
+    ----------
+    config : dict
+        Configuration dictionary to validate.
 
-    Returns:
+    Returns
+    -------
+    list
         List of validation errors (empty if valid).
     """
     errors = []
@@ -219,10 +244,14 @@ def _validate_parameters(config: Dict[str, Any]) -> List[str]:
     - Date ordering (start <= end)
     - Model-specific required params (for known models only)
 
-    Args:
-        config: Merged configuration dictionary.
+    Parameters
+    ----------
+    config : dict
+        Merged configuration dictionary.
 
-    Returns:
+    Returns
+    -------
+    list
         List of validation errors (empty if valid).
     """
     errors = []
@@ -310,14 +339,20 @@ def process_config(config_path: str) -> Dict[str, Any]:
     4. Validate structure (required sections/fields)
     5. Validate parameters (dates, model-specific)
 
-    Args:
-        config_path: Path to configuration file.
+    Parameters
+    ----------
+    config_path : str
+        Path to configuration file.
 
-    Returns:
+    Returns
+    -------
+    dict
         Fully validated and merged configuration dictionary.
 
-    Raises:
-        ConfigValidationError: If any validation stage fails.
+    Raises
+    ------
+    ConfigValidationError
+        If any validation stage fails.
     """
     # Stage 1: File validation
     validated_path = _validate_file(config_path)

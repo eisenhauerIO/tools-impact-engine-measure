@@ -14,14 +14,19 @@ def prepare_for_synthetic_control(data: pd.DataFrame, params: Dict[str, Any]) ->
     For each row, treatment = 1 when the product is enriched AND the date is
     on or after ``enrichment_start``.  Otherwise treatment = 0.
 
-    Args:
-        data: Long-format panel DataFrame with ``enriched`` and ``date`` columns.
-        params: Configuration parameters:
-            - enrichment_start (str): Date when enrichment started (YYYY-MM-DD).
-              Auto-injected from ENRICHMENT.PARAMS by validation.py.
+    Parameters
+    ----------
+    data : pd.DataFrame
+        Long-format panel DataFrame with ``enriched`` and ``date`` columns.
+    params : dict
+        Configuration parameters:
+        - enrichment_start (str): Date when enrichment started (YYYY-MM-DD).
+          Auto-injected from ENRICHMENT.PARAMS by validation.py.
 
-    Returns:
-        pd.DataFrame: Data with an added ``treatment`` column.
+    Returns
+    -------
+    pd.DataFrame
+        Data with an added ``treatment`` column.
     """
     result = data.copy()
     enrichment_start = params.get("enrichment_start")

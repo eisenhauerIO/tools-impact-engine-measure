@@ -1,6 +1,4 @@
-"""
-Base interfaces and common classes for the metrics layer.
-"""
+"""Base interfaces and common classes for the metrics layer."""
 
 from abc import ABC, abstractmethod
 from typing import Any, Dict
@@ -30,13 +28,19 @@ class MetricsInterface(ABC):
     def retrieve_business_metrics(self, products: pd.DataFrame, start_date: str, end_date: str) -> pd.DataFrame:
         """Retrieve business metrics for specified products and time range.
 
-        Args:
-            products: DataFrame with product identifiers and characteristics
-            start_date: Start date in YYYY-MM-DD format
-            end_date: End date in YYYY-MM-DD format
+        Parameters
+        ----------
+        products : pd.DataFrame
+            DataFrame with product identifiers and characteristics.
+        start_date : str
+            Start date in YYYY-MM-DD format.
+        end_date : str
+            End date in YYYY-MM-DD format.
 
-        Returns:
-            DataFrame with business metrics for the specified products
+        Returns
+        -------
+        pd.DataFrame
+            DataFrame with business metrics for the specified products.
         """
         pass
 
@@ -45,8 +49,10 @@ class MetricsInterface(ABC):
 
         Default implementation returns True. Override for custom validation.
 
-        Returns:
-            bool: True if connection is valid, False otherwise.
+        Returns
+        -------
+        bool
+            True if connection is valid, False otherwise.
         """
         return True
 
@@ -56,13 +62,19 @@ class MetricsInterface(ABC):
         Default implementation is pass-through.
         Override for adapters that need data transformation.
 
-        Args:
-            products: DataFrame with product identifiers and characteristics
-            start_date: Start date in YYYY-MM-DD format
-            end_date: End date in YYYY-MM-DD format
+        Parameters
+        ----------
+        products : pd.DataFrame
+            DataFrame with product identifiers and characteristics.
+        start_date : str
+            Start date in YYYY-MM-DD format.
+        end_date : str
+            End date in YYYY-MM-DD format.
 
-        Returns:
-            Dictionary with parameters formatted for the external system
+        Returns
+        -------
+        dict
+            Dictionary with parameters formatted for the external system.
         """
         return {"products": products, "start_date": start_date, "end_date": end_date}
 
@@ -72,11 +84,15 @@ class MetricsInterface(ABC):
         Default implementation returns data as-is if DataFrame, otherwise raises.
         Override for adapters that need result transformation.
 
-        Args:
-            external_data: Raw data from the external system
+        Parameters
+        ----------
+        external_data : Any
+            Raw data from the external system.
 
-        Returns:
-            DataFrame with standardized business metrics format
+        Returns
+        -------
+        pd.DataFrame
+            DataFrame with standardized business metrics format.
         """
         if isinstance(external_data, pd.DataFrame):
             return external_data

@@ -19,7 +19,8 @@ class ModelResult:
         - impact_estimates: The treatment effect measurements
         - model_summary: Fit diagnostics, sample sizes, configuration echo
 
-    Attributes:
+    Attributes
+    ----------
         model_type: Identifier for the model that produced this result.
         data: Primary result data with keys: model_params, impact_estimates, model_summary.
         metadata: Metadata about the model run (populated by the manager).
@@ -70,11 +71,15 @@ class ModelInterface(ABC):
     def connect(self, config: Dict[str, Any]) -> bool:
         """Initialize model with configuration parameters.
 
-        Args:
-            config: Dictionary containing model configuration parameters
+        Parameters
+        ----------
+        config : dict
+            Dictionary containing model configuration parameters.
 
-        Returns:
-            bool: True if initialization successful, False otherwise
+        Returns
+        -------
+        bool
+            True if initialization successful, False otherwise.
         """
         pass
 
@@ -82,17 +87,24 @@ class ModelInterface(ABC):
     def fit(self, data: pd.DataFrame, **kwargs) -> Any:
         """Fit the model to the provided data.
 
-        Args:
-            data: DataFrame containing data for model fitting.
-            **kwargs: Model-specific parameters (e.g., intervention_date,
-                     dependent_variable).
+        Parameters
+        ----------
+        data : pd.DataFrame
+            DataFrame containing data for model fitting.
+        **kwargs
+            Model-specific parameters (e.g., intervention_date, dependent_variable).
 
-        Returns:
+        Returns
+        -------
+        Any
             Model-specific results (Dict, str path, etc.)
 
-        Raises:
-            ValueError: If data validation fails or required columns are missing.
-            RuntimeError: If model fitting fails.
+        Raises
+        ------
+        ValueError
+            If data validation fails or required columns are missing.
+        RuntimeError
+            If model fitting fails.
         """
         pass
 
@@ -101,8 +113,10 @@ class ModelInterface(ABC):
 
         Default implementation returns True. Override for custom validation.
 
-        Returns:
-            bool: True if model is ready, False otherwise.
+        Returns
+        -------
+        bool
+            True if model is ready, False otherwise.
         """
         return True
 
@@ -112,11 +126,15 @@ class ModelInterface(ABC):
         Default implementation checks if data is non-empty.
         Override for custom validation.
 
-        Args:
-            data: DataFrame to validate.
+        Parameters
+        ----------
+        data : pd.DataFrame
+            DataFrame to validate.
 
-        Returns:
-            bool: True if data is valid, False otherwise.
+        Returns
+        -------
+        bool
+            True if data is valid, False otherwise.
         """
         return data is not None and not data.empty
 
@@ -126,8 +144,10 @@ class ModelInterface(ABC):
         Default implementation returns empty list.
         Override if model requires specific columns.
 
-        Returns:
-            List[str]: Column names that must be present in input data.
+        Returns
+        -------
+        list of str
+            Column names that must be present in input data.
         """
         return []
 
@@ -142,12 +162,16 @@ class ModelInterface(ABC):
         Centralized config validation (process_config) handles known models,
         but this method ensures custom/user-defined models also validate.
 
-        Args:
-            params: Dictionary containing parameters that will be passed to fit().
-                Typical keys: intervention_date, dependent_variable.
+        Parameters
+        ----------
+        params : dict
+            Dictionary containing parameters that will be passed to fit().
+            Typical keys: intervention_date, dependent_variable.
 
-        Raises:
-            ValueError: If required parameters are missing or invalid.
+        Raises
+        ------
+        ValueError
+            If required parameters are missing or invalid.
         """
         pass
 
@@ -157,10 +181,14 @@ class ModelInterface(ABC):
         Called by ModelsManager before fit() to prevent cross-model param pollution.
         Default returns all params (backward compatible). Built-in adapters override.
 
-        Args:
-            params: Full params dict (config PARAMS merged with caller overrides).
+        Parameters
+        ----------
+        params : dict
+            Full params dict (config PARAMS merged with caller overrides).
 
-        Returns:
+        Returns
+        -------
+        dict
             Filtered dict for fit().
         """
         return dict(params)
@@ -171,12 +199,17 @@ class ModelInterface(ABC):
         Default implementation is pass-through.
         Override for models that need data transformation.
 
-        Args:
-            data: DataFrame with impact engine standardized format
-            **kwargs: Additional model-specific parameters
+        Parameters
+        ----------
+        data : pd.DataFrame
+            DataFrame with impact engine standardized format.
+        **kwargs
+            Additional model-specific parameters.
 
-        Returns:
-            Dictionary with parameters formatted for the model library
+        Returns
+        -------
+        dict
+            Dictionary with parameters formatted for the model library.
         """
         return {"data": data, **kwargs}
 
@@ -186,11 +219,15 @@ class ModelInterface(ABC):
         Default implementation returns results as-is (or wrapped in dict).
         Override for models that need result transformation.
 
-        Args:
-            model_results: Raw results from the model library
+        Parameters
+        ----------
+        model_results : Any
+            Raw results from the model library.
 
-        Returns:
-            Dictionary with standardized impact analysis results
+        Returns
+        -------
+        dict
+            Dictionary with standardized impact analysis results.
         """
         if isinstance(model_results, dict):
             return model_results

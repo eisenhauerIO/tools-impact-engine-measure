@@ -57,15 +57,19 @@ class MetricsApproximationAdapter(ModelInterface):
 
         Config is pre-validated with defaults merged via process_config().
 
-        Args:
-            config: Dictionary containing model configuration:
-                - metric_before_column: Column name for pre-intervention metric
-                - metric_after_column: Column name for post-intervention metric
-                - baseline_column: Column name for baseline outcome
-                - response: Dict with FUNCTION name and optional PARAMS
+        Parameters
+        ----------
+        config : dict
+            Dictionary containing model configuration:
+            - metric_before_column: Column name for pre-intervention metric
+            - metric_after_column: Column name for post-intervention metric
+            - baseline_column: Column name for baseline outcome
+            - response: Dict with FUNCTION name and optional PARAMS
 
-        Returns:
-            bool: True if initialization successful
+        Returns
+        -------
+        bool
+            True if initialization successful.
         """
         # Config has defaults merged from process_config()
         metric_before = config["metric_before_column"]
@@ -108,8 +112,10 @@ class MetricsApproximationAdapter(ModelInterface):
         configured in connect(). This implementation satisfies the abstract method
         requirement while allowing all params.
 
-        Args:
-            params: Parameters dict (typically empty for this model).
+        Parameters
+        ----------
+        params : dict
+            Parameters dict (typically empty for this model).
         """
         # No required fit-time params for metrics approximation
         pass
@@ -130,18 +136,26 @@ class MetricsApproximationAdapter(ModelInterface):
             delta_metric = metric_after - metric_before
             approximated_impact = response_function(delta_metric, baseline, row_attributes)
 
-        Args:
-            data: DataFrame with enriched products (only treated products).
-                  Must contain metric_before, metric_after, and baseline columns.
-                  Additional columns are passed as row_attributes to response function.
-            **kwargs: Additional parameters passed to response function.
+        Parameters
+        ----------
+        data : pd.DataFrame
+            DataFrame with enriched products (only treated products).
+            Must contain metric_before, metric_after, and baseline columns.
+            Additional columns are passed as row_attributes to response function.
+        **kwargs
+            Additional parameters passed to response function.
 
-        Returns:
-            ModelResult: Standardized result container (storage handled by manager).
+        Returns
+        -------
+        ModelResult
+            Standardized result container (storage handled by manager).
 
-        Raises:
-            ConnectionError: If model not connected
-            ValueError: If data validation fails
+        Raises
+        ------
+        ConnectionError
+            If model not connected.
+        ValueError
+            If data validation fails.
         """
         if not self.is_connected:
             raise ConnectionError("Model not connected. Call connect() first.")
@@ -233,11 +247,15 @@ class MetricsApproximationAdapter(ModelInterface):
     def validate_data(self, data: pd.DataFrame) -> bool:
         """Validate that the input data meets model requirements.
 
-        Args:
-            data: DataFrame to validate
+        Parameters
+        ----------
+        data : pd.DataFrame
+            DataFrame to validate.
 
-        Returns:
-            bool: True if data is valid, False otherwise
+        Returns
+        -------
+        bool
+            True if data is valid, False otherwise.
         """
         if data is None or data.empty:
             self.logger.warning("Data is empty")
@@ -255,8 +273,10 @@ class MetricsApproximationAdapter(ModelInterface):
     def get_required_columns(self) -> List[str]:
         """Get the list of required columns for this model.
 
-        Returns:
-            List[str]: Column names that must be present in input data
+        Returns
+        -------
+        list of str
+            Column names that must be present in input data.
         """
         if not self.config:
             return ["quality_before", "quality_after", "baseline_sales"]
@@ -274,11 +294,16 @@ class MetricsApproximationAdapter(ModelInterface):
     ) -> tuple:
         """Filter rows with missing values in required columns and log them.
 
-        Args:
-            df: DataFrame to filter
-            required_columns: Columns to check for NaN/None values
+        Parameters
+        ----------
+        df : pd.DataFrame
+            DataFrame to filter.
+        required_columns : list of str
+            Columns to check for NaN/None values.
 
-        Returns:
+        Returns
+        -------
+        tuple
             Tuple of (filtered DataFrame, DataFrame of filtered product IDs).
             The second DataFrame is empty when no rows were filtered.
         """

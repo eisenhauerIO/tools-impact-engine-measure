@@ -1,61 +1,59 @@
-## Development
+# CLAUDE.md
 
-Always use the hatch environment for running tests, linting, and other dev tasks:
-- Run tests: `hatch run test`
-- Format: `hatch run format` (ruff format)
-- Lint: `hatch run lint`
+## Project overview
 
-Never use bare `pytest` or `ruff` directly — always go through `hatch run`.
+Causal impact measurement for the impact engine pipeline. Runs econometric models
+(experiment, synthetic control, nearest-neighbour matching, interrupted time series,
+subclassification, metrics approximation) against product data and writes normalized
+results to a job directory for downstream pipeline stages.
 
-## Design Philosophy
+## Development setup
 
-### Models: Thin Wrappers
-
-Each measurement model adapter should be as thin a wrapper as possible around the underlying Python library. Minimize custom logic; delegate to the library for all statistical/ML work. The adapter's job is only to translate between the impact engine's interface (config, DataFrame in, ModelResult out) and the library's API.
-
-### Model Output
-
-**JSON Envelope (`impact_results.json`).** Every model returns a `ModelResult`; the manager persists it via `storage.write_json("impact_results.json", result.to_dict())`. The serialized JSON has a stable envelope with three standardized keys inside `data`:
-
-- **`model_params`**: Input parameters used for this run. Model-specific.
-- **`impact_estimates`**: The treatment effect measurements. Model-specific keys, but always the primary result.
-- **`model_summary`**: Fit diagnostics, sample sizes, and configuration echo.
-
-Models never write the main result file themselves. The manager handles serialization and storage.
-
-**Supplementary Artifacts (Parquet).** When a model needs to persist detailed row-level data, it returns DataFrames in `ModelResult.artifacts`. The manager writes them as Parquet files named `{model_type}__{artifact_name}.parquet`.
-
-**Job Manifest (`manifest.json`).** Every pipeline run writes a manifest as its final step, making the output self-describing. Consumers read the manifest first, then load exactly what they need.
-
-**`FitOutput` Return Type.** `ModelsManager.fit_model()` returns a `FitOutput` dataclass providing programmatic access to `results_path`, `artifact_paths`, and `model_type`.
-
-**Metadata.** The manager populates `ModelResult.metadata` with execution context (timestamp). Models never set metadata themselves.
-
-### Output Directory Structure
-
-Current layout (flat):
-
-```
-job-impact-engine-XXXX/
-  config.yaml
-  manifest.json
-  products.parquet
-  business_metrics.parquet
-  transformed_metrics.parquet
-  impact_results.json
-  {model_type}__{artifact_name}.parquet
+```bash
+pip install hatch
+hatch env create
 ```
 
-Future consideration: split into `pipeline/` and `model/` subdirectories. Consumers should use `manifest.json` to resolve paths rather than hardcoding filenames, to make future reorganization non-breaking.
+## Common commands
 
-## Skills & Subagents
+- `hatch run test` — run pytest suite
+- `hatch run lint` — check with ruff
+- `hatch run format` — auto-format with ruff
+- `hatch run docs:build` — build Sphinx documentation
 
-### General (shared across projects)
-- Skills: .claude/general-skills/
-- Subagents: .claude/general-subagents/
+Always use `hatch run` to execute commands. Never bare `python` or `pytest`.
 
-### Project-specific
-- Skills: .claude/skills/
+## Architecture
 
-To invoke a subagent, read its .md file and follow its instructions.
-General resources take precedence unless a project-specific skill covers the same topic.
+- `impact_engine_measure/engine.py` — `measure_impact()`: main entry point; orchestrates config, model, storage
+- `impact_engine_measure/config.py` — `parse_config_file()` (internal); `load_config()` re-exported as canonical entry point
+- `impact_engine_measure/normalize.py` — `normalize_result()`: writes `measure_result.json` (flat normalized estimates)
+- `impact_engine_measure/results.py` — `MeasureJobResult`, `load_results()`: structured access to job output
+- `impact_engine_measure/core/validation.py` — `load_config()`: parse-once config entry point
+- `impact_engine_measure/core/contracts.py` — internal data contracts
+- `impact_engine_measure/core/transforms.py` — shared data transformations
+- `impact_engine_measure/metrics/` — `MetricsManager`, `MetricsInterface`, `METRICS_REGISTRY`: pluggable metric definitions
+- `impact_engine_measure/models/` — `ModelsManager`, `ModelInterface`, `MODEL_REGISTRY`: pluggable model adapters
+  - `experiment/` — OLS-based experiment adapter
+  - `synthetic_control/` — synthetic control adapter (pysyncon)
+  - `nearest_neighbour_matching/` — PSM adapter (causalml)
+  - `interrupted_time_series/` — ITS adapter (statsmodels)
+  - `subclassification/` — subclassification adapter
+  - `metrics_approximation/` — metrics approximation adapter
+- `impact_engine_measure/storage/` — job directory I/O
+- `tests/` — unit and integration tests
+- `docs/source/` — Sphinx docs with method demo notebooks
+
+## Verification
+
+1. `hatch run lint` — confirm no ruff errors
+2. `hatch run test` — all tests pass
+3. `hatch run docs:build` — docs build without warnings
+
+## Key conventions
+
+- NumPy-style docstrings
+- Logging via `logging.getLogger(__name__)` (no print statements)
+- Models are thin wrappers — delegate all statistical work to the underlying library
+- Every model run writes `measure_result.json` (normalized flat dict) and `manifest.json`; consumers read these files, not raw model output
+- `_external/` contains reference submodules — do not modify

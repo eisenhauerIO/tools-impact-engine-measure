@@ -69,11 +69,15 @@ class SyntheticControlAdapter(ModelInterface):
 
         Only validates the three truly required params (null in config_defaults.yaml).
 
-        Args:
-            params: Parameters dict with treatment_time, treated_unit, etc.
+        Parameters
+        ----------
+        params : dict
+            Parameters dict with treatment_time, treated_unit, etc.
 
-        Raises:
-            ValueError: If required parameters are missing.
+        Raises
+        ------
+        ValueError
+            If required parameters are missing.
         """
         if params.get("treatment_time") is None:
             raise ValueError(
@@ -107,24 +111,33 @@ class SyntheticControlAdapter(ModelInterface):
     def fit(self, data: pd.DataFrame, **kwargs) -> ModelResult:
         """Fit the synthetic control model and return results.
 
-        Args:
-            data: Panel DataFrame with unit, time, outcome, and treatment columns.
-            **kwargs: Model parameters:
-                - treatment_time: When the intervention occurred (index value). Required.
-                - treated_unit (str): Name of the treated unit. Required.
-                - outcome_column (str): Column with the outcome variable. Required.
-                - unit_column (str): Column identifying units (default from config).
-                - time_column (str): Column identifying time periods (default from config).
-                - optim_method (str): Optimization method (default: "Nelder-Mead").
-                - optim_initial (str): Initial weight strategy (default: "equal").
+        Parameters
+        ----------
+        data : pd.DataFrame
+            Panel DataFrame with unit, time, outcome, and treatment columns.
+        **kwargs
+            Model parameters:
+            - treatment_time: When the intervention occurred (index value). Required.
+            - treated_unit (str): Name of the treated unit. Required.
+            - outcome_column (str): Column with the outcome variable. Required.
+            - unit_column (str): Column identifying units (default from config).
+            - time_column (str): Column identifying time periods (default from config).
+            - optim_method (str): Optimization method (default: "Nelder-Mead").
+            - optim_initial (str): Initial weight strategy (default: "equal").
 
-        Returns:
-            ModelResult: Standardized result container.
+        Returns
+        -------
+        ModelResult
+            Standardized result container.
 
-        Raises:
-            ConnectionError: If model not connected.
-            ValueError: If data validation fails.
-            RuntimeError: If model fitting fails.
+        Raises
+        ------
+        ConnectionError
+            If model not connected.
+        ValueError
+            If data validation fails.
+        RuntimeError
+            If model fitting fails.
         """
         if not self.is_connected:
             raise ConnectionError("Model not connected. Call connect() first.")
@@ -239,11 +252,15 @@ class SyntheticControlAdapter(ModelInterface):
     def validate_data(self, data: pd.DataFrame) -> bool:
         """Validate that the input data meets panel data requirements.
 
-        Args:
-            data: DataFrame to validate.
+        Parameters
+        ----------
+        data : pd.DataFrame
+            DataFrame to validate.
 
-        Returns:
-            bool: True if data is valid, False otherwise.
+        Returns
+        -------
+        bool
+            True if data is valid, False otherwise.
         """
         if data is None or data.empty:
             self.logger.warning("Data is empty")
@@ -261,8 +278,10 @@ class SyntheticControlAdapter(ModelInterface):
     def get_required_columns(self) -> List[str]:
         """Get required column names from config.
 
-        Returns:
-            List[str]: Column names that must be present in input data.
+        Returns
+        -------
+        list of str
+            Column names that must be present in input data.
         """
         if not self.config:
             return ["unit_id", "date"]

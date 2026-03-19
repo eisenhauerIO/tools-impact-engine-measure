@@ -11,10 +11,14 @@ def merge_model_params(params: Dict[str, Any]) -> Dict[str, Any]:
     Use this when testing adapters directly without going through
     the full process_config() pipeline.
 
-    Args:
-        params: User-provided params dict to merge over defaults.
+    Parameters
+    ----------
+    params : dict
+        User-provided params dict to merge over defaults.
 
-    Returns:
+    Returns
+    -------
+    dict
         Merged params with defaults applied.
     """
     defaults = get_defaults()

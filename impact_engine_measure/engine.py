@@ -20,20 +20,27 @@ def measure_impact(
     storage_url: str = "./data",
     job_id: Optional[str] = None,
 ) -> JobInfo:
-    """
-    Evaluate impact using business metrics retrieved through the metrics layer
+    """Measure causal impact using the configured model and metrics.
+
+    Evaluates impact using business metrics retrieved through the metrics layer
     and models layer for statistical analysis.
 
-    Args:
-        config_path: Path to configuration file containing metrics and model settings.
-                     The config must include DATA.SOURCE.CONFIG.PATH pointing to a products CSV file.
-        storage_url: Storage URL or path (e.g., "./data", "s3://bucket/prefix")
-        job_id: Optional job ID for resuming existing jobs or using custom IDs.
-            If not provided, a unique ID will be auto-generated.
+    Parameters
+    ----------
+    config_path : str
+        Path to configuration file containing metrics and model settings.
+        The config must include DATA.SOURCE.CONFIG.PATH pointing to a products CSV file.
+    storage_url : str
+        Storage URL or path (e.g., "./data", "s3://bucket/prefix").
+    job_id : str, optional
+        Job ID for resuming existing jobs or using custom IDs.
+        If not provided, a unique ID will be auto-generated.
 
-    Returns:
-        JobInfo: Job object for the completed run. Use ``load_results(job_info)``
-            to load all artifacts into a typed ``MeasureJobResult``.
+    Returns
+    -------
+    JobInfo
+        Job object for the completed run. Use ``load_results(job_info)``
+        to load all artifacts into a typed ``MeasureJobResult``.
     """
     config = parse_config_file(config_path)
     source_config = config["DATA"]["SOURCE"]["CONFIG"]

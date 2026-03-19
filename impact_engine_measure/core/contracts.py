@@ -70,12 +70,17 @@ class Schema:
         Searches for the standard name first, then checks all known aliases
         from the mappings.
 
-        Args:
-            df: DataFrame to search
-            standard_name: The standard column name to find
+        Parameters
+        ----------
+        df : pd.DataFrame
+            DataFrame to search.
+        standard_name : str
+            The standard column name to find.
 
-        Returns:
-            Actual column name if found, None otherwise
+        Returns
+        -------
+        str or None
+            Actual column name if found, None otherwise.
 
         Example:
             col = MetricsSchema.get_column(df, "product_id")
@@ -105,12 +110,17 @@ class Schema:
         If source is provided, uses that source's mapping. Otherwise,
         attempts to detect columns from all known aliases.
 
-        Args:
-            df: DataFrame to normalize
-            source: Optional source type for targeted normalization
+        Parameters
+        ----------
+        df : pd.DataFrame
+            DataFrame to normalize.
+        source : str, optional
+            Source type for targeted normalization.
 
-        Returns:
-            DataFrame with columns renamed to standard names
+        Returns
+        -------
+        pd.DataFrame
+            DataFrame with columns renamed to standard names.
 
         Example:
             # Normalize from known source

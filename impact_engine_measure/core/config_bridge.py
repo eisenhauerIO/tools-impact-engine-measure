@@ -27,12 +27,17 @@ class ConfigBridge:
         """
         Convert impact-engine config to catalog-simulator format.
 
-        Args:
-            ie_config: Impact-engine configuration dict with DATA section
-            num_products: Number of products (from actual products DataFrame)
+        Parameters
+        ----------
+        ie_config : dict
+            Impact-engine configuration dict with DATA section.
+        num_products : int
+            Number of products (from actual products DataFrame).
 
-        Returns:
-            Catalog-simulator compatible configuration
+        Returns
+        -------
+        dict
+            Catalog-simulator compatible configuration.
 
         Example input (flat dict built by adapter, not full user config):
             DATA:
@@ -101,11 +106,15 @@ class ConfigBridge:
         """
         Convert catalog-simulator config to impact-engine format.
 
-        Args:
-            cs_config: Catalog-simulator configuration dict
+        Parameters
+        ----------
+        cs_config : dict
+            Catalog-simulator configuration dict.
 
-        Returns:
-            Impact-engine compatible configuration
+        Returns
+        -------
+        dict
+            Impact-engine compatible configuration.
         """
         rule = cs_config.get("RULE", cs_config.get("SYNTHESIZER", {}))
         metrics_params = rule.get("METRICS", {}).get("PARAMS", {})
@@ -135,11 +144,15 @@ class ConfigBridge:
         """
         Build catalog-simulator IMPACT config from enrichment settings.
 
-        Args:
-            enrichment: Enrichment config with 'function' and 'params'
+        Parameters
+        ----------
+        enrichment : dict
+            Enrichment config with 'function' and 'params'.
 
-        Returns:
-            Catalog-simulator IMPACT configuration block
+        Returns
+        -------
+        dict
+            Catalog-simulator IMPACT configuration block.
         """
         return {
             "IMPACT": {

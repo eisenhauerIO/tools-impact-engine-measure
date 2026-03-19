@@ -37,17 +37,24 @@ def prepare_simulator_for_approximation(data: pd.DataFrame, params: Dict[str, An
         - baseline_sales: Aggregated revenue before enrichment_start
         - All other columns: Preserved (first value per product) for attribute-based conditioning
 
-    Args:
-        data: Time-series DataFrame with quality_score per row.
-        params: Configuration parameters:
-            - enrichment_start (str): Date when enrichment started (REQUIRED, format: YYYY-MM-DD)
-            - baseline_metric (str): Column to aggregate as baseline. Default: "revenue"
+    Parameters
+    ----------
+    data : pd.DataFrame
+        Time-series DataFrame with quality_score per row.
+    params : dict
+        Configuration parameters:
+        - enrichment_start (str): Date when enrichment started (REQUIRED, format: YYYY-MM-DD)
+        - baseline_metric (str): Column to aggregate as baseline. Default: "revenue"
 
-    Returns:
-        pd.DataFrame: Cross-sectional data ready for MetricsApproximationAdapter.
+    Returns
+    -------
+    pd.DataFrame
+        Cross-sectional data ready for MetricsApproximationAdapter.
 
-    Raises:
-        ValueError: If required columns or params are missing.
+    Raises
+    ------
+    ValueError
+        If required columns or params are missing.
     """
     # Validate input
     if not isinstance(data, pd.DataFrame):

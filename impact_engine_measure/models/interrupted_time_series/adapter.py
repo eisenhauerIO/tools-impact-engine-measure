@@ -91,11 +91,15 @@ class InterruptedTimeSeriesAdapter(ModelInterface):
     def validate_params(self, params: Dict[str, Any]) -> None:
         """Validate ITS-specific parameters.
 
-        Args:
-            params: Parameters dict with intervention_date, dependent_variable, etc.
+        Parameters
+        ----------
+        params : dict
+            Parameters dict with intervention_date, dependent_variable, etc.
 
-        Raises:
-            ValueError: If intervention_date is missing.
+        Raises
+        ------
+        ValueError
+            If intervention_date is missing.
         """
         if not params.get("intervention_date"):
             raise ValueError(
@@ -120,21 +124,29 @@ class InterruptedTimeSeriesAdapter(ModelInterface):
         """
         Fit the interrupted time series model and return results.
 
-        Args:
-            data: DataFrame containing time series data with 'date' column
-                  and dependent variable column.
-            **kwargs: Model parameters:
-                - intervention_date (str): Date (YYYY-MM-DD) when intervention occurred. Required.
-                - dependent_variable (str): Column to model (default: "revenue").
-                - order (tuple): SARIMAX order (p, d, q).
-                - seasonal_order (tuple): SARIMAX seasonal order (P, D, Q, s).
+        Parameters
+        ----------
+        data : pd.DataFrame
+            DataFrame containing time series data with 'date' column
+            and dependent variable column.
+        **kwargs
+            Model parameters:
+            - intervention_date (str): Date (YYYY-MM-DD) when intervention occurred. Required.
+            - dependent_variable (str): Column to model (default: "revenue").
+            - order (tuple): SARIMAX order (p, d, q).
+            - seasonal_order (tuple): SARIMAX seasonal order (P, D, Q, s).
 
-        Returns:
-            ModelResult: Standardized result container (storage handled by manager).
+        Returns
+        -------
+        ModelResult
+            Standardized result container (storage handled by manager).
 
-        Raises:
-            ValueError: If data validation fails or required columns are missing.
-            RuntimeError: If model fitting fails.
+        Raises
+        ------
+        ValueError
+            If data validation fails or required columns are missing.
+        RuntimeError
+            If model fitting fails.
         """
         # Extract required kwargs
         intervention_date = kwargs.get("intervention_date")
@@ -189,11 +201,15 @@ class InterruptedTimeSeriesAdapter(ModelInterface):
         """
         Validate that the input data meets model requirements.
 
-        Args:
-            data: DataFrame to validate.
+        Parameters
+        ----------
+        data : pd.DataFrame
+            DataFrame to validate.
 
-        Returns:
-            bool: True if data is valid, False otherwise.
+        Returns
+        -------
+        bool
+            True if data is valid, False otherwise.
         """
         if data.empty:
             self.logger.warning("Data is empty")
@@ -224,8 +240,10 @@ class InterruptedTimeSeriesAdapter(ModelInterface):
         """
         Get the list of required columns for this model.
 
-        Returns:
-            List[str]: Column names that must be present in input data.
+        Returns
+        -------
+        list of str
+            Column names that must be present in input data.
         """
         return ["date"]
 
@@ -241,17 +259,26 @@ class InterruptedTimeSeriesAdapter(ModelInterface):
         This method transforms raw input data into the format required by SARIMAX,
         returning all necessary data in a TransformedInput container.
 
-        Args:
-            data: Raw input DataFrame with date and metric columns.
-            intervention_date: Date string (YYYY-MM-DD) for intervention.
-            dependent_variable: Name of the column to model.
-            **kwargs: Optional overrides for order and seasonal_order.
+        Parameters
+        ----------
+        data : pd.DataFrame
+            Raw input DataFrame with date and metric columns.
+        intervention_date : str
+            Date string (YYYY-MM-DD) for intervention.
+        dependent_variable : str
+            Name of the column to model.
+        **kwargs
+            Optional overrides for order and seasonal_order.
 
-        Returns:
-            TransformedInput: Container with all data needed for model fitting.
+        Returns
+        -------
+        TransformedInput
+            Container with all data needed for model fitting.
 
-        Raises:
-            ValueError: If dependent variable is not in data.
+        Raises
+        ------
+        ValueError
+            If dependent variable is not in data.
         """
         # Check if dependent variable exists
         if dependent_variable not in data.columns:
@@ -289,15 +316,22 @@ class InterruptedTimeSeriesAdapter(ModelInterface):
     def _format_results(self, model_results: Any, transformed: TransformedInput) -> Dict[str, Any]:
         """Format SARIMAX results into standardized impact engine format.
 
-        Args:
-            model_results: Fitted SARIMAX results object.
-            transformed: The TransformedInput used for fitting.
+        Parameters
+        ----------
+        model_results : Any
+            Fitted SARIMAX results object.
+        transformed : TransformedInput
+            The TransformedInput used for fitting.
 
-        Returns:
+        Returns
+        -------
+        dict
             Dict containing standardized impact analysis results.
 
-        Raises:
-            ValueError: If model_results lacks expected attributes.
+        Raises
+        ------
+        ValueError
+            If model_results lacks expected attributes.
         """
         if not hasattr(model_results, "params"):
             raise ValueError("Expected SARIMAX results object with params attribute")
@@ -326,13 +360,19 @@ class InterruptedTimeSeriesAdapter(ModelInterface):
         """
         Calculate impact estimates from the fitted model.
 
-        Args:
-            df: DataFrame with intervention indicator.
-            y: Original time series values.
-            model_results: Fitted SARIMAX results object.
+        Parameters
+        ----------
+        df : pd.DataFrame
+            DataFrame with intervention indicator.
+        y : np.ndarray
+            Original time series values.
+        model_results : Any
+            Fitted SARIMAX results object.
 
-        Returns:
-            dict: Dictionary containing impact estimates.
+        Returns
+        -------
+        dict
+            Dictionary containing impact estimates.
         """
         # Get pre and post period data
         pre_mask = df["intervention"] == 0

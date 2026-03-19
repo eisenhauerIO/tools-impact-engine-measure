@@ -19,17 +19,24 @@ def aggregate_by_date(data: pd.DataFrame, params: Dict[str, Any]) -> pd.DataFram
     This transform is used by Interrupted Time Series (ITS) models.
     It groups data by date and sums numeric columns.
 
-    Args:
-        data: Input DataFrame with 'date' column and numeric metrics.
-        params: Configuration parameters:
-            - metric (str): The primary metric column name (default: "revenue").
-                           All numeric columns are summed, but this validates the metric exists.
+    Parameters
+    ----------
+    data : pd.DataFrame
+        Input DataFrame with 'date' column and numeric metrics.
+    params : dict
+        Configuration parameters:
+        - metric (str): The primary metric column name (default: "revenue").
+                       All numeric columns are summed, but this validates the metric exists.
 
-    Returns:
-        pd.DataFrame: Aggregated data with one row per date.
+    Returns
+    -------
+    pd.DataFrame
+        Aggregated data with one row per date.
 
-    Raises:
-        ValueError: If 'date' column is missing or metric column doesn't exist.
+    Raises
+    ------
+    ValueError
+        If 'date' column is missing or metric column doesn't exist.
     """
     metric = params.get("metric", "revenue")
 

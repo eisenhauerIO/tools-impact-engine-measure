@@ -1,5 +1,4 @@
-"""
-Configuration Parser and Validator for Data Abstraction Layer
+"""Configuration parser and validator for the data abstraction layer.
 
 Delegates to centralized validation in core.validation module.
 """
@@ -32,14 +31,20 @@ class ConfigurationParser:
         - Validates structure and required fields
         - Validates date formats and parameter values
 
-        Args:
-            config_path: Path to the configuration file (YAML or JSON).
+        Parameters
+        ----------
+        config_path : str
+            Path to the configuration file (YAML or JSON).
 
-        Returns:
+        Returns
+        -------
+        dict
             Fully validated and merged configuration dictionary.
 
-        Raises:
-            ConfigurationError: If validation fails.
+        Raises
+        ------
+        ConfigurationError
+            If validation fails.
         """
         try:
             return process_config(config_path)
@@ -48,6 +53,6 @@ class ConfigurationParser:
 
 
 def parse_config_file(config_path: str) -> Dict[str, Any]:
-    """Convenience function to parse a configuration file."""
+    """Parse a configuration file and return the validated config dict."""
     parser = ConfigurationParser()
     return parser.parse_config(config_path)

@@ -34,16 +34,16 @@ OUTPUT:
 **3. Run the analysis.**
 
 ```python
-from impact_engine_measure import evaluate_impact, load_results
+from impact_engine_measure import measure_impact, load_results
 
-job_info = evaluate_impact(
+job_info = measure_impact(
     config_path="config.yaml",
     storage_url="./results"
 )
 results = load_results(job_info)
 ```
 
-The engine loads products, retrieves metrics, applies transformations, fits the model, and writes results. `evaluate_impact` returns a `JobInfo` object; pass it to `load_results()` to get a typed `MeasureJobResult` with all artifacts loaded.
+The engine loads products, retrieves metrics, applies transformations, fits the model, and writes results. `measure_impact` returns a `JobInfo` object; pass it to `load_results()` to get a typed `MeasureJobResult` with all artifacts loaded.
 
 ---
 
@@ -82,9 +82,9 @@ Each model has a demo notebook with a runnable end-to-end example including trut
 
 | Model | Library | Interface | Description | Demo |
 |-------|---------|-----------|-------------|------|
-| Experiment | [statsmodels](https://www.statsmodels.org/) | [`ols()`](https://www.statsmodels.org/stable/generated/statsmodels.formula.api.ols.html) | Linear regression for randomized A/B tests | [demo_experiment](models/demo_experiment) |
-| Interrupted Time Series | [statsmodels](https://www.statsmodels.org/) | [`SARIMAX()`](https://www.statsmodels.org/stable/generated/statsmodels.tsa.statespace.sarimax.SARIMAX.html) | ARIMA-based pre/post intervention comparison on aggregated time series | [demo_interrupted_time_series](models/demo_interrupted_time_series) |
-| Nearest Neighbour Matching | [causalml](https://causalml.readthedocs.io/) | [`NearestNeighborMatch`](https://causalml.readthedocs.io/en/latest/methodology.html#matching) | Causal matching on covariates for ATT/ATC estimation | [demo_nearest_neighbour_matching](models/demo_nearest_neighbour_matching) |
-| Subclassification | [pandas](https://pandas.pydata.org/) / [NumPy](https://numpy.org/) | `qcut()` + `np.average()` | Propensity stratification with within-stratum treatment effects | [demo_subclassification](models/demo_subclassification) |
-| Synthetic Control | [pysyncon](https://github.com/sdfordham/pysyncon) | [`Synth`](https://sdfordham.github.io/pysyncon/synth.html) | Synthetic control method for aggregate intervention analysis | [demo_synthetic_control](models/demo_synthetic_control) |
-| Metrics Approximation | *(built-in)* | Response function registry | Response function approximation using a library of candidate functions | [demo_metrics_approximation](models/demo_metrics_approximation) |
+| Experiment | [statsmodels](https://www.statsmodels.org/) | [`ols()`](https://www.statsmodels.org/stable/generated/statsmodels.formula.api.ols.html) | Linear regression for randomized A/B tests | [demo_experiment](methods/demo_experiment) |
+| Interrupted Time Series | [statsmodels](https://www.statsmodels.org/) | [`SARIMAX()`](https://www.statsmodels.org/stable/generated/statsmodels.tsa.statespace.sarimax.SARIMAX.html) | ARIMA-based pre/post intervention comparison on aggregated time series | [demo_interrupted_time_series](methods/demo_interrupted_time_series) |
+| Nearest Neighbour Matching | [causalml](https://causalml.readthedocs.io/) | [`NearestNeighborMatch`](https://causalml.readthedocs.io/en/latest/methodology.html#matching) | Causal matching on covariates for ATT/ATC estimation | [demo_nearest_neighbour_matching](methods/demo_nearest_neighbour_matching) |
+| Subclassification | [pandas](https://pandas.pydata.org/) / [NumPy](https://numpy.org/) | `qcut()` + `np.average()` | Propensity stratification with within-stratum treatment effects | [demo_subclassification](methods/demo_subclassification) |
+| Synthetic Control | [pysyncon](https://github.com/sdfordham/pysyncon) | [`Synth`](https://sdfordham.github.io/pysyncon/synth.html) | Synthetic control method for aggregate intervention analysis | [demo_synthetic_control](methods/demo_synthetic_control) |
+| Metrics Approximation | *(built-in)* | Response function registry | Response function approximation using a library of candidate functions | [demo_metrics_approximation](methods/demo_metrics_approximation) |

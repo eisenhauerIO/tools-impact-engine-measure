@@ -8,7 +8,7 @@ from unittest.mock import Mock
 import pandas as pd
 import pytest
 
-from impact_engine_measure import parse_config_file
+from impact_engine_measure import load_config
 from impact_engine_measure.metrics import (
     MetricsInterface,
     MetricsManager,
@@ -227,7 +227,7 @@ class TestMetricsFactory:
             with open(config_path, "w") as f:
                 json.dump(config, f)
 
-            parsed_config = parse_config_file(config_path)
+            parsed_config = load_config(config_path)
             manager = create_metrics_manager(parsed_config)
 
             assert isinstance(manager, MetricsManager)

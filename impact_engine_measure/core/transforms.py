@@ -29,16 +29,23 @@ def apply_transform(
 ) -> pd.DataFrame:
     """Apply a transform to data based on configuration.
 
-    Args:
-        data: The input DataFrame to transform.
-        transform_config: Configuration dict with FUNCTION and PARAMS keys.
-            Example: {"FUNCTION": "aggregate_by_date", "PARAMS": {"metric": "revenue"}}
+    Parameters
+    ----------
+    data : pd.DataFrame
+        The input DataFrame to transform.
+    transform_config : dict
+        Configuration dict with FUNCTION and PARAMS keys.
+        Example: {"FUNCTION": "aggregate_by_date", "PARAMS": {"metric": "revenue"}}
 
-    Returns:
-        pd.DataFrame: The transformed data.
+    Returns
+    -------
+    pd.DataFrame
+        The transformed data.
 
-    Raises:
-        ValueError: If FUNCTION is not specified or not found.
+    Raises
+    ------
+    ValueError
+        If FUNCTION is not specified or not found.
     """
     if "FUNCTION" not in transform_config:
         raise ValueError("Transform config must include 'FUNCTION' key")
@@ -56,11 +63,16 @@ def passthrough(data: pd.DataFrame, params: Dict[str, Any]) -> pd.DataFrame:
 
     Useful when no transformation is needed but a transform must be specified.
 
-    Args:
-        data: Input DataFrame.
-        params: Unused parameters.
+    Parameters
+    ----------
+    data : pd.DataFrame
+        Input DataFrame.
+    params : dict
+        Unused parameters.
 
-    Returns:
-        pd.DataFrame: The input data unchanged.
+    Returns
+    -------
+    pd.DataFrame
+        The input data unchanged.
     """
     return data

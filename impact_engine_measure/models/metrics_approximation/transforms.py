@@ -19,18 +19,25 @@ def aggregate_for_approximation(data: pd.DataFrame, params: Dict[str, Any]) -> p
     This transform creates cross-sectional data for approximation models.
     It computes baseline metrics per product, suitable for before/after analysis.
 
-    Args:
-        data: Input DataFrame with 'product_id' column and metrics.
-        params: Configuration parameters:
-            - baseline_metric (str): The metric to aggregate as baseline (default: "revenue").
+    Parameters
+    ----------
+    data : pd.DataFrame
+        Input DataFrame with 'product_id' column and metrics.
+    params : dict
+        Configuration parameters:
+        - baseline_metric (str): The metric to aggregate as baseline (default: "revenue").
 
-    Returns:
-        pd.DataFrame: Cross-sectional data with columns:
-            - product_id: Product identifier
-            - baseline_sales: Aggregated baseline metric per product
+    Returns
+    -------
+    pd.DataFrame
+        Cross-sectional data with columns:
+        - product_id: Product identifier
+        - baseline_sales: Aggregated baseline metric per product
 
-    Raises:
-        ValueError: If required columns are missing.
+    Raises
+    ------
+    ValueError
+        If required columns are missing.
     """
     baseline_metric = params.get("baseline_metric", "revenue")
 

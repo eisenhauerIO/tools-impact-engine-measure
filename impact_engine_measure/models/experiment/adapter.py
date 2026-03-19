@@ -56,11 +56,15 @@ class ExperimentAdapter(ModelInterface):
     def validate_params(self, params: Dict[str, Any]) -> None:
         """Validate experiment-specific parameters.
 
-        Args:
-            params: Parameters dict with formula, etc.
+        Parameters
+        ----------
+        params : dict
+            Parameters dict with formula, etc.
 
-        Raises:
-            ValueError: If formula is missing.
+        Raises
+        ------
+        ValueError
+            If formula is missing.
         """
         formula = params.get("formula")
         if not formula or not isinstance(formula, str):
@@ -98,17 +102,25 @@ class ExperimentAdapter(ModelInterface):
     def fit(self, data: pd.DataFrame, **kwargs) -> ModelResult:
         """Fit OLS model using statsmodels formula API and return results.
 
-        Args:
-            data: DataFrame containing all variables referenced in the formula.
-            **kwargs: Passed through to statsmodels OLS .fit()
-                (e.g., cov_type='HC3' for robust standard errors).
+        Parameters
+        ----------
+        data : pd.DataFrame
+            DataFrame containing all variables referenced in the formula.
+        **kwargs
+            Passed through to statsmodels OLS .fit()
+            (e.g., cov_type='HC3' for robust standard errors).
 
-        Returns:
-            ModelResult: Standardized result container.
+        Returns
+        -------
+        ModelResult
+            Standardized result container.
 
-        Raises:
-            ConnectionError: If model not connected.
-            RuntimeError: If model fitting fails.
+        Raises
+        ------
+        ConnectionError
+            If model not connected.
+        RuntimeError
+            If model fitting fails.
         """
         if not self.is_connected:
             raise ConnectionError("Model not connected. Call connect() first.")

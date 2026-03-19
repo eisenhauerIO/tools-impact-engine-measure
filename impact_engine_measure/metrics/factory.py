@@ -23,15 +23,22 @@ def create_metrics_manager(
 ) -> MetricsManager:
     """Create a MetricsManager from a parsed config with DATA.SOURCE structure.
 
-    Args:
-        config: The full parsed configuration dict (from parse_config_file()).
-        parent_job: Optional parent job for artifact management.
+    Parameters
+    ----------
+    config : dict
+        The full parsed configuration dict (from parse_config_file()).
+    parent_job : JobInfo, optional
+        Optional parent job for artifact management.
 
-    Returns:
-        MetricsManager: Configured manager with the appropriate adapter.
+    Returns
+    -------
+    MetricsManager
+        Configured manager with the appropriate adapter.
 
-    Raises:
-        ValueError: If the configured metrics type is not supported.
+    Raises
+    ------
+    ValueError
+        If the configured metrics type is not supported.
     """
     source_type = config["DATA"]["SOURCE"]["type"]
     source_config = config["DATA"]["SOURCE"]["CONFIG"]
@@ -54,14 +61,20 @@ def create_metrics_manager(
 def get_metrics_adapter(metrics_type: str) -> MetricsInterface:
     """Get an instance of the metrics adapter for the given type.
 
-    Args:
-        metrics_type: The type of metrics adapter (e.g., "simulator").
+    Parameters
+    ----------
+    metrics_type : str
+        The type of metrics adapter (e.g., "simulator").
 
-    Returns:
-        MetricsInterface: An instance of the appropriate adapter.
+    Returns
+    -------
+    MetricsInterface
+        An instance of the appropriate adapter.
 
-    Raises:
-        ValueError: If the metrics type is not supported.
+    Raises
+    ------
+    ValueError
+        If the metrics type is not supported.
     """
     return METRICS_REGISTRY.get(metrics_type)
 
