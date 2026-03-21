@@ -38,7 +38,6 @@ Every method demo notebook follows this sequence:
 2. **Setup** — imports and any prerequisite configuration.
 3. **Worked example** — step-by-step walkthrough with code and output.
 4. **Inspection** — examine the results in detail.
-5. **Summary** — recap of key takeaways.
 
 ### Execution
 

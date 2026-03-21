@@ -4,7 +4,7 @@ Impact Engine uses YAML configuration files to control all aspects of data sourc
 
 > **See Also.** For practical examples, see the [Model demo notebooks](models/demo_interrupted_time_series.ipynb).
 
-## Configuration Structure
+## Configuration structure
 
 The engine uses YAML configuration files with three main sections.
 
@@ -22,18 +22,18 @@ OUTPUT:
   # Output path configuration
 ```
 
-## DATA Section
+## DATA section
 
 Configures where metrics data comes from and how it's transformed.
 
-### SOURCE Configuration
+### SOURCE configuration
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `type` | string | No | Data source type: `"simulator"` (default) |
 | `CONFIG` | object | Yes | Source-specific configuration |
 
-### Simulator CONFIG Parameters (default)
+### Simulator CONFIG parameters (default)
 
 The simulator generates synthetic metrics data from a product catalog.
 
@@ -57,7 +57,7 @@ DATA:
 | `mode` | string | No | `"rule"` | Simulation mode: `"rule"` (deterministic) |
 | `seed` | int | No | `42` | Random seed for reproducibility |
 
-### File CONFIG Parameters
+### File CONFIG parameters
 
 Load metrics from an existing CSV or Parquet file instead of simulating.
 
@@ -77,7 +77,7 @@ DATA:
 | `product_id_column` | string | No | `"product_id"` | Column name for product identifiers |
 | `date_column` | string | No | `"date"` | Column name for dates |
 
-### Enrichment Configuration
+### Enrichment configuration
 
 Apply synthetic interventions to simulated data for testing causal impact detection.
 
@@ -108,7 +108,7 @@ DATA:
 | `ENRICHMENT.PARAMS.enrichment_start` | string | Yes | Date when enrichment begins (YYYY-MM-DD) |
 | `ENRICHMENT.PARAMS.seed` | int | No | Random seed for reproducibility |
 
-### TRANSFORM Configuration
+### TRANSFORM configuration
 
 Optional transformation applied to data before model fitting.
 
@@ -125,7 +125,7 @@ DATA:
 | `FUNCTION` | string | No | `"passthrough"` | Transform function name |
 | `PARAMS` | object | No | `{}` | Function-specific parameters |
 
-#### Available Transforms
+#### Available transforms
 
 Each model typically pairs with a specific transform. The engine selects the transform by name from a registry.
 
@@ -137,18 +137,18 @@ Each model typically pairs with a specific transform. The engine selects the tra
 | `aggregate_for_approximation` | Metrics Approximation | Aggregates baseline metric per product into cross-sectional format. | `baseline_metric`: column to aggregate (default `"revenue"`) |
 | `prepare_simulator_for_approximation` | Metrics Approximation (simulator source) | Converts simulator time-series into before/after quality scores and baseline sales per product. | `enrichment_start`: date split point (required), `baseline_metric`: column to aggregate (default `"revenue"`) |
 
-## MEASUREMENT Section
+## MEASUREMENT section
 
 Configures the statistical model for impact analysis.
 
-### Common Parameters
+### Common parameters
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `MODEL` | string | No | Model type (default: `"interrupted_time_series"`) |
 | `PARAMS` | object | Yes | Model-specific parameters |
 
-### Interrupted Time Series Model
+### Interrupted time series model
 
 ```yaml
 MEASUREMENT:
@@ -167,7 +167,7 @@ MEASUREMENT:
 | `order` | array | No | `[1, 0, 0]` | ARIMA order (p, d, q) |
 | `seasonal_order` | array | No | `[0, 0, 0, 0]` | Seasonal ARIMA order (P, D, Q, s) |
 
-### Experiment Model
+### Experiment model
 
 ```yaml
 MEASUREMENT:
@@ -182,7 +182,7 @@ MEASUREMENT:
 
 ---
 
-### Subclassification Model
+### Subclassification model
 
 ```yaml
 MEASUREMENT:
@@ -206,7 +206,7 @@ MEASUREMENT:
 
 ---
 
-### Nearest Neighbour Matching Model
+### Nearest neighbour matching model
 
 ```yaml
 MEASUREMENT:
@@ -235,7 +235,7 @@ MEASUREMENT:
 
 ---
 
-### Metrics Approximation Model
+### Metrics approximation model
 
 ```yaml
 MEASUREMENT:
@@ -260,7 +260,7 @@ MEASUREMENT:
 
 ---
 
-### Synthetic Control Model
+### Synthetic control model
 
 ```yaml
 MEASUREMENT:
@@ -285,7 +285,7 @@ MEASUREMENT:
 
 ---
 
-## OUTPUT Section
+## OUTPUT section
 
 Configures where results are stored.
 
@@ -298,7 +298,7 @@ OUTPUT:
 |-----------|------|----------|---------|-------------|
 | `PATH` | string | No | `"output"` | Directory for output files |
 
-## Complete Example
+## Complete example
 
 ```yaml
 DATA:
@@ -326,8 +326,3 @@ MEASUREMENT:
 OUTPUT:
   PATH: output
 ```
-
-## Next Steps
-
-- **Examples.** See the [Model demo notebooks](models/demo_interrupted_time_series.ipynb) for practical examples
-- **API.** See [API Reference](api_reference.rst) for function documentation
