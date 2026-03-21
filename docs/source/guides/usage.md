@@ -41,9 +41,13 @@ job_info = measure_impact(
     storage_url="./results"
 )
 results = load_results(job_info)
+print(results.model_type)         # "interrupted_time_series"
+print(results.job_id)             # "job-20260101-abc123"
+print(results.impact_results)     # {"schema_version": "2.0", "model_type": ..., "data": {...}}
+print(results.transformed_metrics.head())  # DataFrame with aggregated revenue
 ```
 
-The engine loads products, retrieves metrics, applies transformations, fits the model, and writes results. `measure_impact` returns a `JobInfo` object; pass it to `load_results()` to get a typed `MeasureJobResult` with all artifacts loaded.
+The engine loads products, retrieves metrics, applies transformations, fits the model, and writes results. `measure_impact()` returns a `JobInfo` object; pass it to `load_results()` to get a typed `MeasureJobResult` with all artifacts loaded: `config`, `impact_results`, `products`, `business_metrics`, `transformed_metrics`, and any model-specific `model_artifacts`.
 
 ---
 
