@@ -8,7 +8,7 @@ from unittest.mock import Mock
 import pandas as pd
 import pytest
 
-from impact_engine_measure import load_config
+from impact_engine_measure.core.validation import load_config
 from impact_engine_measure.metrics import (
     MetricsInterface,
     MetricsManager,
