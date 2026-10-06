@@ -36,14 +36,11 @@ OUTPUT:
 ```python
 from impact_engine_measure import measure_impact, load_results
 
-job_info = measure_impact(
-    config_path="config.yaml",
-    storage_url="./results"
-)
+job_info = measure_impact(config_path="config.yaml", storage_url="./results")
 results = load_results(job_info)
-print(results.model_type)         # "interrupted_time_series"
-print(results.job_id)             # "job-20260101-abc123"
-print(results.impact_results)     # {"schema_version": "2.0", "model_type": ..., "data": {...}}
+print(results.model_type)  # "interrupted_time_series"
+print(results.job_id)  # "job-20260101-abc123"
+print(results.impact_results)  # {"schema_version": "2.0", "model_type": ..., "data": {...}}
 print(results.transformed_metrics.head())  # DataFrame with aggregated revenue
 ```
 
