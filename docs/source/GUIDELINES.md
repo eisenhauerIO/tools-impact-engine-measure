@@ -28,6 +28,21 @@ Methodology  → methodology notebooks
 
 ---
 
+## Architectural symmetry
+
+The three core layers—Metrics, Models, and Storage—must be treated symmetrically. Each layer follows the same structural pattern:
+
+| Component | Metrics | Models | Storage |
+|-----------|---------|--------|---------|
+| Interface | `MetricsInterface` | `ModelInterface` | `StorageInterface` |
+| Manager | `MetricsManager` | `ModelsManager` | `StorageManager` |
+| Registry | `METRICS_REGISTRY` | `MODEL_REGISTRY` | `STORAGE_REGISTRY` |
+| Factory | `create_metrics_manager()` | `create_models_manager()` | `create_storage_manager()` |
+
+When extending or modifying one layer, ensure the same pattern applies to all three.
+
+---
+
 ## Tutorials
 
 ### Structure

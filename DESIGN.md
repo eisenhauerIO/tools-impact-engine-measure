@@ -1,4 +1,4 @@
-# Design
+# Design: Adapter-based causal impact measurement
 
 *Last updated: February 2026*
 
@@ -9,7 +9,7 @@ Impact Engine measures the causal impact of interventions on business metrics. I
 The architecture is **adapter-based**. Data sources, models, and storage backends are all pluggable. New adapters slot in without modifying the core engine or changing the user-facing API. The "Custom..." entries in the diagram below mark these extension points.
 
 <p align="center">
-  <img src="_static/diagrams/overview.svg" alt="Overview">
+  <img src="docs/source/_static/diagrams/overview.svg" alt="Overview">
 </p>
 
 ---
@@ -31,7 +31,7 @@ Two patterns make this work.
 The system is **configuration-driven**. A single config file selects which adapters to use, and data flows through four stages orchestrated by [engine.py](https://github.com/eisenhauerIO/tools-impact-engine-measure/blob/main/impact_engine_measure/engine.py).
 
 <p align="center">
-  <img src="_static/diagrams/architecture.svg" alt="Data Flow">
+  <img src="docs/source/_static/diagrams/architecture.svg" alt="Data Flow">
 </p>
 
 Each stage is handled by a dedicated manager that delegates to the configured adapter.
@@ -74,4 +74,4 @@ The codebase enforces quality through automated tooling. GitHub Actions runs tes
 
 The architecture facilitates testing through **dependency injection**. Each manager receives its adapter through the constructor rather than creating it internally, so [unit tests](https://github.com/eisenhauerIO/tools-impact-engine-measure/tree/main/tests/) can inject mock implementations that satisfy the interface contract. This means tests run fast and deterministically without requiring external systems. The same pattern applies across all three layers—metrics, models, and storage—making the entire codebase testable in isolation.
 
-For complete configuration schema and parameter documentation, see the [Configuration Guide](configuration.md).
+For complete configuration schema and parameter documentation, see the [Configuration Guide](docs/source/guides/configuration.md).

@@ -26,10 +26,11 @@ Always use `hatch run` to execute commands. Never bare `python` or `pytest`.
 ## Architecture
 
 - `impact_engine_measure/engine.py` — `measure_impact()`: main entry point; orchestrates config, model, storage
-- `impact_engine_measure/config.py` — `parse_config_file()` (internal); `load_config()` re-exported as canonical entry point
+- `impact_engine_measure/config.py` — `ConfigurationParser`, `parse_config_file()` (internal): parse and validate a config file
+- `impact_engine_measure/config_defaults.yaml` — default values for every config key; acts as the implicit config schema
 - `impact_engine_measure/normalize.py` — `normalize_result()`: writes `measure_result.json` (flat normalized estimates)
 - `impact_engine_measure/results.py` — `MeasureJobResult`, `load_results()`: structured access to job output
-- `impact_engine_measure/core/validation.py` — `load_config()`: parse-once config entry point
+- `impact_engine_measure/core/validation.py` — `load_config()`: parse-once config entry point (re-exported from `core/__init__.py`)
 - `impact_engine_measure/core/contracts.py` — internal data contracts
 - `impact_engine_measure/core/transforms.py` — shared data transformations
 - `impact_engine_measure/metrics/` — `MetricsManager`, `MetricsInterface`, `METRICS_REGISTRY`: pluggable metric definitions
@@ -56,4 +57,3 @@ Always use `hatch run` to execute commands. Never bare `python` or `pytest`.
 - Logging via `logging.getLogger(__name__)` (no print statements)
 - Models are thin wrappers — delegate all statistical work to the underlying library
 - Every model run writes `measure_result.json` (normalized flat dict) and `manifest.json`; consumers read these files, not raw model output
-- `_external/` contains reference submodules — do not modify
